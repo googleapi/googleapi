@@ -287,7 +287,7 @@ type
     procedure InsertCategory(Root: IXMLNode);
     function GetEditURL: string;
   public
-    constructor Create(const ByNode: IXMLNode=nil; aAuth: string='');
+    constructor Create(const ByNode: IXMLNode=nil; aAuth: string='');overload;
     destructor Destroy;
     procedure ParseXML(Node: IXMLNode);
     procedure Update;
@@ -1207,12 +1207,20 @@ begin
   Freminders.Add(Remainder);
 end;
 
+
 constructor TCelenrarEvent.Create(const ByNode: IXMLNode; aAuth: string);
+var Attr: TAttribute;
 begin
   inherited Create;
   FAuth := aAuth;
+  Attr.Name:='type';
+  Attr.Value:='text';
   FTitle := TTextTag.Create(nil);
+  FTitle.Name:='title';
+  FTitle.Attributes.Add(Attr);
   FDescription := TTextTag.Create(nil);
+  FDescription.Name:='content';
+  FDescription.FAttributes.Add(Attr);
   FSummary := TTextTag.Create(nil);
   FLinks := TCelendarLinksList.Create; // ссылки события
   FAuthor := TAuthorTag.Create(nil);

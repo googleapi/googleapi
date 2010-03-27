@@ -44,7 +44,7 @@ procedure TForm2.Button3Click(Sender: TObject);
 var Event: TCelenrarEvent;
     Rem: TgdReminder;
 begin
-  Event:=TCelenrarEvent.Create();
+  Event:=TCelenrarEvent.Create;
   Event.title.Value:=Edit4.Text;
   Event.title.Name:='title';
   Event.Description.Value:=Edit5.Text;

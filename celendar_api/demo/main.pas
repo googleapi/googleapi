@@ -4,7 +4,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, ComCtrls, GCalendar,GDataCommon,Math;
+  Dialogs, StdCtrls, ComCtrls, GCalendar,GDataCommon,Math, IdBaseComponent,
+  IdComponent, IdTCPConnection, IdTCPClient, IdHTTP;
 
 type
   TForm1 = class(TForm)
@@ -152,9 +153,7 @@ CheckBox3.Checked:=false;
   Edit4.Text:=Event.title.Value;
   Edit5.Text:=Event.Description.Value;
   DateTimePicker1.Date:=Event.When.startTime;
-  DateTimePicker2.Time:=Event.When.startTime;
   DateTimePicker4.Date:=Event.When.endTime;
-  DateTimePicker3.Time:=Event.When.endTime;
   for i:=0 to Event.Reminders.Count-1 do
     begin
       case Event.Reminders[i].Method of
