@@ -72,23 +72,21 @@ MyCelendars:=TGoogleCalendar.Create(Edit1.Text,Edit2.Text);
 if MyCelendars.Login then
   begin
     label4.Caption:='Подключен';
-    MyCelendars.RetriveAllCelendars; //получаем список всех календарей
+    MyCelendars.RetriveCelendars(true); //получаем список календарей на чтение/запись
     label7.Caption:=IntToStr(MyCelendars.AllCelendars.Count);
     ComboBox1.Items.Clear;
     for I := 0 to MyCelendars.AllCelendars.Count - 1 do
-       ComboBox1.Items.Add(MyCelendars.AllCelendars[i].title.Value);
+       ComboBox1.Items.Add(MyCelendars.AllCelendars[i].title);
   end
 else
   label4.Caption:='Нет соединения';
-
-
 end;
 
 procedure TForm1.Button2Click(Sender: TObject);
 var Rem: TgdReminder;
 begin
-  Event.title.Value:=Edit4.Text;
-  Event.Description.Value:=Edit5.Text;
+  Event.title:=Edit4.Text;
+  Event.Description:=Edit5.Text;
   Event.When.startTime:=Trunc(DateTimePicker1.Date);
   Event.When.endTime:=Trunc(DateTimePicker4.Date);
   Event.Reminders.Clear;
@@ -116,8 +114,10 @@ begin
      Rem.Method:=tmAlert;
      Event.Reminders.Add(Rem);
    end;
-  Event.Update;
-  ComboBox1Change(self);
+  if Event.Update then
+    ShowMessage('Мероприятие обновлено')
+  else
+    ShowMessage('Во время обновления произошла ошибка');
 end;
 
 procedure TForm1.Button3Click(Sender: TObject);
@@ -137,7 +137,7 @@ begin
  ComboBox2.Items.Clear;
  count:=MyCelendars.AllCelendars[ComboBox1.ItemIndex].RetrieveEvents;
  for I := 0 to Count - 1 do
-    ComboBox2.Items.Add(MyCelendars.AllCelendars[ComboBox1.ItemIndex].Event[i].title.Value);
+    ComboBox2.Items.Add(MyCelendars.AllCelendars[ComboBox1.ItemIndex].Event[i].title);
 end;
 
 procedure TForm1.ComboBox2Change(Sender: TObject);
@@ -150,8 +150,8 @@ CheckBox3.Checked:=false;
   Event:=MyCelendars.AllCelendars[ComboBox1.ItemIndex].Event[ComboBox2.ItemIndex];
   label12.Caption:=DateTimeToStr(Event.PublishedTime);
   label14.Caption:=DateTimeToStr(Event.UpdateTime);
-  Edit4.Text:=Event.title.Value;
-  Edit5.Text:=Event.Description.Value;
+  Edit4.Text:=Event.title;
+  Edit5.Text:=Event.Description;
   DateTimePicker1.Date:=Event.When.startTime;
   DateTimePicker4.Date:=Event.When.endTime;
   for i:=0 to Event.Reminders.Count-1 do

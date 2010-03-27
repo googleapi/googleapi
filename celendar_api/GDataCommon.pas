@@ -1027,7 +1027,7 @@ if Node=nil then Exit;
     raise Exception.Create(Format(rcErrCompNodes,
         [cGDTagNames[ord(egdReminder)]]));
   try
-    if Node.Attributes['absoluteTime']<>null then
+    if (Node.Attributes['absoluteTime']<>null)and(Length(Trim(Node.Attributes['absoluteTime']))>0) then
       FabsoluteTime:=ServerDateToDateTime(Node.Attributes['absoluteTime']);
     if Node.Attributes['method']<>null then
        Fmethod:=TMethod(AnsiIndexStr(Node.Attributes['method'], cMethods));

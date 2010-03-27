@@ -3,10 +3,13 @@ unit GCalendar;
 interface
 
 uses WinInet, GData, Graphics, strutils, httpsend, GHelper, XMLIntf,
-  GoogleLogin, Windows, Messages, SysUtils, Variants, Classes, Dialogs,
+  GoogleLogin, Windows,  SysUtils, Variants, Classes, Dialogs,
   StdCtrls, XMLDoc, xmldom, Generics.Collections, msxml, GDataCommon;
 
 const
+  AllCelendarsLink  ='http://www.google.com/calendar/feeds/default/allcalendars/full';
+  OwnerCelendarLink ='http://www.google.com/calendar/feeds/default/owncalendars/full';
+
   cgCalTagNames: array [0 .. 15] of string = ('gCal:accesslevel', 'gCal:color',
     'gCal:hidden', 'gCal:selected', 'gCal:settingsProperty', 'gCal:sequence',
     'gCal:suppressReplyNotifications', 'gCal:syncEvent', 'gCal:timezone',
@@ -152,7 +155,8 @@ type
   TAuthorTag = Class(TPersistent)
   private
     FAuthor: string;
-    FEmail: string;
+    FEmail : string;
+    FUID   : string;
   public
     constructor Create(ByNode: IXMLNode);
     procedure ParseXML(Node: IXMLNode);
@@ -265,7 +269,6 @@ type
     Fupdated: TDateTime;
     FTitle: TTextTag;
     FDescription: TTextTag;
-    FSummary: TTextTag;
     FLinks: TCelendarLinksList; // ссылки события
     FAuthor: TAuthorTag;
     FeventStatus: TgdEventStatus;
@@ -286,19 +289,22 @@ type
     procedure RetriveETag(const aLink: string);
     procedure InsertCategory(Root: IXMLNode);
     function GetEditURL: string;
+    function GetTitle: string;
+    procedure SetTitle(aTitle:string);
+    function GetDescription: string;
+    procedure SetDescription(aDescr: string);
   public
     constructor Create(const ByNode: IXMLNode=nil; aAuth: string='');overload;
     destructor Destroy;
     procedure ParseXML(Node: IXMLNode);
-    procedure Update;
-    procedure DeleteThis;
+    function Update:boolean;
+    function DeleteThis:boolean;
     property ID: string read Fid;
     property Etag: string read FEtag;
     property PublishedTime: TDateTime read Fpublished;
     property UpdateTime: TDateTime read Fupdated;
-    property title: TTextTag read FTitle write FTitle;
-    property Description: TTextTag read FDescription write FDescription;
-    property Summary: TTextTag read FSummary write FSummary;
+    property Title: string read GetTitle write SetTitle;
+    property Description: string read GetDescription write SetDescription;
     property Links: TCelendarLinksList read FLinks;
     property Author: TAuthorTag read FAuthor write FAuthor;
     property EventStatus: TgdEventStatus read FeventStatus write FeventStatus;
@@ -349,17 +355,21 @@ type
     function GetEvent(i: integer): TCelenrarEvent;
     procedure InsertCategory(Root: IXMLNode);
     function GetEventFeedLink: string;
+    function GetEventCount: integer;
+    function GetTitle:string;
+    function GetDescription: string;
+    procedure SetTitle(aTitle: string);
+    procedure SetDescription(aDescr: string);
   public
-    constructor Create(const ByNode: IXMLNode; aAuth: string);
+    constructor Create(const ByNode: IXMLNode=nil; aAuth: string='');
     procedure ParseXML(Node: IXMLNode);
     function AddSingleEvent(aEvent: TCelenrarEvent): boolean;
     function RetrieveEvents: integer;
     function SendToGoogle(const GoogleAuth: string): boolean;
-    // отправка данных календаря на сервак
     property Auth: string read FAuth write FAuth;
-    property title: TTextTag read FTitle write FTitle;
-    property Description: TTextTag read FDescription write FDescription;
-    property Links: integer read GetLinksCount;
+    property title: string read GetTitle write SetTitle;
+    property Description: string read GetDescription write SetDescription;
+    property LinkCount: integer read GetLinksCount;
     property Link[i: integer]: TCelendarLink read GetLink write SetLink;
     property Author: TAuthorTag read FAuthor write FAuthor;
     property TimeZone: TgCaltimezone read Ftimezone write Ftimezone;
@@ -373,6 +383,7 @@ type
     property TimesCleaned: TgCaltimesCleaned read FgCaltimesCleaned write
       FgCaltimesCleaned;
     property Event[i: integer]: TCelenrarEvent read GetEvent;
+    property EventCount: integer read GetEventCount;
   end;
 
 type
@@ -386,7 +397,7 @@ type
   public
     constructor Create(const Email, password: string);
     function Login: boolean;
-    procedure RetriveAllCelendars;
+    procedure RetriveCelendars(const Owner: boolean);
     property Account: TGoogleLogin read FAccount write FAccount;
     property AllCelendars: TCelendarList read FCelendars;
   end;
@@ -428,22 +439,20 @@ begin
     Result := false;
 end;
 
-procedure TGoogleCalendar.RetriveAllCelendars;
+procedure TGoogleCalendar.RetriveCelendars(const Owner: boolean);
 var
   Doc: IXMLDocument;
-  List: IXMLNodeList;
   i: integer;
-  tmpURL: string;
 begin
   FCelendars.Clear;
   Doc := NewXMLDocument();
-  Doc.LoadFromStream(SendRequest('GET',
-      'http://www.google.com/calendar/feeds/default/allcalendars/full',
-      FAccount.Auth));
-  List := Doc.DocumentElement.ChildNodes;
-  for i := 0 to List.Count - 1 do
-    if LowerCase(List.Nodes[i].NodeName) = 'entry' then
-      FCelendars.Add(TCelendar.Create(List.Nodes[i], FAccount.Auth));
+  if not Owner then
+    Doc.LoadFromStream(SendRequest('GET',AllCelendarsLink, FAccount.Auth))
+  else
+    Doc.LoadFromStream(SendRequest('GET',OwnerCelendarLink, FAccount.Auth));
+  for i := 0 to Doc.DocumentElement.ChildNodes.Count - 1 do
+    if LowerCase(Doc.DocumentElement.ChildNodes[i].NodeName) = 'entry' then
+      FCelendars.Add(TCelendar.Create(Doc.DocumentElement.ChildNodes[i], FAccount.Auth));
 end;
 
 { TCelendar }
@@ -512,12 +521,22 @@ begin
   ParseXML(ByNode);
 end;
 
+function TCelendar.GetDescription: string;
+begin
+  Result:=FDescription.Value
+end;
+
 function TCelendar.GetEvent(i: integer): TCelenrarEvent;
 begin
   if (i <= FEvents.Count) and (i > - 1) then
     Result := FEvents[i]
   else
     raise Exception.Create(rcErrMissAgrument);
+end;
+
+function TCelendar.GetEventCount: integer;
+begin
+  Result:=FEvents.Count;
 end;
 
 function TCelendar.GetEventFeedLink: string;
@@ -543,6 +562,11 @@ end;
 function TCelendar.GetLinksCount: integer;
 begin
   Result := FLinks.Count
+end;
+
+function TCelendar.GetTitle: string;
+begin
+  Result:=FTitle.Value;
 end;
 
 procedure TCelendar.InsertCategory(Root: IXMLNode);
@@ -667,8 +691,7 @@ begin
     Headers.Add('Authorization: GoogleLogin auth=' + GoogleAuth);
     MimeType := 'application/atom+xml';
     aDoc.SaveToStream(Document);
-    HTTPMethod('POST',
-      'http://www.google.com/calendar/feeds/default/owncalendars/full');
+    HTTPMethod('POST',OwnerCelendarLink);
     if (ResultCode > 200) and (ResultCode < 400) then
     begin
       tmpURL := GetNewLocationURL(Headers);
@@ -684,6 +707,11 @@ begin
   end;
 end;
 
+procedure TCelendar.SetDescription(aDescr: string);
+begin
+  FDescription.Value:=aDescr;
+end;
+
 procedure TCelendar.SetLink(i: integer; Link: TCelendarLink);
 begin
   if FLinks.Contains(Link) then
@@ -692,6 +720,11 @@ begin
     Exit;
   end;
   FLinks.Insert(i, Link);
+end;
+
+procedure TCelendar.SetTitle(aTitle: string);
+begin
+  FTitle.Value:=aTitle
 end;
 
 { TgCaltimezone }
@@ -755,7 +788,10 @@ begin
         FAuthor := Node.ChildNodes[i].Text
       else
         if Node.ChildNodes[i].NodeName = 'email' then
-          FEmail := Node.ChildNodes[i].Text;
+          FEmail := Node.ChildNodes[i].Text
+        else
+          if Node.ChildNodes[i].NodeName = 'uid' then
+            FUID:=Node.ChildNodes[i].Text;
     end;
   except
     Exception.Create(Format(rcErrPrepareNode, [Node.NodeName]));
@@ -805,8 +841,7 @@ end;
 constructor TgCalcolor.Create(const ByNode: IXMLNode);
 begin
   inherited Create;
-  if ByNode = nil then
-    Exit;
+  if ByNode = nil then Exit;
   ParseXML(ByNode);
 end;
 
@@ -1221,7 +1256,6 @@ begin
   FDescription := TTextTag.Create(nil);
   FDescription.Name:='content';
   FDescription.FAttributes.Add(Attr);
-  FSummary := TTextTag.Create(nil);
   FLinks := TCelendarLinksList.Create; // ссылки события
   FAuthor := TAuthorTag.Create(nil);
   FeventStatus := TgdEventStatus.Create(nil);
@@ -1243,7 +1277,7 @@ begin
 
 end;
 
-procedure TCelenrarEvent.DeleteThis;
+function TCelenrarEvent.DeleteThis:boolean;
 var tmpURL:string;
 begin
   if length(GetEditURL) > 0 then
@@ -1265,12 +1299,18 @@ begin
         Headers.Add('If-Match: ' + FEtag);
         HTTPMethod('DELETE', tmpURL);
       end;
+      Result:=ResultCode=200;
     end;
 end;
 
 destructor TCelenrarEvent.Destroy;
 begin
   inherited Destroy;
+end;
+
+function TCelenrarEvent.GetDescription: string;
+begin
+ Result:=FDescription.FValue
 end;
 
 function TCelenrarEvent.GetEditURL: string;
@@ -1286,6 +1326,11 @@ begin
       break;
     end;
   end;
+end;
+
+function TCelenrarEvent.GetTitle: string;
+begin
+  result:=FTitle.FValue;
 end;
 
 procedure TCelenrarEvent.InsertCategory(Root: IXMLNode);
@@ -1378,7 +1423,17 @@ begin
   end;
 end;
 
-procedure TCelenrarEvent.Update;
+procedure TCelenrarEvent.SetDescription(aDescr: string);
+begin
+  FDescription.Value:=aDescr;
+end;
+
+procedure TCelenrarEvent.SetTitle(aTitle: string);
+begin
+  FTitle.FValue:=aTitle;
+end;
+
+function TCelenrarEvent.Update: boolean;
 var
   i: integer;
   aDoc: IXMLDocument;
@@ -1432,17 +1487,23 @@ begin
       aDoc.SaveToStream(Document);
       HTTPMethod('PUT', GetEditURL);
       if (ResultCode > 200) and (ResultCode < 400) then
-      begin
-        tmpURL := GetNewLocationURL(Headers);
-        Document.Clear;
-        aDoc.SaveToStream(Document);
-        Headers.Clear;
-        MimeType := 'application/atom+xml';
-        Headers.Add('GData-Version: 2');
-        Headers.Add('Authorization: GoogleLogin auth=' + FAuth);
-        Headers.Add('If-Match: ' + FEtag);
-        HTTPMethod('PUT', tmpURL);
-      end;
+        begin
+          tmpURL := GetNewLocationURL(Headers);
+          Document.Clear;
+          aDoc.SaveToStream(Document);
+          Headers.Clear;
+          MimeType := 'application/atom+xml';
+          Headers.Add('GData-Version: 2');
+          Headers.Add('Authorization: GoogleLogin auth=' + FAuth);
+          Headers.Add('If-Match: ' + FEtag);
+          HTTPMethod('PUT', tmpURL);
+        end;
+      Result:=ResultCode=200;
+      if Result then
+        begin
+          aDoc.LoadFromStream(Document);
+          Self.ParseXML(aDoc.DocumentElement);
+        end;
     end;
 end;
 

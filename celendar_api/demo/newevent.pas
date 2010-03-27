@@ -20,8 +20,6 @@ type
     Edit4: TEdit;
     Edit5: TEdit;
     DateTimePicker1: TDateTimePicker;
-    DateTimePicker2: TDateTimePicker;
-    DateTimePicker3: TDateTimePicker;
     DateTimePicker4: TDateTimePicker;
     Button3: TButton;
     procedure Button3Click(Sender: TObject);
@@ -45,12 +43,10 @@ var Event: TCelenrarEvent;
     Rem: TgdReminder;
 begin
   Event:=TCelenrarEvent.Create;
-  Event.title.Value:=Edit4.Text;
-  Event.title.Name:='title';
-  Event.Description.Value:=Edit5.Text;
-  Event.Description.Name:='content';
-  Event.When.startTime:=Trunc(DateTimePicker1.Date)+DateTimePicker2.Time-DateTimePicker2.Date;
-  Event.When.endTime:=Trunc(DateTimePicker4.Date)+DateTimePicker3.Time-DateTimePicker4.Date;
+  Event.title:=Edit4.Text;
+  Event.Description:=Edit5.Text;
+  Event.When.startTime:=Trunc(DateTimePicker1.Date);
+  Event.When.endTime:=Trunc(DateTimePicker4.Date);
   Event.Reminders.Clear;
   if CheckBox1.Checked then
    begin
