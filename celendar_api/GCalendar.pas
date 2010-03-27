@@ -287,7 +287,7 @@ type
     procedure InsertCategory(Root: IXMLNode);
     function GetEditURL: string;
   public
-    constructor Create(const ByNode: IXMLNode; aAuth: string);
+    constructor Create(const ByNode: IXMLNode=nil; aAuth: string='');
     destructor Destroy;
     procedure ParseXML(Node: IXMLNode);
     procedure Update;
@@ -938,7 +938,7 @@ function TTextTag.AddToXML(Root: IXMLNode): IXMLNode;
 var
   i: integer;
 begin
-  Result := Root.OwnerDocument.CreateElement(FName, clNameSpaces[0, 1]);
+  Result:= Root.OwnerDocument.CreateElement(FName, clNameSpaces[0, 1]);
   Result.Text := AnsiToUtf8(FValue);
   for i := 0 to FAttributes.Count - 1 do
     Result.Attributes[FAttributes[i].Name] := FAttributes[i].Value;
@@ -1390,10 +1390,22 @@ begin
   aDoc.DocumentElement.ChildNodes.Add(Node);
 
   FTitle.AddToXML(Root);
-  // FDescription.AddToXML(Root);
+  FDescription.AddToXML(Root);
   FeventStatus.AddToXML(Root);
   Fwhere.AddToXML(Root);
-  Fwhen.AddToXML(Root);
+  Node:=Fwhen.AddToXML(Root);
+
+  if Frecurrence.Text.Count=0 then
+    begin
+      for I:=0 to FReminders.Count - 1 do
+        Freminders[i].AddToXML(Node);
+    end
+  else
+    begin
+      for I:=0 to FReminders.Count - 1 do
+        Freminders[i].AddToXML(Root);
+    end;
+
   Fwho.AddToXML(Root);
   Ftransparency.AddToXML(Root);
   Fvisibility.AddToXML(Root);
@@ -1401,7 +1413,7 @@ begin
   FguestsCanModify.AddToXML(Root);
   FguestsCanSeeGuests.AddToXML(Root);
 
-//  aDoc.XML.SaveToFile('PUT_Request.xml');
+
   if length(GetEditURL) > 0 then
     with THTTPSend.Create do
     begin
