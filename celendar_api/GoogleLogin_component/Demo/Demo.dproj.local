@@ -1,0 +1,9 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2010.03.20 16:44:46.359.pas,C:\Documents and Settings\Vlad_55\Мои документы\RAD Studio\Projects\Unit11.pas=F:\Google Login\Google_Components\Test\main.pas</Transaction>
+    <Transaction>2010.03.20 16:44:46.359.dfm,C:\Documents and Settings\Vlad_55\Мои документы\RAD Studio\Projects\Unit11.dfm=F:\Google Login\Google_Components\Test\main.dfm</Transaction>
+    <Transaction>2010.03.20 16:46:08.781.dproj,C:\Documents and Settings\Vlad_55\Мои документы\RAD Studio\Projects\Project9.dproj=F:\Google Login\Google_Components\Test\Project9.dproj</Transaction>
+    <Transaction>2010.03.30 18:21:35.020.dproj,G:\delphicelendar\celendar_api\GoogleLogin_component\Demo\Project9.dproj=G:\delphicelendar\celendar_api\GoogleLogin_component\Demo\Demo.dproj</Transaction>
+  </Transactions>
+</BorlandProject>
