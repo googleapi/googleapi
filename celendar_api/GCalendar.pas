@@ -3,27 +3,21 @@ unit GCalendar;
 interface
 
 uses WinInet, GData, Graphics, strutils, httpsend, GHelper, XMLIntf,
-  GoogleLogin, Windows,  SysUtils, Variants, Classes, Dialogs,
-  StdCtrls, XMLDoc, xmldom, Generics.Collections, msxml, GDataCommon;
+     GoogleLogin, Windows,  SysUtils, Variants, Classes, Dialogs,
+     StdCtrls, NativeXML,xmldoc, xmldom, Generics.Collections, msxml, GDataCommon;
 
 const
+  ClProtocolVer = '2.0';
+
   AllCelendarsLink  ='http://www.google.com/calendar/feeds/default/allcalendars/full';
   OwnerCelendarLink ='http://www.google.com/calendar/feeds/default/owncalendars/full';
 
-  cgCalTagNames: array [0 .. 15] of string = ('gCal:accesslevel', 'gCal:color',
+    cgCalTagNames: array [0 .. 15] of string = ('gCal:accesslevel', 'gCal:color',
     'gCal:hidden', 'gCal:selected', 'gCal:settingsProperty', 'gCal:sequence',
     'gCal:suppressReplyNotifications', 'gCal:syncEvent', 'gCal:timezone',
     'gCal:timesCleaned', 'gCal:uid', 'gCal:webContent',
     'gCal:webContentGadgetPrefss', 'gCal:guestsCanModify',
     'gCal:guestsCanInviteOthers', 'gCal:guestsCanSeeGuests');
-
-  clNameSpaces: array [0 .. 2, 0 .. 1] of string =
-    (('', 'http://www.w3.org/2005/Atom'), ('gd',
-      'http://schemas.google.com/g/2005'), ('gCal',
-      'http://schemas.google.com/gCal/2005'));
-  clCategories: array [0 .. 1, 0 .. 1] of string = (('scheme',
-      'http://schemas.google.com/g/2005#kind'), ('term',
-      'http://schemas.google.com/g/2005#event'));
 
  clEventRequareTags :array [0..19]of string=('id',
  'published','updated','title','link','content','author','gd:eventStatus',
@@ -50,7 +44,7 @@ type
   private
     FValue: boolean;
   public
-    Constructor Create(const ByNode: IXMLNode);
+    Constructor Create(const ByNode: IXMLNode=nil);
     procedure ParseXML(Node: IXMLNode);
     function AddToXML(Root: IXMLNode): IXMLNode;
     property Value: boolean read FValue write FValue;
@@ -61,7 +55,7 @@ type
   private
     FValue: boolean;
   public
-    Constructor Create(const ByNode: IXMLNode);
+    Constructor Create(const ByNode: IXMLNode=nil);
     procedure ParseXML(Node: IXMLNode);
     function AddToXML(Root: IXMLNode): IXMLNode;
     property Value: boolean read FValue write FValue;
@@ -72,7 +66,7 @@ type
   private
     FValue: string;
   public
-    Constructor Create(const ByNode: IXMLNode);
+    Constructor Create(const ByNode: IXMLNode=nil);
     procedure ParseXML(Node: IXMLNode);
     function AddToXML(Root: IXMLNode): IXMLNode;
     property Value: string read FValue write FValue;
@@ -83,7 +77,7 @@ type
   private
     FValue: integer;
   public
-    Constructor Create(const ByNode: IXMLNode);
+    Constructor Create(const ByNode: IXMLNode=nil);
     procedure ParseXML(Node: IXMLNode);
     function AddToXML(Root: IXMLNode): IXMLNode;
     property Value: integer read FValue write FValue;
@@ -94,7 +88,7 @@ type
   private
     FValue: boolean;
   public
-    Constructor Create(const ByNode: IXMLNode);
+    Constructor Create(const ByNode: IXMLNode=nil);
     procedure ParseXML(Node: IXMLNode);
     function AddToXML(Root: IXMLNode): IXMLNode;
     property Value: boolean read FValue write FValue;
@@ -105,7 +99,7 @@ type
   private
     FValue: boolean;
   public
-    Constructor Create(const ByNode: IXMLNode);
+    Constructor Create(const ByNode: IXMLNode=nil);
     procedure ParseXML(Node: IXMLNode);
     function AddToXML(Root: IXMLNode): IXMLNode;
     property Value: boolean read FValue write FValue;
@@ -116,7 +110,7 @@ type
   private
     FValue: boolean;
   public
-    Constructor Create(const ByNode: IXMLNode);
+    Constructor Create(const ByNode: IXMLNode=nil);
     procedure ParseXML(Node: IXMLNode);
     function AddToXML(Root: IXMLNode): IXMLNode;
     property Value: boolean read FValue write FValue;
@@ -142,27 +136,7 @@ type
   end;
 
 type
-  TCelendarLink = packed record
-    rel: string;
-    ltype: string;
-    href: string;
-  end;
-
-type
-  TCelendarLinksList = TList<TCelendarLink>;
-
-type
-  TAuthorTag = Class(TPersistent)
-  private
-    FAuthor: string;
-    FEmail : string;
-    FUID   : string;
-  public
-    constructor Create(ByNode: IXMLNode);
-    procedure ParseXML(Node: IXMLNode);
-    property Author: string read FAuthor write FAuthor;
-    property Email: string read FEmail write FEmail;
-  end;
+  TCelendarLinksList = TList<TEntryLink>;
 
 type
   TgCaltimezone = Class(TPersistent)
@@ -171,7 +145,7 @@ type
     FDescription: string;
     FGMT: extended;
   public
-    Constructor Create(const ByNode: IXMLNode);
+    Constructor Create(const ByNode: IXMLNode=nil);
     procedure ParseXML(Node: IXMLNode);
     function AddToXML(Root: IXMLNode): IXMLNode;
     property Value: string read FValue write FValue;
@@ -184,7 +158,7 @@ type
   private
     FValue: boolean;
   public
-    Constructor Create(const ByNode: IXMLNode);
+    Constructor Create(const ByNode: IXMLNode=nil);
     procedure ParseXML(Node: IXMLNode);
     function AddToXML(Root: IXMLNode): IXMLNode;
     property Value: boolean read FValue write FValue;
@@ -197,7 +171,7 @@ type
     FColor: TColor;
     procedure SetColor(aColor: TColor);
   public
-    Constructor Create(const ByNode: IXMLNode);
+    Constructor Create(const ByNode: IXMLNode=nil);
     procedure ParseXML(Node: IXMLNode);
     function AddToXML(Root: IXMLNode): IXMLNode;
     property Value: string read FValue write FValue;
@@ -209,7 +183,7 @@ type
   private
     FValue: boolean;
   public
-    Constructor Create(const ByNode: IXMLNode);
+    Constructor Create(const ByNode: IXMLNode=nil);
     procedure ParseXML(Node: IXMLNode);
     property Value: boolean read FValue write FValue;
   end;
@@ -222,7 +196,7 @@ type
     procedure SetLevel(aLevel: TAccessLevel);
     procedure SetValue(aValue: string);
   public
-    Constructor Create(const ByNode: IXMLNode);
+    Constructor Create(const ByNode: IXMLNode=nil);
     procedure ParseXML(Node: IXMLNode);
     property Value: string read FValue write SetValue;
     property Level: TAccessLevel read FLevel write SetLevel;
@@ -233,30 +207,9 @@ type
   private
     FValue: integer;
   public
-    Constructor Create(const ByNode: IXMLNode);
+    Constructor Create(const ByNode: IXMLNode=nil);
     procedure ParseXML(Node: IXMLNode);
     property Value: integer read FValue write FValue;
-  end;
-
-type
-  TAttribute = packed record
-    Name: string;
-    Value: string;
-  end;
-
-type
-  TTextTag = class(TPersistent)
-  private
-    FName: string;
-    FValue: string;
-    FAttributes: TList<TAttribute>;
-  public
-    Constructor Create(const ByNode: IXMLNode);
-    procedure ParseXML(Node: IXMLNode);
-    function AddToXML(Root: IXMLNode): IXMLNode;
-    property Value: string read FValue write FValue;
-    property Name: string read FName write FName;
-    property Attributes: TList<TAttribute>read FAttributes write FAttributes;
   end;
 
 type
@@ -349,8 +302,8 @@ type
     FgCaltimesCleaned: TgCaltimesCleaned;
     FEvents: TList<TCelenrarEvent>;
     procedure AddLink(const aNode: IXMLNode);
-    function GetLink(index: integer): TCelendarLink;
-    procedure SetLink(i: integer; Link: TCelendarLink);
+    function GetLink(index: integer): TEntryLink;
+    procedure SetLink(i: integer; Link: TEntryLink);
     function GetLinksCount: integer;
     function GetEvent(i: integer): TCelenrarEvent;
     procedure InsertCategory(Root: IXMLNode);
@@ -362,6 +315,7 @@ type
     procedure SetDescription(aDescr: string);
   public
     constructor Create(const ByNode: IXMLNode=nil; aAuth: string='');
+    function DeleteThis: boolean;
     procedure ParseXML(Node: IXMLNode);
     function AddSingleEvent(aEvent: TCelenrarEvent): boolean;
     function RetrieveEvents: integer;
@@ -370,7 +324,7 @@ type
     property title: string read GetTitle write SetTitle;
     property Description: string read GetDescription write SetDescription;
     property LinkCount: integer read GetLinksCount;
-    property Link[i: integer]: TCelendarLink read GetLink write SetLink;
+    property Link[i: integer]: TEntryLink read GetLink write SetLink;
     property Author: TAuthorTag read FAuthor write FAuthor;
     property TimeZone: TgCaltimezone read Ftimezone write Ftimezone;
     property PublishedTime: TDateTime read Fpublished write Fpublished;
@@ -399,7 +353,7 @@ type
     function Login: boolean;
     procedure RetriveCelendars(const Owner: boolean);
     property Account: TGoogleLogin read FAccount write FAccount;
-    property AllCelendars: TCelendarList read FCelendars;
+    property Celendars: TCelendarList read FCelendars;
   end;
 
 function GetGClalNodeType(NodeName: string): TgCalEnum;
@@ -422,7 +376,7 @@ begin
   inherited Create;
   try
     FAccount:= TGoogleLogin.Create(Email, password);
-    FAccount.Service := 'cl';
+    FAccount.Service := tsCelendar;
     FAccount.Source := DefoultAppName;
     FCelendars := TCelendarList.Create;
   except
@@ -445,13 +399,13 @@ var
   i: integer;
 begin
   FCelendars.Clear;
-  Doc := NewXMLDocument();
+  Doc:=NewXMLDocument();
   if not Owner then
-    Doc.LoadFromStream(SendRequest('GET',AllCelendarsLink, FAccount.Auth))
+    Doc.LoadFromStream(SendRequest('GET',AllCelendarsLink, FAccount.Auth,'2.0'))
   else
-    Doc.LoadFromStream(SendRequest('GET',OwnerCelendarLink, FAccount.Auth));
+    Doc.LoadFromStream(SendRequest('GET',OwnerCelendarLink, FAccount.Auth,'2.0'));
   for i := 0 to Doc.DocumentElement.ChildNodes.Count - 1 do
-    if LowerCase(Doc.DocumentElement.ChildNodes[i].NodeName) = 'entry' then
+    if LowerCase(Doc.DocumentElement.ChildNodes[i].NodeName) = EntryNodeName then
       FCelendars.Add(TCelendar.Create(Doc.DocumentElement.ChildNodes[i], FAccount.Auth));
 end;
 
@@ -459,7 +413,7 @@ end;
 
 procedure TCelendar.AddLink(const aNode: IXMLNode);
 var
-  Link: TCelendarLink;
+  Link: TEntryLink;
 begin
   try
     Link.rel := aNode.Attributes['rel'];
@@ -474,13 +428,14 @@ end;
 function TCelendar.AddSingleEvent(aEvent: TCelenrarEvent): boolean;
 var
   aDoc: IXMLDocument;
-  Root, WhenNode: IXMLNode;
+  Root : IXMLNode;
+  WhenNode:TXMLNode;
   i: integer;
  Stream: TStream;
 begin
   aDoc := NewXMLDocument();
   aDoc.Active := true;
-  Root := aDoc.AddChild('entry');
+  Root := aDoc.AddChild(EntryNodeName);
   for i := 0 to High(clNameSpaces) - 1 do
     Root.DeclareNamespace(clNameSpaces[i, 0], clNameSpaces[i, 1]);
   InsertCategory(Root);
@@ -489,15 +444,15 @@ begin
   aEvent.Ftransparency.AddToXML(Root);
   aEvent.FeventStatus.AddToXML(Root);
   aEvent.Fwhere.AddToXML(Root);
-  WhenNode := aEvent.Fwhen.AddToXML(Root);
+ // WhenNode := aEvent.Fwhen.AddToXML(Root);
   if aEvent.Freminders.Count > 0 then
     for i := 0 to aEvent.Freminders.Count - 1 do
-      aEvent.Freminders[i].AddToXML(WhenNode);
+ //     aEvent.Freminders[i].AddToXML(WhenNode);
  Stream:=TStringStream.Create('');
  aDoc.SaveToStream(Stream);
 if length(GetEventFeedLink) > 0 then
- aDoc.LoadFromStream(SendRequest('POST', GetEventFeedLink, FAuth,Stream));
-Result:=aDoc.DocumentElement.ChildNodes.FindNode('entry')<>nil;
+ aDoc.LoadFromStream(SendRequest('POST', GetEventFeedLink, FAuth,ClProtocolVer,Stream));
+Result:=aDoc.DocumentElement.ChildNodes.FindNode(EntryNodeName)<>nil;
 end;
 
 constructor TCelendar.Create(const ByNode: IXMLNode; aAuth: string);
@@ -505,20 +460,54 @@ begin
   inherited Create;
   FAuth := aAuth;
   FLinks := TCelendarLinksList.Create;
-  FAuthor := TAuthorTag.Create(nil);
-  Ftimezone := TgCaltimezone.Create(nil);
-  Fhidden := TgCalHidden.Create(nil);
-  FVColor := TgCalcolor.Create(nil);
-  Faccesslevel := TgCalAccessLevel.Create(nil);
-  FgCaltimesCleaned := TgCaltimesCleaned.Create(nil);
-  FTitle := TTextTag.Create(nil);
-  FDescription := TTextTag.Create(nil);
-  Fwhere := TgdWhere.Create(nil);
+  FAuthor := TAuthorTag.Create;
+  Ftimezone := TgCaltimezone.Create;
+  Fhidden := TgCalHidden.Create;
+  FVColor := TgCalcolor.Create;
+  Faccesslevel := TgCalAccessLevel.Create;
+  FgCaltimesCleaned := TgCaltimesCleaned.Create;
+  FTitle := TTextTag.Create;
+  FDescription := TTextTag.Create;
+  Fwhere := TgdWhere.Create;
   FEvents := TList<TCelenrarEvent>.Create;
-  Fselected := TgCalselected.Create(nil);
+  Fselected := TgCalselected.Create;
   if ByNode = nil then
     Exit;
   ParseXML(ByNode);
+end;
+
+function TCelendar.DeleteThis: boolean;
+var i:integer;
+begin
+  for I := 0 to FLinks.Count - 1 do
+    begin
+      if FLinks[i].rel='edit' then
+        begin
+          with THTTPSend.Create do
+            begin
+              Headers.Add('GData-Version: '+ClProtocolVer);
+              Headers.Add('Authorization: GoogleLogin auth=' + FAuth);
+              MimeType := 'application/atom+xml';
+              Headers.Add('If-Match: ' + FEtag);
+              if HTTPMethod('DELETE',FLinks[i].href) then
+                begin
+                  if (ResultCode > 200) and (ResultCode < 400) then
+                    begin
+                      Headers.Clear;
+                      Headers.Add('GData-Version: '+ClProtocolVer);
+                      Headers.Add('Authorization: GoogleLogin auth=' + FAuth);
+                      MimeType := 'application/atom+xml';
+                      Headers.Add('If-Match: ' + FEtag);
+                      HTTPMethod('DELETE', GetNewLocationURL(Headers));
+                    end;
+                  ShowMessage(IntToStr(ResultCode));
+                  Result:=ResultCode=200;
+                end
+              else
+                Result:=false;
+            end;
+        end;
+    end;
 end;
 
 function TCelendar.GetDescription: string;
@@ -554,7 +543,7 @@ begin
     end;
 end;
 
-function TCelendar.GetLink(index: integer): TCelendarLink;
+function TCelendar.GetLink(index: integer): TEntryLink;
 begin
   Result := FLinks.Items[index];
 end;
@@ -653,13 +642,13 @@ FEvents.Clear;
     if FLinks[i].rel = 'alternate' then
     begin
       aDoc := NewXMLDocument();
-      aDoc.LoadFromStream(SendRequest('GET', FLinks[i].href, FAuth));
+      aDoc.LoadFromStream(SendRequest('GET', FLinks[i].href, FAuth,ClProtocolVer));
       break;
     end;
   if not aDoc.IsEmptyDoc then
   begin
     for i := 0 to aDoc.DocumentElement.ChildNodes.Count - 1 do
-      if aDoc.DocumentElement.ChildNodes[i].NodeName = 'entry' then
+      if aDoc.DocumentElement.ChildNodes[i].NodeName = EntryNodeName then
         FEvents.Add(TCelenrarEvent.Create(aDoc.DocumentElement.ChildNodes[i],
             FAuth));
   end;
@@ -687,7 +676,7 @@ begin
   Fwhere.AddToXML(Root);
   with THTTPSend.Create do
   begin
-    Headers.Add('GData-Version: 2');
+    Headers.Add('GData-Version: '+ClProtocolVer);
     Headers.Add('Authorization: GoogleLogin auth=' + GoogleAuth);
     MimeType := 'application/atom+xml';
     aDoc.SaveToStream(Document);
@@ -699,7 +688,7 @@ begin
       aDoc.SaveToStream(Document);
       Headers.Clear;
       MimeType := 'application/atom+xml';
-      Headers.Add('GData-Version: 2');
+      Headers.Add('GData-Version: '+ClProtocolVer);
       Headers.Add('Authorization: GoogleLogin auth=' + GoogleAuth);
       HTTPMethod('POST', tmpURL);
     end;
@@ -712,7 +701,7 @@ begin
   FDescription.Value:=aDescr;
 end;
 
-procedure TCelendar.SetLink(i: integer; Link: TCelendarLink);
+procedure TCelendar.SetLink(i: integer; Link: TEntryLink);
 begin
   if FLinks.Contains(Link) then
   begin
@@ -734,7 +723,7 @@ begin
   if Root = nil then
     Exit;
   Result := Root.AddChild(cgCalTagNames[ord(egCaltimezone)]);
-  Result.Attributes['value'] := FValue;
+  Result.Attributes[NodeValueAttr] := FValue;
 end;
 
 constructor TgCaltimezone.Create(const ByNode: IXMLNode);
@@ -753,7 +742,7 @@ begin
     raise Exception.Create
       (Format(rcErrCompNodes, [cgCalTagNames[ord(egCaltimezone)]]));
   try
-    FValue := Node.Attributes['value'];
+    FValue := Node.Attributes[NodeValueAttr];
     for i := 0 to High(GoogleTimeZones) - 1 do
     begin
       if Trim(LowerCase(GoogleTimeZones[i, 0])) = Trim(LowerCase(FValue)) then
@@ -767,36 +756,6 @@ begin
   end;
 end;
 
-{ TAuthorTag }
-
-constructor TAuthorTag.Create(ByNode: IXMLNode);
-begin
-  inherited Create;
-  if ByNode = nil then
-    Exit;
-  ParseXML(ByNode);
-end;
-
-procedure TAuthorTag.ParseXML(Node: IXMLNode);
-var
-  i: integer;
-begin
-  try
-    for i := 0 to Node.ChildNodes.Count - 1 do
-    begin
-      if Node.ChildNodes[i].NodeName = 'name' then
-        FAuthor := Node.ChildNodes[i].Text
-      else
-        if Node.ChildNodes[i].NodeName = 'email' then
-          FEmail := Node.ChildNodes[i].Text
-        else
-          if Node.ChildNodes[i].NodeName = 'uid' then
-            FUID:=Node.ChildNodes[i].Text;
-    end;
-  except
-    Exception.Create(Format(rcErrPrepareNode, [Node.NodeName]));
-  end;
-end;
 
 { TgCalhidden }
 
@@ -805,7 +764,7 @@ begin
   if Root = nil then
     Exit;
   Result := Root.AddChild(cgCalTagNames[ord(egCalhidden)]);
-  Result.Attributes['value'] := FValue;
+  Result.Attributes[NodeValueAttr] := FValue;
 end;
 
 constructor TgCalHidden.Create(const ByNode: IXMLNode);
@@ -822,7 +781,7 @@ begin
     raise Exception.Create
       (Format(rcErrCompNodes, [cgCalTagNames[ord(egCalhidden)]]));
   try
-    FValue := Node.Attributes['value'];
+    FValue := Node.Attributes[NodeValueAttr];
   except
     Exception.Create(Format(rcErrPrepareNode, [Node.NodeName]));
   end;
@@ -835,7 +794,7 @@ begin
   if Root = nil then
     Exit;
   Result := Root.AddChild(cgCalTagNames[ord(egCalcolor)]);
-  Result.Attributes['value'] := FValue;
+  Result.Attributes[NodeValueAttr] := FValue;
 end;
 
 constructor TgCalcolor.Create(const ByNode: IXMLNode);
@@ -851,7 +810,7 @@ begin
     raise Exception.Create
       (Format(rcErrCompNodes, [cgCalTagNames[ord(egCalcolor)]]));
   try
-    FValue := Node.Attributes['value'];
+    FValue := Node.Attributes[NodeValueAttr];
     FColor := HexToColor(FValue);
   except
     Exception.Create(Format(rcErrPrepareNode, [Node.NodeName]));
@@ -880,7 +839,7 @@ begin
     raise Exception.Create
       (Format(rcErrCompNodes, [cgCalTagNames[ord(egCalselected)]]));
   try
-    FValue := Node.Attributes['value'];
+    FValue := Node.Attributes[NodeValueAttr];
   except
     Exception.Create(Format(rcErrPrepareNode, [Node.NodeName]));
   end;
@@ -902,7 +861,7 @@ begin
     raise Exception.Create(Format(rcErrCompNodes,
         [cgCalTagNames[ord(egCalaccesslevel)]]));
   try
-    FValue := Node.Attributes['value'];
+    FValue := Node.Attributes[NodeValueAttr];
     if AnsiIndexStr(FValue, cgCalaccesslevel) <> -1 then
       FLevel := TAccessLevel(AnsiIndexStr(FValue, cgCalaccesslevel))
     else
@@ -961,48 +920,7 @@ begin
     raise Exception.Create(Format(rcErrCompNodes,
         [cgCalTagNames[ord(egCaltimesCleaned)]]));
   try
-    FValue := Node.Attributes['value'];
-  except
-    Exception.Create(Format(rcErrPrepareNode, [Node.NodeName]));
-  end;
-end;
-
-{ TTitleTag }
-
-function TTextTag.AddToXML(Root: IXMLNode): IXMLNode;
-var
-  i: integer;
-begin
-  Result:= Root.OwnerDocument.CreateElement(FName, clNameSpaces[0, 1]);
-  Result.Text := AnsiToUtf8(FValue);
-  for i := 0 to FAttributes.Count - 1 do
-    Result.Attributes[FAttributes[i].Name] := FAttributes[i].Value;
-  Root.ChildNodes.Add(Result);
-end;
-
-constructor TTextTag.Create(const ByNode: IXMLNode);
-begin
-  inherited Create;
-  FAttributes := TList<TAttribute>.Create;
-  if ByNode = nil then
-    Exit;
-  ParseXML(ByNode);
-end;
-
-procedure TTextTag.ParseXML(Node: IXMLNode);
-var
-  i: integer;
-  Attr: TAttribute;
-begin
-  try
-    FValue := Node.Text;
-    FName := Node.NodeName;
-    for i := 0 to Node.AttributeNodes.Count - 1 do
-    begin
-      Attr.Name := Node.AttributeNodes[i].NodeName;
-      Attr.Value := Node.Attributes[Attr.Name];
-      FAttributes.Add(Attr)
-    end;
+    FValue := Node.Attributes[NodeValueAttr];
   except
     Exception.Create(Format(rcErrPrepareNode, [Node.NodeName]));
   end;
@@ -1015,7 +933,7 @@ begin
   if Root = nil then
     Exit;
   Result := Root.AddChild(cgCalTagNames[ord(egCalguestsCanInviteOthers)]);
-  Result.Attributes['value'] := LowerCase(BoolToStr(FValue, true));
+  Result.Attributes[NodeValueAttr] := LowerCase(BoolToStr(FValue, true));
 end;
 
 constructor TgCalguestsCanInviteOthers.Create(const ByNode: IXMLNode);
@@ -1032,7 +950,7 @@ begin
     raise Exception.Create(Format(rcErrCompNodes, [cgCalTagNames[ord
           (egCalguestsCanInviteOthers)]]));
   try
-    FValue := Node.Attributes['value'];
+    FValue := Node.Attributes[NodeValueAttr];
   except
     Exception.Create(Format(rcErrPrepareNode, [Node.NodeName]));
   end;
@@ -1045,7 +963,7 @@ begin
   if Root = nil then
     Exit;
   Result := Root.AddChild(cgCalTagNames[ord(egCalguestsCanModify)]);
-  Result.Attributes['value'] := LowerCase(BoolToStr(FValue, true));
+  Result.Attributes[NodeValueAttr] := LowerCase(BoolToStr(FValue, true));
 end;
 
 constructor TgCalguestsCanModify.Create(const ByNode: IXMLNode);
@@ -1062,7 +980,7 @@ begin
     raise Exception.Create(Format(rcErrCompNodes,
         [cgCalTagNames[ord(egCalguestsCanModify)]]));
   try
-    FValue := Node.Attributes['value'];
+    FValue:=Node.Attributes[NodeValueAttr];
   except
     Exception.Create(Format(rcErrPrepareNode, [Node.NodeName]));
   end;
@@ -1075,7 +993,7 @@ begin
   if Root = nil then
     Exit;
   Result := Root.AddChild(cgCalTagNames[ord(egCalguestsCanSeeGuests)]);
-  Result.Attributes['value'] := LowerCase(BoolToStr(FValue, true));
+  Result.Attributes[NodeValueAttr] := LowerCase(BoolToStr(FValue, true));
 end;
 
 constructor TgCalguestsCanSeeGuests.Create(const ByNode: IXMLNode);
@@ -1092,7 +1010,7 @@ begin
     raise Exception.Create(Format(rcErrCompNodes,
         [cgCalTagNames[ord(egCalguestsCanSeeGuests)]]));
   try
-    FValue := Node.Attributes['value'];
+    FValue := Node.Attributes[NodeValueAttr];
   except
     Exception.Create(Format(rcErrPrepareNode, [Node.NodeName]));
   end;
@@ -1104,8 +1022,8 @@ function TgCalsequence.AddToXML(Root: IXMLNode): IXMLNode;
 begin
   if Root = nil then
     Exit;
-  Result := Root.AddChild(cgCalTagNames[ord(egCalguestsCanSeeGuests)]);
-  Result.Attributes['value'] := IntToStr(FValue);
+  Result := Root.AddChild(cgCalTagNames[ord(egCalsequence)]);
+  Result.Attributes[NodeValueAttr] := IntToStr(FValue);
 end;
 
 constructor TgCalsequence.Create(const ByNode: IXMLNode);
@@ -1122,7 +1040,7 @@ begin
     raise Exception.Create
       (Format(rcErrCompNodes, [cgCalTagNames[ord(egCalsequence)]]));
   try
-    FValue := Node.Attributes['value'];
+    FValue := Node.Attributes[NodeValueAttr];
   except
     Exception.Create(Format(rcErrPrepareNode, [Node.NodeName]));
   end;
@@ -1134,8 +1052,8 @@ function TgCaluid.AddToXML(Root: IXMLNode): IXMLNode;
 begin
   if Root = nil then
     Exit;
-  Result := Root.AddChild(cgCalTagNames[ord(egCalguestsCanSeeGuests)]);
-  Result.Attributes['value'] := FValue;
+  Result := Root.AddChild(cgCalTagNames[ord(egCaluid)]);
+  Result.Attributes[NodeValueAttr] := FValue;
 end;
 
 constructor TgCaluid.Create(const ByNode: IXMLNode);
@@ -1152,7 +1070,7 @@ begin
     raise Exception.Create
       (Format(rcErrCompNodes, [cgCalTagNames[ord(egCaluid)]]));
   try
-    FValue := Node.Attributes['value'];
+    FValue := Node.Attributes[NodeValueAttr];
   except
     Exception.Create(Format(rcErrPrepareNode, [Node.NodeName]));
   end;
@@ -1164,8 +1082,8 @@ function TgCalsuppressReplyNotifications.AddToXML(Root: IXMLNode): IXMLNode;
 begin
   if Root = nil then
     Exit;
-  Result := Root.AddChild(cgCalTagNames[ord(egCalguestsCanSeeGuests)]);
-  Result.Attributes['value'] := BoolToStr(FValue, true);
+  Result := Root.AddChild(cgCalTagNames[ord(egCalsuppressReplyNotifications)]);
+  Result.Attributes[NodeValueAttr] := BoolToStr(FValue, true);
 end;
 
 constructor TgCalsuppressReplyNotifications.Create(const ByNode: IXMLNode);
@@ -1182,7 +1100,7 @@ begin
     raise Exception.Create(Format(rcErrCompNodes, [cgCalTagNames[ord
           (egCalsuppressReplyNotifications)]]));
   try
-    FValue := Node.Attributes['value'];
+    FValue := Node.Attributes[NodeValueAttr];
   except
     Exception.Create(Format(rcErrPrepareNode, [Node.NodeName]));
   end;
@@ -1194,8 +1112,8 @@ function TgCalsyncEvent.AddToXML(Root: IXMLNode): IXMLNode;
 begin
   if Root = nil then
     Exit;
-  Result := Root.AddChild(cgCalTagNames[ord(egCalguestsCanSeeGuests)]);
-  Result.Attributes['value'] := BoolToStr(FValue, true);
+  Result := Root.AddChild(cgCalTagNames[ord(egCalsyncEvent)]);
+  Result.Attributes[NodeValueAttr] := BoolToStr(FValue, true);
 end;
 
 constructor TgCalsyncEvent.Create(const ByNode: IXMLNode);
@@ -1212,7 +1130,7 @@ begin
     raise Exception.Create
       (Format(rcErrCompNodes, [cgCalTagNames[ord(egCalsyncEvent)]]));
   try
-    FValue := Node.Attributes['value'];
+    FValue := Node.Attributes[NodeValueAttr];
   except
     Exception.Create(Format(rcErrPrepareNode, [Node.NodeName]));
   end;
@@ -1222,7 +1140,7 @@ end;
 
 procedure TCelenrarEvent.AddLink(const aNode: IXMLNode);
 var
-  Link: TCelendarLink;
+  Link: TEntryLink;
 begin
   try
     Link.rel := aNode.Attributes['rel'];
@@ -1250,31 +1168,29 @@ begin
   FAuth := aAuth;
   Attr.Name:='type';
   Attr.Value:='text';
-  FTitle := TTextTag.Create(nil);
+  FTitle := TTextTag.Create;
   FTitle.Name:='title';
   FTitle.Attributes.Add(Attr);
-  FDescription := TTextTag.Create(nil);
+  FDescription := TTextTag.Create;
   FDescription.Name:='content';
-  FDescription.FAttributes.Add(Attr);
+  FDescription.Attributes.Add(Attr);
   FLinks := TCelendarLinksList.Create; // ссылки события
-  FAuthor := TAuthorTag.Create(nil);
-  FeventStatus := TgdEventStatus.Create(nil);
-  Fwhere := TgdWhere.Create(nil);
-  Fwhen := TgdWhen.Create(nil);
-  Fwho := TgdWho.Create(nil);
-  Frecurrence := TgdRecurrence.Create(nil);
+  FAuthor := TAuthorTag.Create;
+  FeventStatus := TgdEventStatus.Create;
+  Fwhere := TgdWhere.Create;
+  Fwhen := TgdWhen.Create;
+  Fwho := TgdWho.Create;
+  Frecurrence := TgdRecurrence.Create;
   Freminders := TList<TgdReminder>.Create;
-  Ftransparency := TgdTransparency.Create(nil);
-  Fvisibility := TgdVisibility.Create(nil);
-  FguestsCanInviteOthers := TgCalguestsCanInviteOthers.Create(nil);
-  FguestsCanModify := TgCalguestsCanModify.Create(nil);
-  FguestsCanSeeGuests := TgCalguestsCanSeeGuests.Create(nil);
-  Fsequence := TgCalsequence.Create(nil);
-  Fuid := TgCaluid.Create(nil);
-
+  Ftransparency := TgdTransparency.Create;
+  Fvisibility := TgdVisibility.Create;
+  FguestsCanInviteOthers := TgCalguestsCanInviteOthers.Create;
+  FguestsCanModify := TgCalguestsCanModify.Create;
+  FguestsCanSeeGuests := TgCalguestsCanSeeGuests.Create;
+  Fsequence := TgCalsequence.Create;
+  Fuid := TgCaluid.Create;
   if ByNode <> nil then
     ParseXML(ByNode);
-
 end;
 
 function TCelenrarEvent.DeleteThis:boolean;
@@ -1283,7 +1199,7 @@ begin
   if length(GetEditURL) > 0 then
     with THTTPSend.Create do
     begin
-      Headers.Add('GData-Version: 2');
+      Headers.Add('GData-Version: '+ClProtocolVer);
       Headers.Add('Authorization: GoogleLogin auth=' + FAuth);
       MimeType := 'application/atom+xml';
       Headers.Add('If-Match: ' + FEtag);
@@ -1294,7 +1210,7 @@ begin
         Document.Clear;
         Headers.Clear;
         MimeType := 'application/atom+xml';
-        Headers.Add('GData-Version: 2');
+        Headers.Add('GData-Version: '+ClProtocolVer);
         Headers.Add('Authorization: GoogleLogin auth=' + FAuth);
         Headers.Add('If-Match: ' + FEtag);
         HTTPMethod('DELETE', tmpURL);
@@ -1310,7 +1226,7 @@ end;
 
 function TCelenrarEvent.GetDescription: string;
 begin
- Result:=FDescription.FValue
+ Result:=FDescription.Value
 end;
 
 function TCelenrarEvent.GetEditURL: string;
@@ -1330,7 +1246,7 @@ end;
 
 function TCelenrarEvent.GetTitle: string;
 begin
-  result:=FTitle.FValue;
+  result:=FTitle.Value;
 end;
 
 procedure TCelenrarEvent.InsertCategory(Root: IXMLNode);
@@ -1371,7 +1287,7 @@ begin
       8:Fwhere.ParseXML(Node.ChildNodes[i]);
       9:Fwho.ParseXML(Node.ChildNodes[i]);
       10:begin
-          Fwhen.ParseXML(Node.ChildNodes[i]);
+        //!!!!!  Fwhen.ParseXML(Node.ChildNodes[i]);
           if Node.ChildNodes[i].ChildNodes.Count > 0 then
             begin
               for j := 0 to Node.ChildNodes[i].ChildNodes.Count - 1 do
@@ -1398,7 +1314,7 @@ var
 begin
   with THTTPSend.Create do
   begin
-    Headers.Add('GData-Version: 2');
+    Headers.Add('GData-Version: '+ClProtocolVer);
     Headers.Add('Authorization: GoogleLogin auth=' + FAuth);
     MimeType := 'application/atom+xml';
     HTTPMethod('HEAD', aLink);
@@ -1408,7 +1324,7 @@ begin
       Document.Clear;
       Headers.Clear;
       MimeType := 'application/atom+xml';
-      Headers.Add('GData-Version: 2');
+      Headers.Add('GData-Version: '+ClProtocolVer);
       Headers.Add('Authorization: GoogleLogin auth=' + FAuth);
       HTTPMethod('HEAD', tmpURL);
     end;
@@ -1430,7 +1346,7 @@ end;
 
 procedure TCelenrarEvent.SetTitle(aTitle: string);
 begin
-  FTitle.FValue:=aTitle;
+  FTitle.Value:=aTitle;
 end;
 
 function TCelenrarEvent.Update: boolean;
@@ -1443,7 +1359,7 @@ begin
   aDoc := NewXMLDocument();
   aDoc.Active := true;
   aDoc.Options := [doNodeAutoIndent];
-  Root := aDoc.AddChild('entry');
+  Root := aDoc.AddChild(EntryNodeName);
   for i := 0 to High(clNameSpaces) do
     Root.DeclareNamespace(clNameSpaces[i, 0], clNameSpaces[i, 1]);
   Root.Attributes['gd:etag'] := FEtag;
@@ -1456,7 +1372,7 @@ begin
   FDescription.AddToXML(Root);
   FeventStatus.AddToXML(Root);
   Fwhere.AddToXML(Root);
-  Node:=Fwhen.AddToXML(Root);
+//!!!!!!!!!!!!  Node:=Fwhen.AddToXML(Root);
 
   if Frecurrence.Text.Count=0 then
     begin
@@ -1480,7 +1396,7 @@ begin
   if length(GetEditURL) > 0 then
     with THTTPSend.Create do
     begin
-      Headers.Add('GData-Version: 2');
+      Headers.Add('GData-Version: '+ClProtocolVer);
       Headers.Add('Authorization: GoogleLogin auth=' + FAuth);
       MimeType := 'application/atom+xml';
       Headers.Add('If-Match: ' + FEtag);
@@ -1493,7 +1409,7 @@ begin
           aDoc.SaveToStream(Document);
           Headers.Clear;
           MimeType := 'application/atom+xml';
-          Headers.Add('GData-Version: 2');
+          Headers.Add('GData-Version: '+ClProtocolVer);
           Headers.Add('Authorization: GoogleLogin auth=' + FAuth);
           Headers.Add('If-Match: ' + FEtag);
           HTTPMethod('PUT', tmpURL);
