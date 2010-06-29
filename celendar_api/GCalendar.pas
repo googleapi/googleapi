@@ -748,7 +748,7 @@ begin
       if Trim(LowerCase(GoogleTimeZones[i, 0])) = Trim(LowerCase(FValue)) then
       begin
         FDescription := GoogleTimeZones[i, 1];
-        FGMT := StrToFloat(GoogleTimeZones[i, 2]);
+        FGMT := StrToFloat(stringreplace(GoogleTimeZones[i,2],',',DecimalSeparator,[]));
       end;
     end;
   except
