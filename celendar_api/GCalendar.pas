@@ -427,23 +427,22 @@ end;
 
 function TCelendar.AddSingleEvent(aEvent: TCelenrarEvent): boolean;
 var
-  aDoc: IXMLDocument;
-  Root : IXMLNode;
+  aDoc: TNativeXML;
+  Root : TXMLNode;
   WhenNode:TXMLNode;
   i: integer;
  Stream: TStream;
 begin
-  aDoc := NewXMLDocument();
-  aDoc.Active := true;
-  Root := aDoc.AddChild(EntryNodeName);
+  aDoc := TNativeXML.Create;
+  aDoc.CreateName(EntryNodeName);
   for i := 0 to High(clNameSpaces) - 1 do
-    Root.DeclareNamespace(clNameSpaces[i, 0], clNameSpaces[i, 1]);
-  InsertCategory(Root);
-  aEvent.FTitle.AddToXML(Root);
-  aEvent.FDescription.AddToXML(Root);
-  aEvent.Ftransparency.AddToXML(Root);
-  aEvent.FeventStatus.AddToXML(Root);
-  aEvent.Fwhere.AddToXML(Root);
+    aDoc.Root.WriteAttributeString(clNameSpaces[i, 0], clNameSpaces[i, 1]);
+  InsertCategory(aDoc.Root);
+  aEvent.FTitle.AddToXML(aDoc.Root);
+  aEvent.FDescription.AddToXML(aDoc.Root);
+  aEvent.Ftransparency.AddToXML(aDoc.Root);
+  aEvent.FeventStatus.AddToXML(aDoc.Root);
+  aEvent.Fwhere.AddToXML(aDoc.Root);
  // WhenNode := aEvent.Fwhen.AddToXML(Root);
   if aEvent.Freminders.Count > 0 then
     for i := 0 to aEvent.Freminders.Count - 1 do
@@ -452,7 +451,7 @@ begin
  aDoc.SaveToStream(Stream);
 if length(GetEventFeedLink) > 0 then
  aDoc.LoadFromStream(SendRequest('POST', GetEventFeedLink, FAuth,ClProtocolVer,Stream));
-Result:=aDoc.DocumentElement.ChildNodes.FindNode(EntryNodeName)<>nil;
+Result:=aDoc.Root.FindNode(EntryNodeName)<>nil;
 end;
 
 constructor TCelendar.Create(const ByNode: IXMLNode; aAuth: string);
