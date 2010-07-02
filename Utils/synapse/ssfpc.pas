@@ -1,9 +1,9 @@
 {==============================================================================|
-| Project : Ararat Synapse                                       | 001.001.000 |
+| Project : Ararat Synapse                                       | 001.001.002 |
 |==============================================================================|
 | Content: Socket Independent Platform Layer - FreePascal definition include   |
 |==============================================================================|
-| Copyright (c)2006-2009, Lukas Gebauer                                        |
+| Copyright (c)2006-2010, Lukas Gebauer                                        |
 | All rights reserved.                                                         |
 |                                                                              |
 | Redistribution and use in source and binary forms, with or without           |
@@ -33,7 +33,7 @@
 | DAMAGE.                                                                      |
 |==============================================================================|
 | The Initial Developer of the Original Code is Lukas Gebauer (Czech Republic).|
-| Portions created by Lukas Gebauer are Copyright (c)2006-2009.                |
+| Portions created by Lukas Gebauer are Copyright (c)2006-2010.                |
 | All Rights Reserved.                                                         |
 |==============================================================================|
 | Contributor(s):                                                              |
@@ -113,6 +113,7 @@ const
   IPPROTO_UDP    =   17;	{ User Datagram Protocol		}
   IPPROTO_IPV6   =   41;
   IPPROTO_ICMPV6 =   58;
+  IPPROTO_RM     =  113;
 
   IPPROTO_RAW    =   255;
   IPPROTO_MAX    =   256;
@@ -715,7 +716,7 @@ var
               if IN6_IS_ADDR_UNSPECIFIED(@a6[1]) then
                 Resolvename6(ip, a6);
             end;
-            if IN6_IS_ADDR_UNSPECIFIED(@a6[1]) then
+            if not IN6_IS_ADDR_UNSPECIFIED(@a6[1]) then
             begin
               Sin.sin_family := AF_INET6;
               sin.sin6_addr := a6[1];

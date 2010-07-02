@@ -3,7 +3,7 @@
 |==============================================================================|
 | Content: misc. procedures and functions                                      |
 |==============================================================================|
-| Copyright (c)1999-2008, Lukas Gebauer                                        |
+| Copyright (c)1999-2010, Lukas Gebauer                                        |
 | All rights reserved.                                                         |
 |                                                                              |
 | Redistribution and use in source and binary forms, with or without           |
@@ -33,7 +33,7 @@
 | DAMAGE.                                                                      |
 |==============================================================================|
 | The Initial Developer of the Original Code is Lukas Gebauer (Czech Republic).|
-| Portions created by Lukas Gebauer are Copyright (c) 2002-2008.               |
+| Portions created by Lukas Gebauer are Copyright (c) 2002-2010.               |
 | All Rights Reserved.                                                         |
 |==============================================================================|
 | Contributor(s):                                                              |
@@ -50,6 +50,11 @@
 {$Q-}
 {$H+}
 
+{$IFDEF UNICODE}
+  {$WARN IMPLICIT_STRING_CAST OFF}
+  {$WARN IMPLICIT_STRING_CAST_LOSS OFF}
+{$ENDIF}
+
 unit synamisc;
 
 interface
@@ -63,12 +68,15 @@ interface
 {$ENDIF}
 
 uses
-  synautil, blcksock, SysUtils, Classes,
+  synautil, blcksock, SysUtils, Classes
 {$IFDEF LINUX}
-  Libc;
+  {$IFNDEF FPC}
+  , Libc
+  {$ENDIF}
 {$ELSE}
-  Windows;
+  , Windows
 {$ENDIF}
+;
 
 Type
   {:@abstract(This record contains information about proxy setting.)}
