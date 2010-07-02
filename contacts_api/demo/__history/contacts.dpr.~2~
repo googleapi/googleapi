@@ -1,0 +1,23 @@
+program contacts;
+
+uses
+  Forms,
+  main in 'main.pas' {Form3},
+  GData in '..\celendar_api\GData.pas',
+  GDataCommon in '..\celendar_api\GDataCommon.pas',
+  GContacts in 'GContacts.pas',
+  NativeXml in '..\Utils\NativeXml.pas',
+  GHelper in '..\celendar_api\GHelper.pas',
+  GoogleLogin in '..\celendar_api\GoogleLogin.pas',
+  Profile in 'Profile.pas' {ProfileForm},
+  Common in 'Common.pas';
+
+{$R *.res}
+
+begin
+  Application.Initialize;
+  Application.MainFormOnTaskbar := True;
+  Application.CreateForm(TForm3, Form3);
+  Application.CreateForm(TProfileForm, ProfileForm);
+  Application.Run;
+end.

@@ -1,0 +1,14 @@
+HTTP/1.0 200 OK
+Content-Type: application/atom+xml; charset=UTF-8; type=feed
+Expires: Fri, 02 Jul 2010 20:13:16 GMT
+Date: Fri, 02 Jul 2010 20:13:16 GMT
+Cache-Control: private, max-age=0, must-revalidate, no-transform
+Vary: Accept, X-GData-Authorization, GData-Version
+GData-Version: 3.0
+ETag: W/"C0INR3gycSt7ImA9WxFbEU0."
+Last-Modified: Fri, 02 Jul 2010 20:13:16 GMT
+X-Content-Type-Options: nosniff
+X-Frame-Options: SAMEORIGIN
+X-XSS-Protection: 1; mode=block
+Server: GSE
+
