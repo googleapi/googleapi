@@ -2,7 +2,7 @@ unit GoogleLogin;
 
 interface
 
-uses WinInet, strutils,  Windows, Messages, SysUtils, Variants, Classes, Dialogs, StdCtrls;
+uses WinInet, strutils, SysUtils, Classes;
 
 resourcestring
  rcNone = 'Аутентификация не производилась или сброшена';
@@ -29,6 +29,20 @@ const
                   INTERNET_FLAG_PRAGMA_NOCACHE or
                   INTERNET_FLAG_KEEP_CONNECTION;
 
+ Errors : array [0..8] of string = ('BadAuthentication','NotVerified',
+  'TermsNotAgreed','CaptchaRequired','Unknown','AccountDeleted','AccountDisabled',
+  'ServiceDisabled','ServiceUnavailable');
+
+type
+  TServices = (tsNone,tsAnalytics,tsApps,tsGBase,tsSites,tsBlogger,tsBookSearch,
+               tsCelendar,tcCodeSearch,tsContacts,tsDocLists,tsFinance,
+               tsGMailFeed,tsHealth,tsMaps,tsPicasa,tsSidewiki,tsSpreadsheets,
+               tsWebmaster,tsYouTube);
+
+const
+  ServiceIDs: array[0..19]of string=('xapi','analytics','apps','gbase',
+  'jotspot','blogger','print','cl','codesearch','cp','writely','finance',
+  'mail','health','local','lh2','annotateweb','wise','sitemaps','youtube');
 
 type
   TAccountType = (atNone ,atGOOGLE, atHOSTED, atHOSTED_OR_GOOGLE);
@@ -51,7 +65,7 @@ type
     FSID          : string;//в настоящее время не используется
     FLSID         : string;//в настоящее время не используется
     FAuth         : string;
-    FService      : string;//сервис к которому необходимо получить доступ
+    FService      : TServices;//сервис к которому необходимо получить доступ
     FSource       : string;//имя вызывающего приложения
     FLogintoken   : string;
     FLogincaptcha : string;
@@ -65,19 +79,19 @@ type
     function GetResultText:string;
     procedure SetEmail(cEmail:string);
     procedure SetPassword(cPassword:string);
-    procedure SetService(cService:string);
+    procedure SetService(cService:TServices);
     procedure SetSource(cSource: string);
     procedure SetCaptcha(cCaptcha:string);
   public
     constructor Create(const aEmail, aPassword: string);
     function Login(aLoginToken:string='';aLoginCaptcha:string=''):TLoginResult;
-    procedure CloseConect;//удаляет все данные по авторизации
+    procedure Disconnect;//удаляет все данные по авторизации
     property AccountType: TAccountType read FAccountType write FAccountType;
     property LastResult: TLoginResult read FLastResult;
     property LastResultText:string read GetResultText;
     property Email: string read FEmail write SetEmail;
     property Password:string read FPassword write SetPassword;
-    property Service: string read FService write SetService;
+    property Service: TServices read FService write SetService;
     property Source: string read FSource write FSource;
     property Auth: string read FAuth;
     property SID: string read FSID;
@@ -92,7 +106,7 @@ implementation
 
 { TGoogleLogin }
 
-procedure TGoogleLogin.CloseConect;
+procedure TGoogleLogin.Disconnect;
 begin
  FAccountType:=atNone;
  FLastResult:=lrNone;
@@ -189,34 +203,8 @@ function TGoogleLogin.GetLoginError(const str: string): TLoginResult;
 var ErrorText:string;
 begin
 //получили текст ошибки
- ErrorText:=Trim(copy(str,pos('=',str)+1,Length(str)-pos('=',str)));
-//анализируем
- if ErrorText='BadAuthentication' then
-   Result:=lrBadAuthentication
- else
-   if ErrorText='NotVerified' then
-   Result:=lrNotVerified
- else
- if ErrorText='TermsNotAgreed' then
-   Result:=lrTermsNotAgreed
- else
- if ErrorText='CaptchaRequired' then
-   Result:=lrCaptchaRequired
- else
- if ErrorText='Unknown' then
-   Result:=lrUnknown
- else
- if ErrorText='AccountDeleted' then
-   Result:=lrAccountDeleted
- else
- if ErrorText='AccountDisabled' then
-   Result:=lrAccountDisabled
- else
- if ErrorText='ServiceDisabled' then
-   Result:=lrServiceDisabled
- else
- if ErrorText='ServiceUnavailable' then
-   Result:=lrServiceUnavailable
+  ErrorText:=Trim(copy(str,pos('=',str)+1,Length(str)-pos('=',str)));
+ Result:=TLoginResult(AnsiIndexStr(ErrorText,Errors)+2);
 end;
 
 function TGoogleLogin.GetResultText: string;
@@ -249,10 +237,7 @@ begin
  end;
  cBody.WriteString('Email='+FEmail+'&');
  cBody.WriteString('Passwd='+FPassword+'&');
- if Length(Trim(FService))>0 then
-   cBody.WriteString('service='+FService+'&')
- else
-   cBody.WriteString('service=xapi&');
+ cBody.WriteString('service='+ServiceIDs[ord(FService)]+'&');
  if Length(Trim(FSource))>0 then
    cBody.WriteString('source='+FSource)
  else
@@ -325,26 +310,26 @@ end;
 procedure TGoogleLogin.SetEmail(cEmail: string);
 begin
   FEmail:=cEmail;
-  CloseConect;//обнуляем результаты
+  Disconnect;//обнуляем результаты
 end;
 
 procedure TGoogleLogin.SetPassword(cPassword: string);
 begin
   FPassword:=cPassword;
-  CloseConect;//обнуляем результаты
+  Disconnect;//обнуляем результаты
 end;
 
-procedure TGoogleLogin.SetService(cService: string);
+procedure TGoogleLogin.SetService(cService: TServices);
 begin
   FService:=cService;
-  CloseConect;//обнуляем результаты
+  Disconnect;//обнуляем результаты
   Login();    //перелогиниваемся
 end;
 
 procedure TGoogleLogin.SetSource(cSource: string);
 begin
-FService:=cSource;
-CloseConect;//обнуляем результаты
+FSource:=cSource;
+Disconnect;//обнуляем результаты
 end;
 
 end.

@@ -2,8 +2,7 @@ unit GData;
 
 interface
 
-uses WinInet, Graphics, strutils, httpsend, GHelper, XMLIntf,
-  GoogleLogin, Windows, Messages, SysUtils, Variants, Classes, Dialogs,
+uses strutils, GHelper, XMLIntf,SysUtils, Variants, Classes,
   StdCtrls, XMLDoc, xmldom, GDataCommon;
 
 // элемены протокола

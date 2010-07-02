@@ -2,8 +2,8 @@ unit GHelper;
 
 interface
 
-uses Graphics,strutils,Windows,DateUtils,
-Messages, SysUtils, Variants, Classes, Dialogs, StdCtrls,httpsend;
+uses Graphics,strutils,Windows,DateUtils,SysUtils, Variants,
+Classes,StdCtrls,httpsend,Generics.Collections,xmlintf,xmldom,NativeXML,typinfo;
 
 resourcestring
   rcErrPrepareNode = 'Ошибка обработки узла %s';
@@ -14,6 +14,10 @@ resourcestring
   rcErrMissAgrument = 'Недопустимый аргумент в вызове функции';
   rcUnUsedTag = 'Неучтенный тэг ';
   rcDuplicateLink = 'Такая ссылка уже есть в списке';
+  rcWrongAttr = 'Неверное значение атрибута %s';
+  rcRightAttrValues = 'Допустимые значения атрибута: %s';
+  rcErrCGroupCreate ='Пустой XML-документ. Чтение групп контактов прервано';
+  rcErrNullAuth = 'Параметр Auth не может быть пустым';
 
 const
   GoogleColors: array [1..21]of string = ('A32929','B1365F','7A367A','5229A3',
@@ -22,6 +26,10 @@ const
                                           'BE6D00','B1440E','865A5A','705770',
                                           '4E5D6C','5A6986','4A716C','6E6E41',
                                           '8D6F47');
+
+  NodeValueAttr = 'value';
+  EntryNodeName = 'entry';
+  SchemaHref ='http://schemas.google.com/g/2005#';
 
 //константы для TimeZone
   GoogleTimeZones: array [0..308,0..3]of string =
@@ -362,6 +370,23 @@ const
   ('http://schemas.google.com/g/2005#event.performer',''),
   ('http://schemas.google.com/g/2005#event.speaker',''));
 
+//просранства имен для календарей
+clNameSpaces: array [0 .. 2, 0 .. 1] of string =
+    (('xmlns', 'http://www.w3.org/2005/Atom'), ('xmlns:gd',
+      'xmlns:http://schemas.google.com/g/2005'), ('xmlns:gCal',
+      'http://schemas.google.com/gCal/2005'));
+contactNameSpaces: array [0 .. 2, 0 .. 1] of string =
+    (('xmlns', 'http://www.w3.org/2005/Atom'),
+    ('xmlns:gd', 'http://schemas.google.com/g/2005'),
+    ('xmlns:gContact','http://schemas.google.com/contact/2008'));
+//значения rel для узлов category календарея
+clCategories: array [0 .. 1, 0 .. 1] of string = (('scheme',
+      'http://schemas.google.com/g/2005#kind'), ('term',
+      'http://schemas.google.com/g/2005#event'));
+
+type
+  TNodePrefix=(tpnone,tpatom);
+
 type
  TTimeZone = packed record
    gConst: string;
@@ -386,26 +411,89 @@ type
   end;
 
 
+type
+  TAttribute = packed record
+    Name: string;
+    Value: string;
+  end;
+
+type
+  TTextTag = class(TPersistent)
+  private
+    FName: string;
+    FValue: string;
+    FAtributes: TList<TAttribute>;
+  public
+    Constructor Create(const ByNode: TXMLNode=nil);
+    procedure ParseXML(Node: TXMLNode);
+    function AddToXML(Root: TXMLNode; NodePrefix:TNodePrefix=tpnone): TXMLNode;
+    function IsEmpty:boolean;
+    property Value: string read FValue write FValue;
+    property Name: string read FName write FName;
+    property Attributes: TList<TAttribute>read FAtributes write FAtributes;
+  end;
+
+type
+  TEntryLink = class(TPersistent)
+  private
+    Frel: string;
+    Ftype: string;
+    Fhref: string;
+    FEtag: string;
+  public
+    Constructor Create(const ByNode: TXMLNode=nil);
+    procedure ParseXML(Node: TXMLNode);
+    function AddToXML(Root: TXMLNode): TXMLNode;
+    property Rel:   string read Frel write Frel;
+    property Ltype: string read Ftype write Ftype;
+    property Href:  string read Fhref write Fhref;
+    property Etag:  string read FEtag write FEtag;
+  end;
+
+type
+  TAuthorTag = Class(TPersistent)
+  private
+    FAuthor: string;
+    FEmail : string;
+    FUID   : string;
+  public
+    constructor Create(ByNode: IXMLNode=nil);
+    procedure ParseXML(Node: IXMLNode);
+    property Author: string read FAuthor write FAuthor;
+    property Email: string read FEmail write FEmail;
+  end;
+
 function HexToColor(Color: string): TColor;
 function ColorToHex(Color: TColor): string;
 //преобразование строки 2007-07-11T21:50:15.000Z в TDateTime
 function ServerDateToDateTime(cServerDate:string):TDateTime;
 //преобразование TDateTime в строку 2007-07-11T21:50:15.000Z
 function DateTimeToServerDate(DateTime:TDateTime):string;
-//function
+//преобразование строк
+function ArrayToStr(Values:array of string; Delimiter:char):string;
+//работа с HTTP
 function GetNewLocationURL(Headers: TStringList):string;
-function SendRequest(const aMethod, aURL, aAuth: string; aDocument:TStream=nil; aExtendedHeaders:TStringList=nil):TStream;
+function SendRequest(const aMethod, aURL, aAuth, ApiVersion: string; aDocument:TStream=nil; aExtendedHeaders:TStringList=nil):TStream;
 
 
 implementation
 
-function SendRequest(const aMethod, aURL, aAuth: string; aDocument:TStream; aExtendedHeaders:TStringList):TStream;
+function ArrayToStr(Values:array of string; Delimiter:char):string;
+var i:integer;
+begin
+  if length(Values)=0 then Exit;
+  Result:=Values[0];
+  for i:= 1 to Length(Values)-1 do
+    Result:=Result+Delimiter+Values[i]
+end;
+
+function SendRequest(const aMethod, aURL, aAuth, ApiVersion: string; aDocument:TStream; aExtendedHeaders:TStringList):TStream;
 var tmpURL:string;
     i:integer;
 begin
   with THTTPSend.Create do
     begin
-      Headers.Add('GData-Version: 2');
+      Headers.Add('GData-Version: '+ApiVersion);
       Headers.Add('Authorization: GoogleLogin auth='+aAuth);
       MimeType := 'application/atom+xml';
       if aExtendedHeaders<>nil then
@@ -435,7 +523,9 @@ begin
           HTTPMethod(aMethod,tmpURL);
         end;
         Result:=TStringStream.Create('');
+//        Headers.SaveToFile('headers.txt');
         Document.SaveToStream(Result);
+        Result.Seek(0,soFromBeginning);
      end;
 end;
 
@@ -457,9 +547,7 @@ function DateTimeToServerDate(DateTime:TDateTime):string;
 var Year, Mounth, Day, hours, Mins, Seconds,MSec: Word;
     aYear, aMounth, aDay, ahours, aMins, aSeconds,aMSec: string;
 begin
-//2007-07-11T21:50:15.000Z
   DecodeDateTime(DateTime,Year, Mounth, Day, hours, Mins, Seconds,MSec);
-
   aYear:=IntToStr(Year);
   if Mounth<10 then aMounth:='0'+IntToStr(Mounth)
   else aMounth:=IntToStr(Mounth);
@@ -499,7 +587,6 @@ begin
       Mins:=0;
       Seconds:=0;
     end;
- // MSec:=StrToInt(copy(cServerDate,21,3));
   Result:=EncodeDateTime(Year, Mounth, Day, hours, Mins, Seconds,0)
 end;
 
@@ -583,5 +670,126 @@ begin
   end;
 end;
 
+
+{ TTextTag }
+
+function TTextTag.AddToXML(Root: TXMLNode;NodePrefix:TNodePrefix): TXMLNode;
+var
+  i: integer;
+  prefix:string;
+begin
+  if IsEmpty then Exit;
+  if NodePrefix=tpnone then
+    Result:= Root.NodeNew(FName)
+  else
+    begin
+      prefix:=GetEnumName(TypeInfo(TNodePrefix),ord(NodePrefix));
+      Delete(prefix,1,2);
+      Result:= Root.NodeNew(prefix+':'+FName)
+    end;
+  Result.ValueAsString:=AnsiToUtf8(FValue);
+  for i := 0 to FAtributes.Count - 1 do
+    Result.AttributeAdd(FAtributes[i].Name,FAtributes[i].Value);
+end;
+
+constructor TTextTag.Create(const ByNode: TXMLNode);
+begin
+  inherited Create;
+  FAtributes:=TList<TAttribute>.Create;
+  FName:='';
+  FValue:='';
+  if ByNode = nil then
+    Exit;
+  ParseXML(ByNode);
+end;
+
+function TTextTag.IsEmpty: boolean;
+begin
+  Result:=(Length(Trim(FValue))=0)and(FAtributes.Count=0)
+end;
+
+procedure TTextTag.ParseXML(Node: TXMLNode);
+var
+  i: integer;
+  Attr: TAttribute;
+begin
+  try
+    FValue := Node.ValueAsString;
+    FName := Node.Name;
+    for i := 0 to Node.AttributeCount - 1 do
+    begin
+      Attr.Name := Node.AttributeName[i];
+      Attr.Value := Node.AttributeValue[i];
+      FAtributes.Add(Attr)
+    end;
+  except
+    Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
+  end;
+end;
+
+{ TAuthorTag }
+
+{ TAuthorTag }
+
+constructor TAuthorTag.Create(ByNode: IXMLNode);
+begin
+  inherited Create;
+  if ByNode = nil then
+    Exit;
+  ParseXML(ByNode);
+end;
+
+procedure TAuthorTag.ParseXML(Node: IXMLNode);
+var
+  i: integer;
+begin
+  try
+    for i := 0 to Node.ChildNodes.Count - 1 do
+    begin
+      if Node.ChildNodes[i].NodeName = 'name' then
+        FAuthor := Node.ChildNodes[i].Text
+      else
+        if Node.ChildNodes[i].NodeName = 'email' then
+          FEmail := Node.ChildNodes[i].Text
+        else
+          if Node.ChildNodes[i].NodeName = 'uid' then
+            FUID:=Node.ChildNodes[i].Text;
+    end;
+  except
+    Exception.Create(Format(rcErrPrepareNode, [Node.NodeName]));
+  end;
+end;
+
+
+{ TEntryLink }
+
+function TEntryLink.AddToXML(Root: TXMLNode): TXMLNode;
+begin
+Result:= Root.NodeNew('link');
+Result.WriteAttributeString('rel',Self.Frel);
+Result.WriteAttributeString('type',Self.Ftype);
+Result.WriteAttributeString('href',Self.Fhref);
+Result.WriteAttributeString('gd:etag',Self.FEtag);
+end;
+
+constructor TEntryLink.Create(const ByNode: TXMLNode);
+begin
+  inherited Create;
+  if ByNode<>nil then
+    ParseXML(ByNode);
+end;
+
+procedure TEntryLink.ParseXML(Node: TXMLNode);
+begin
+  if Node=nil then Exit;
+  try
+    Frel:=Node.ReadAttributeString('rel');
+    Ftype:=Node.ReadAttributeString('type');
+    Fhref:=Node.ReadAttributeString('href');
+    FEtag:=Node.ReadAttributeString('gd:etag')
+  except
+    Exception.Create(Format(rcErrPrepareNode, ['link']));
+  end;
+end;
 
 end.

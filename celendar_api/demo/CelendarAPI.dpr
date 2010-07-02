@@ -8,7 +8,8 @@ uses
   GHelper in '..\GHelper.pas',
   GoogleLogin in '..\GoogleLogin.pas',
   GData in '..\GData.pas',
-  newevent in 'newevent.pas' {Form2};
+  newevent in 'newevent.pas' {Form2},
+  NativeXml in '..\..\Utils\NativeXml.pas';
 
 {$R *.res}
 

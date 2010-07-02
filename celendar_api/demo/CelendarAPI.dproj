@@ -54,6 +54,7 @@
 			<DCCReference Include="newevent.pas">
 				<Form>Form2</Form>
 			</DCCReference>
+			<DCCReference Include="..\..\Utils\NativeXml.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

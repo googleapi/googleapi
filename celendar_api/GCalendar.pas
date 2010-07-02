@@ -12,7 +12,7 @@ const
   AllCelendarsLink  ='http://www.google.com/calendar/feeds/default/allcalendars/full';
   OwnerCelendarLink ='http://www.google.com/calendar/feeds/default/owncalendars/full';
 
-    cgCalTagNames: array [0 .. 15] of string = ('gCal:accesslevel', 'gCal:color',
+ cgCalTagNames: array [0 .. 15] of string = ('gCal:accesslevel', 'gCal:color',
     'gCal:hidden', 'gCal:selected', 'gCal:settingsProperty', 'gCal:sequence',
     'gCal:suppressReplyNotifications', 'gCal:syncEvent', 'gCal:timezone',
     'gCal:timesCleaned', 'gCal:uid', 'gCal:webContent',
