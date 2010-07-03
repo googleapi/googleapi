@@ -1,4 +1,4 @@
-unit GContacts;
+п»їunit GContacts;
 
 interface
 
@@ -6,13 +6,13 @@ uses NativeXML, strUtils, httpsend, GHelper,Classes,SysUtils,
 GDataCommon,Generics.Collections,Dialogs,jpeg, Graphics, typinfo,
 IOUtils;
 
-// 1. правильно обрабатывать конакты разбиые по группам
-// 2. писать обработчики событий
-// 3. Вынести из TCotsct загрузку фотки и убратьоттуда нахер TOwner
+// 1. РїСЂР°РІРёР»СЊРЅРѕ РѕР±СЂР°Р±Р°С‚С‹РІР°С‚СЊ РєРѕРЅР°РєС‚С‹ СЂР°Р·Р±РёС‹Рµ РїРѕ РіСЂСѓРїРїР°Рј
+// 2. РїРёСЃР°С‚СЊ РѕР±СЂР°Р±РѕС‚С‡РёРєРё СЃРѕР±С‹С‚РёР№
+// 3. Р’С‹РЅРµСЃС‚Рё РёР· TCotsct Р·Р°РіСЂСѓР·РєСѓ С„РѕС‚РєРё Рё СѓР±СЂР°С‚СЊРѕС‚С‚СѓРґР° РЅР°С…РµСЂ TOwner
 
 
 const
-  {$REGION 'Константы'}
+  {$REGION 'РљРѕРЅСЃС‚Р°РЅС‚С‹'}
    CpProtocolVer = '3.0';
    CpNodeAlias = 'gContact:';
    CpAtomAlias = 'atom:';
@@ -43,14 +43,14 @@ type
     FYear  : word;
     FMonth : word;
     FDay   : word;
-    FShortFormat: boolean;//укороченый формат дня рождения --MM-DD
+    FShortFormat: boolean;//СѓРєРѕСЂРѕС‡РµРЅС‹Р№ С„РѕСЂРјР°С‚ РґРЅСЏ СЂРѕР¶РґРµРЅРёСЏ --MM-DD
   public
     constructor Create(const byNode: TXmlNode=nil);
     procedure Clear;
     destructor Destroy;override;
     function IsEmpty: boolean;
-    //ToDate - перевод в формат TDate; Если задан укороченый формат, то
-    //годом будет текущий
+    //ToDate - РїРµСЂРµРІРѕРґ РІ С„РѕСЂРјР°С‚ TDate; Р•СЃР»Рё Р·Р°РґР°РЅ СѓРєРѕСЂРѕС‡РµРЅС‹Р№ С„РѕСЂРјР°С‚, С‚Рѕ
+    //РіРѕРґРѕРј Р±СѓРґРµС‚ С‚РµРєСѓС‰РёР№
     function ToDate:TDate;
     procedure ParseXML(const Node: TXmlNode);
     function AddToXML(Root: TXMLNode):TXMLNode;
@@ -62,8 +62,8 @@ end;
 
 type
   TcpCalendarLink = class
-  private         { TODO -oЯ -cНедочёт : избавиться от строкового поля }
-    FDescr: string;//содержит либо значение атрибута rel либо label
+  private         { TODO -oРЇ -cРќРµРґРѕС‡С‘С‚ : РёР·Р±Р°РІРёС‚СЊСЃСЏ РѕС‚ СЃС‚СЂРѕРєРѕРІРѕРіРѕ РїРѕР»СЏ }
+    FDescr: string;//СЃРѕРґРµСЂР¶РёС‚ Р»РёР±Рѕ Р·РЅР°С‡РµРЅРёРµ Р°С‚СЂРёР±СѓС‚Р° rel Р»РёР±Рѕ label
     FPrimary: boolean;
     FHref: string;
     const RelValues: array [0..2] of string = ('work','home','free-busy');
@@ -203,20 +203,16 @@ type
 end;
 
 type
-  TRelationType = (trNone,trAssistant,trBrother,trChild,
-                   trDomesticPartner,trFather,trFriend,
-                   trManager,trMother,trParent,trPartner,
-                   trReferredBy,trRelative,trSister,trSpouse);
+  TRelationType = (tr_None,tr_assistant,tr_brother,tr_child,
+                   tr_domestic_partner,tr_father,tr_friend,
+                   tr_manager,tr_mother,tr_parent,tr_partner,
+                   tr_referred_by,tr_relative,tr_sister,tr_spouse);
 
-type
   TcpRelation = class
   private
-    FDescr: string;//атрибут rel или label
+    FDescr: string;//Р°С‚СЂРёР±СѓС‚ rel РёР»Рё label
     FValue: string;
     FRealition:TRelationType;
-    const
-      RelValues: array [0..13]of string =('assistant','brother','child','domestic-partner','father','friend','manager','mother','parent',
-'partner','referred-by','relative','sister','spouse');
     procedure SetRel(aRel:TRelationType);
     procedure SetDescr(const aDescr:string);
   public
@@ -251,7 +247,7 @@ type
 type
   TcpSystemGroup = class
   private
-    Fid: string;   { TODO -oЯ -cНедочёт : избавиться от строкового поля }
+    Fid: string;   { TODO -oРЇ -cРќРµРґРѕС‡С‘С‚ : РёР·Р±Р°РІРёС‚СЊСЃСЏ РѕС‚ СЃС‚СЂРѕРєРѕРІРѕРіРѕ РїРѕР»СЏ }
     const IDValues: array [0..3]of string=('Contacts','Friends','Family','Coworkers');
     procedure SetId(aId:string);
   public
@@ -281,7 +277,7 @@ end;
 type
   TWebSiteType = (twHomePage,twBlog,twProfile,twHome,twWork,twOther,twFtp);
   TcpWebsite = class
-  private  { TODO -oЯ -cНедочёт : избавиться от строкового поля }
+  private  { TODO -oРЇ -cРќРµРґРѕС‡С‘С‚ : РёР·Р±Р°РІРёС‚СЊСЃСЏ РѕС‚ СЃС‚СЂРѕРєРѕРІРѕРіРѕ РїРѕР»СЏ }
     FHref: string;
     FPrimary:boolean;
     Flabel: string;
@@ -331,7 +327,6 @@ type
     FIMs:TList<TgdIm>;
     function GetPrimaryEmail: string;
     procedure SetPrimaryEmail(aEmail:string);
-//    function GetName : TgdName;
     function GetOrganization:TgdOrganization;
     function GetContactName:string;
     function GenerateText(TypeFile:TFileType): string;
@@ -400,10 +395,10 @@ end;
 //type
   TGoogleContact = class(TComponent)
   private
-    FAuth: string; //AUTH для доступа к API
-    FEmail:string; //обязательно GMAIL!
-    FGroups: TList<TContactGroup>;
-    FContacts: TList<TContact>;
+    FAuth: string; //AUTH РґР»СЏ РґРѕСЃС‚СѓРїР° Рє API
+    FEmail:string; //РѕР±СЏР·Р°С‚РµР»СЊРЅРѕ GMAIL!
+    FGroups: TList<TContactGroup>;//РіСЂСѓРїРїС‹ РєРѕРЅС‚Р°РєС‚РѕРІ
+    FContacts: TList<TContact>;//РІСЃРµ РєРѕРЅС‚Р°РєС‚С‹
     function GetNextLink(Stream:TStream):string;overload;
     function GetNextLink(aXMLDoc:TNativeXml):string;overload;
     function GetContactsByGroup(GroupName:string):TList<TContact>;
@@ -414,26 +409,26 @@ end;
   public
     constructor Create(AOwner:TComponent; const aAuth,aEmail: string);
     destructor Destroy;override;
-    function RetriveGroups:integer;
-    function RetriveContacts: integer;
-    //удаление контакта
-    function DeleteContact(index:integer):boolean;overload;
+    function RetriveGroups:integer;   //РїРѕР»СѓС‡РµРЅРёРµ РІСЃРµС… РіСЂСѓРїРї РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ
+    function RetriveContacts: integer;//РїРѕР»СѓС‡РµРЅРёРµ РІСЃРµС… РєРѕРЅС‚Р°РєС‚РѕРІ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ
+    //СѓРґР°Р»РµРЅРёРµ РєРѕРЅС‚Р°РєС‚Р°
+    function DeleteContact(index:integer):boolean;overload;//РїРѕ РёРЅРґРµРєСЃСѓ РІ СЃРїРёСЃРєРµ FContacts
     function DeleteContact(aContact:TContact):boolean;overload;
-    //добавление контакта
+    //РґРѕР±Р°РІР»РµРЅРёРµ РєРѕРЅС‚Р°РєС‚Р°
     function AddContact(aContact:TContact):boolean;
-    //обновление информации о контакте
+    //РѕР±РЅРѕРІР»РµРЅРёРµ РёРЅС„РѕСЂРјР°С†РёРё Рѕ РєРѕРЅС‚Р°РєС‚Рµ
     function UpdateContact(aContact:TContact):boolean;overload;
     function UpdateContact(index:integer):boolean;overload;
-    //получение фотографии контакта
+    //РїРѕР»СѓС‡РµРЅРёРµ С„РѕС‚РѕРіСЂР°С„РёРё РєРѕРЅС‚Р°РєС‚Р°
     function RetriveContactPhoto(index:integer):TJPEGImage;overload;
     function RetriveContactPhoto(aContact:TContact):TJPEGImage;overload;
-    //обновление фото контакта
+    //РѕР±РЅРѕРІР»РµРЅРёРµ С„РѕС‚Рѕ РєРѕРЅС‚Р°РєС‚Р°
     function UpdatePhoto(index:integer; const PhotoFile: TFileName):boolean;overload;
     function UpdatePhoto(aContact:TContact; const PhotoFile: TFileName):boolean;overload;
-    //удаление фотографии контакта
+    //СѓРґР°Р»РµРЅРёРµ С„РѕС‚РѕРіСЂР°С„РёРё РєРѕРЅС‚Р°РєС‚Р°
     function DeletePhoto(aContact:TContact):boolean;overload;
     function DeletePhoto(index:integer):boolean;overload;
-    //сохранение/загрузка контактов в/из файл/-а
+    //СЃРѕС…СЂР°РЅРµРЅРёРµ/Р·Р°РіСЂСѓР·РєР° РєРѕРЅС‚Р°РєС‚РѕРІ РІ/РёР· С„Р°Р№Р»/-Р°
     procedure SaveContactsToFile(const FileName:string);
     procedure LoadContactsFromFile(const FileName:string);
 
@@ -483,7 +478,7 @@ if (Root=nil)or IsEmpty then Exit;
 if (Month>0)and(Day>0) then
   begin
     Result:=Root.NodeNew(GetContactNodeName(cp_Birthday));
-    if FShortFormat then //укороченный формат даты
+    if FShortFormat then //СѓРєРѕСЂРѕС‡РµРЅРЅС‹Р№ С„РѕСЂРјР°С‚ РґР°С‚С‹
       When:=FormatDateTime('--mm-dd',EncodeDate(1898,Month,Day))
     else
       When:=FormatDateTime('yyyy-mm-dd',EncodeDate(Year,Month,Day));
@@ -526,7 +521,7 @@ begin
     DateStr:= Node.ReadAttributeString('when');
     if (Length(Trim(DateStr))>0)then
       begin
-        if (pos('--',DateStr)>0) then//сокращенный формат - только месяц и число рождения
+        if (pos('--',DateStr)>0) then//СЃРѕРєСЂР°С‰РµРЅРЅС‹Р№ С„РѕСЂРјР°С‚ - С‚РѕР»СЊРєРѕ РјРµСЃСЏС† Рё С‡РёСЃР»Рѕ СЂРѕР¶РґРµРЅРёСЏ
           begin
             FYear:=0;
             Delete(DateStr,1,2);
@@ -553,7 +548,7 @@ end;
 function TcpBirthday.ToDate: TDate;
 var aYear, aMonth, aDay: word;
 begin
-  if FShortFormat then //укороченный формат
+  if FShortFormat then //СѓРєРѕСЂРѕС‡РµРЅРЅС‹Р№ С„РѕСЂРјР°С‚
     begin
       DecodeDate(Now,aYear,aMonth,aDay);
       Result:=EncodeDate(aYear,FMonth,FDay);
@@ -967,7 +962,7 @@ function TcpRelation.AddToXML(Root: TXmlNode): TXmlNode;
 begin
 if (Root=nil)or IsEmpty then Exit;
 Result:=Root.NodeNew(GetContactNodeName(cp_Relation));
-if FRealition=trNone then
+if FRealition=tr_None then
   Result.WriteAttributeString('label',FDescr)
 else
    Result.WriteAttributeString('rel',FDescr);
@@ -978,7 +973,7 @@ procedure TcpRelation.Clear;
 begin
   FDescr:='';
   FValue:='';
-  FRealition:=trNone;
+  FRealition:=tr_None;
 end;
 
 constructor TcpRelation.Create(const ByNode: TXMLNode);
@@ -991,7 +986,7 @@ end;
 
 function TcpRelation.IsEmpty: boolean;
 begin
-Result:=(Length(Trim(FDescr))=0)and(Length(Trim(FValue))=0)and(FRealition=trNone);
+Result:=(Length(Trim(FDescr))=0)and(Length(Trim(FValue))=0)and(FRealition=tr_None);
 end;
 
 procedure TcpRelation.ParseXML(const Node: TXmlNode);
@@ -1005,15 +1000,16 @@ begin
       begin
         FDescr:=Node.ReadAttributeString('rel');
         FDescr:=StringReplace(FDescr,SchemaHref,'',[rfIgnoreCase]);
-        if AnsiIndexStr(FDescr,RelValues)>-1 then
-          FRealition:=TRelationType(AnsiIndexStr(FDescr,RelValues)+1)
+
+        if GetEnumValue(TypeInfo(TRelationType),FDescr)>-1 then
+           FRealition:= TRelationType(GetEnumValue(TypeInfo(TRelationType),FDescr))
         else
-          FRealition:=trRelative;
+          FRealition:=tr_relative;
       end
     else
       begin
         FDescr:=Node.ReadAttributeString('label');
-        FRealition:=trNone;
+        FRealition:=tr_None;
       end;
     FValue:=Node.ValueAsString;
   except
@@ -1023,18 +1019,22 @@ end;
 
 procedure TcpRelation.SetDescr(const aDescr: string);
 begin
-  if AnsiIndexStr(aDescr,RelValues)>-1 then
-    FRealition:=TRelationType(AnsiIndexStr(aDescr,RelValues)+1)
+  if GetEnumValue(TypeInfo(TRelationType),FDescr)>-1 then
+    FRealition:=TRelationType(GetEnumValue(TypeInfo(TRelationType),FDescr))
   else
-    FRealition:=trNone;
+    FRealition:=tr_None;
 FDescr:=aDescr;
 end;
 
 procedure TcpRelation.SetRel(aRel: TRelationType);
 begin
   FRealition:=aRel;
-  if aRel<>trNone then
-    FDescr:=RelValues[Ord(aRel)-1];
+  if aRel<>tr_None then
+    begin
+      FDescr:=GetEnumName(TypeInfo(TRelationType),ord(FRealition));
+      Delete(FDescr,1,3);
+      FDescr:=ReplaceStr(FDescr,'_','-')
+    end;
 end;
 
 { TcpSensitivity }
@@ -1496,7 +1496,7 @@ try
  Node.NodesByName('id',List);
  for I := 0 to List.Count - 1 do
    FId:=List.Items[i].ValueAsString;
- //вначале заполняем все списки
+ //РІРЅР°С‡Р°Р»Рµ Р·Р°РїРѕР»РЅСЏРµРј РІСЃРµ СЃРїРёСЃРєРё
  Node.NodesByName(GetGDNodeName(gd_Email),List);
  for i:=0 to List.Count-1 do
    FEmails.Add(TgdEmail.Create(List.Items[i]));
@@ -1647,7 +1647,7 @@ try
              XML.LoadFromStream(Document);
              FContacts.Add(TContact.Create(XML.Root))
            end;
-         {TODO -oVlad -cНедочёт : Необходимо обработать возможные исключения}
+         {TODO -oVlad -cРќРµРґРѕС‡С‘С‚ : РќРµРѕР±С…РѕРґРёРјРѕ РѕР±СЂР°Р±РѕС‚Р°С‚СЊ РІРѕР·РјРѕР¶РЅС‹Рµ РёСЃРєР»СЋС‡РµРЅРёСЏ}
 //         Document.SaveToFile('G:\delphicelendar\contacts_api\node_atom.xml');
        end
      else
@@ -1700,7 +1700,7 @@ if Length(aContact.Etag)>0 then
              Headers.Add('If-Match: '+aContact.Etag);
              if HTTPMethod('DELETE',aContact.FLinks[i].Href) then
                begin
-         {TODO -oVlad -cНедочёт : Необходимо обработать возможные исключения}
+         {TODO -oVlad -cРќРµРґРѕС‡С‘С‚ : РќРµРѕР±С…РѕРґРёРјРѕ РѕР±СЂР°Р±РѕС‚Р°С‚СЊ РІРѕР·РјРѕР¶РЅС‹Рµ РёСЃРєР»СЋС‡РµРЅРёСЏ}
 //         Document.SaveToFile('G:\delphicelendar\contacts_api\node_response.xml');
                end
              else
@@ -1710,12 +1710,12 @@ if Length(aContact.Etag)>0 then
        end;
    end;
  end;
-  aContact.Destroy;//удалили из памяти
+  aContact.Destroy;//СѓРґР°Р»РёР»Рё РёР· РїР°РјСЏС‚Рё
 
   for I := 0 to FContacts.Count - 1 do
     if FContacts[i]=nil then
       begin
-        FContacts.DeleteRange(i,1);//удаляем свободный элемент из списка
+        FContacts.DeleteRange(i,1);//СѓРґР°Р»СЏРµРј СЃРІРѕР±РѕРґРЅС‹Р№ СЌР»РµРјРµРЅС‚ РёР· СЃРїРёСЃРєР°
         break;
       end;
   Result:=true;
@@ -2079,7 +2079,6 @@ try
              aContact.Clear;
              aContact.ParseXML(Document);
            end;
-         Document.SaveToFile('Response.xml');
        end
      else
        ShowMessage(IntToStr(ResultCode)+' '+ResultString)
