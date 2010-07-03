@@ -3,9 +3,10 @@ unit GHelper;
 interface
 
 uses Graphics,strutils,Windows,DateUtils,SysUtils, Variants,
-Classes,StdCtrls,httpsend,Generics.Collections,xmlintf,xmldom,NativeXML;
+Classes,StdCtrls,httpsend,Generics.Collections,xmlintf,xmldom,NativeXML,
+uLanguage;
 
-{$I languages\lang_russian.inc}
+//{$I languages\lang_russian.inc}
 
 const
   GoogleColors: array [1..21]of string = ('A32929','B1365F','7A367A','5229A3',

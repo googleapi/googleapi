@@ -2,7 +2,7 @@ unit GDataCommon;
 
 interface
 
-uses NativeXML, Classes, StrUtils, SysUtils, GHelper, typinfo;
+uses NativeXML, Classes, StrUtils, SysUtils, GHelper, typinfo, uLanguage;
 
 type
   TgdEnum = (gd_country, gd_additionalName,gd_name, gd_email, gd_extendedProperty,

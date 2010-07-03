@@ -8,7 +8,9 @@ uses
   GContacts in '..\..\source\GContacts.pas',
   GHelper in '..\..\source\GHelper.pas',
   NativeXml in '..\..\addons\nativexml\NativeXml.pas',
-  GDataCommon in '..\..\source\GDataCommon.pas';
+  GDataCommon in '..\..\source\GDataCommon.pas',
+  uLanguage in '..\..\source\uLanguage.pas',
+  uLog in 'uLog.pas' {fLog};
 
 {$R *.res}
 
@@ -17,5 +19,6 @@ begin
   Application.MainFormOnTaskbar := True;
   Application.CreateForm(TForm3, Form3);
   Application.CreateForm(TProfileForm, ProfileForm);
+  Application.CreateForm(TfLog, fLog);
   Application.Run;
 end.

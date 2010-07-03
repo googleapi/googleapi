@@ -2,7 +2,7 @@ object Form3: TForm3
   Left = 0
   Top = 0
   Caption = 'Google Contacts API'
-  ClientHeight = 350
+  ClientHeight = 351
   ClientWidth = 671
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -17,14 +17,14 @@ object Form3: TForm3
   object Splitter1: TSplitter
     Left = 217
     Top = 38
-    Height = 293
+    Height = 294
     ExplicitLeft = 244
     ExplicitTop = 108
     ExplicitHeight = 100
   end
   object StatusBar1: TStatusBar
     Left = 0
-    Top = 331
+    Top = 332
     Width = 671
     Height = 19
     Panels = <
@@ -49,6 +49,7 @@ object Form3: TForm3
       item
         Width = 50
       end>
+    ExplicitTop = 331
   end
   object ToolBar1: TToolBar
     Left = 0
@@ -100,10 +101,11 @@ object Form3: TForm3
     Left = 0
     Top = 38
     Width = 217
-    Height = 293
+    Height = 294
     Align = alLeft
     BevelOuter = bvNone
     TabOrder = 2
+    ExplicitHeight = 293
     object Label5: TLabel
       Left = 0
       Top = 0
@@ -127,20 +129,22 @@ object Form3: TForm3
       Left = 0
       Top = 34
       Width = 217
-      Height = 259
+      Height = 260
       Align = alClient
       Caption = #1050#1086#1085#1090#1072#1082#1090#1099
       TabOrder = 1
+      ExplicitHeight = 259
       object ListBox1: TListBox
         Left = 2
         Top = 15
         Width = 213
-        Height = 242
+        Height = 243
         Align = alClient
         ItemHeight = 13
         TabOrder = 0
         OnClick = ListBox1Click
         OnDblClick = ListBox1DblClick
+        ExplicitHeight = 242
       end
     end
   end
@@ -148,10 +152,11 @@ object Form3: TForm3
     Left = 220
     Top = 38
     Width = 451
-    Height = 293
+    Height = 294
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 3
+    ExplicitHeight = 293
     object Label1: TLabel
       Left = 12
       Top = 6
@@ -361,7 +366,7 @@ object Form3: TForm3
     Left = 20
     Top = 240
     Bitmap = {
-      494C010104001C00AC0020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010104001C00B00020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000800000004000000001002000000000000080
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000

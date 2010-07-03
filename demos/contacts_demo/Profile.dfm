@@ -50,7 +50,6 @@ object ProfileForm: TProfileForm
     Width = 97
     Height = 21
     TabOrder = 1
-    Text = 'vlad383383'
   end
   object Edit3: TEdit
     Left = 116

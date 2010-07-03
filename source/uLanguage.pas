@@ -1,13 +1,14 @@
 unit uLanguage;
 
 {$DEFINE RUSSIAN}
-const
+
+interface
 
 {$IFDEF RUSSIAN}
-{I langusges/lang_russian.pas}
+{$I languages\lang_russian.inc}
 {$ENDIF}
 
-
+implementation
 
 begin
 end.

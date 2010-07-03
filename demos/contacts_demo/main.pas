@@ -1,11 +1,11 @@
-unit main;
+п»їunit main;
 
 interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, GoogleLogin, StdCtrls, GHelper,GContacts,Generics.Collections,NativeXml,GDataCommon,
-  ExtCtrls, ComCtrls, ToolWin, Menus, ImgList,JPEG, ExtDlgs;
+  ExtCtrls, ComCtrls, ToolWin, Menus, ImgList,JPEG, ExtDlgs,TypInfo;
 
 type
   TForm3 = class(TForm)
@@ -66,7 +66,14 @@ type
     procedure ToolButton4Click(Sender: TObject);
     procedure ListBox1DblClick(Sender: TObject);
   private
-    { Private declarations }
+    //TOnRetriveXML
+    procedure RetriveXML (const FromURL:string);
+    //TOnBeginParse
+    procedure BeginParse (const What: TParseElement; Total, Number: integer);
+    //OnEndParse
+    procedure EndParse(const What: TParseElement; Element: TObject);
+    //OnReadData
+     procedure ReadData(const TotalBytes, ReadBytes: int64);
   public
 
   end;
@@ -80,9 +87,17 @@ var
 
 implementation
 
-uses Profile;
+uses Profile, uLog;
 
 {$R *.dfm}
+
+procedure TForm3.BeginParse(const What: TParseElement; Total, Number: integer);
+begin
+  case What of
+    T_Contact: fLog.Memo1.Lines.Add('РџР°СЂСЃРёРј РєРѕРЅС‚Р°РєС‚ в„–'+IntToStr(Number)+' РІСЃРµРіРѕ РєРѕРЅС‚Р°РєС‚РѕРІ '+IntToStr(Total));
+    T_Group: fLog.Memo1.Lines.Add('РџР°СЂСЃРёРј РіСЂСѓРїРїСѓ в„–'+IntToStr(Number)+' РІСЃРµРіРѕ РіСЂСѓРїРї '+IntToStr(Total));
+  end;
+end;
 
 procedure TForm3.ComboBox1Change(Sender: TObject);
 var i:integer;
@@ -122,47 +137,47 @@ end;
 procedure TForm3.ComboBox2Change(Sender: TObject);
 begin
   case Contact.Contacts[ListBox1.ItemIndex].Emails[ComboBox2.ItemIndex].EmailType of
-    ttHome:label7.Caption:='Домашний';
-    ttOther:label7.Caption:='Другой';
-    ttWork:label7.Caption:='Рабочий';
+    ttHome:label7.Caption:='Р”РѕРјР°С€РЅРёР№';
+    ttOther:label7.Caption:='Р”СЂСѓРіРѕР№';
+    ttWork:label7.Caption:='Р Р°Р±РѕС‡РёР№';
   end;
 end;
 
 procedure TForm3.ComboBox3Change(Sender: TObject);
 begin
 case Contact.Contacts[ListBox1.ItemIndex].Phones[ComboBox3.ItemIndex].PhoneType of
- tpAssistant:label9.Caption:='Вспомогательный';
- tpCallback:label9.Caption:='Автоответчик';
- tpCar:label9.Caption:='Автомобильный';
- TpCompany_main:label9.Caption:='Рабочий сновной';
- tpFax:label9.Caption:='Факс';
- tpHome:label9.Caption:='Домашний';
- tpHome_fax:label9.Caption:='Домашний факс';
+ tpAssistant:label9.Caption:='Р’СЃРїРѕРјРѕРіР°С‚РµР»СЊРЅС‹Р№';
+ tpCallback:label9.Caption:='РђРІС‚РѕРѕС‚РІРµС‚С‡РёРє';
+ tpCar:label9.Caption:='РђРІС‚РѕРјРѕР±РёР»СЊРЅС‹Р№';
+ TpCompany_main:label9.Caption:='Р Р°Р±РѕС‡РёР№ СЃРЅРѕРІРЅРѕР№';
+ tpFax:label9.Caption:='Р¤Р°РєСЃ';
+ tpHome:label9.Caption:='Р”РѕРјР°С€РЅРёР№';
+ tpHome_fax:label9.Caption:='Р”РѕРјР°С€РЅРёР№ С„Р°РєСЃ';
  tpIsdn:label9.Caption:='ISDN';
- tpMain:label9.Caption:='Основной';
- tpMobile:label9.Caption:='Мобильный';
- tpOther:label9.Caption:='Другой';
- tpOther_fax:label9.Caption:='Факс (другой)';
- tpPager:label9.Caption:='Пэйджер';
- tpRadio:label9.Caption:='Радиотелефон';
- tpTelex:label9.Caption:='Телекс';
- tpTty_tdd:label9.Caption:='IP-телефон';
- TpWork:label9.Caption:='Рабочий';
- tpWork_fax:label9.Caption:='Рабочий факс';
- tpWork_mobile:label9.Caption:='Рабочий мобильный';
- tpWork_pager:label9.Caption:='Рабочий пэйджер';
+ tpMain:label9.Caption:='РћСЃРЅРѕРІРЅРѕР№';
+ tpMobile:label9.Caption:='РњРѕР±РёР»СЊРЅС‹Р№';
+ tpOther:label9.Caption:='Р”СЂСѓРіРѕР№';
+ tpOther_fax:label9.Caption:='Р¤Р°РєСЃ (РґСЂСѓРіРѕР№)';
+ tpPager:label9.Caption:='РџСЌР№РґР¶РµСЂ';
+ tpRadio:label9.Caption:='Р Р°РґРёРѕС‚РµР»РµС„РѕРЅ';
+ tpTelex:label9.Caption:='РўРµР»РµРєСЃ';
+ tpTty_tdd:label9.Caption:='IP-С‚РµР»РµС„РѕРЅ';
+ TpWork:label9.Caption:='Р Р°Р±РѕС‡РёР№';
+ tpWork_fax:label9.Caption:='Р Р°Р±РѕС‡РёР№ С„Р°РєСЃ';
+ tpWork_mobile:label9.Caption:='Р Р°Р±РѕС‡РёР№ РјРѕР±РёР»СЊРЅС‹Р№';
+ tpWork_pager:label9.Caption:='Р Р°Р±РѕС‡РёР№ РїСЌР№РґР¶РµСЂ';
 end;
 end;
 
 procedure TForm3.ComboBox4Change(Sender: TObject);
 begin
  case Contact.Contacts[ListBox1.ItemIndex].WebSites[ComboBox4.ItemIndex].SiteType of
-   twHomePage:label17.Caption:='Домашняя страница';
-   twBlog:label17.Caption:='Блог';
-   twProfile:label17.Caption:='Профиль';
-   twHome:label17.Caption:='Личный сайт';
-   twWork:label17.Caption:='Рабочий сайт';
-   twOther:label17.Caption:='Другой';
+   twHomePage:label17.Caption:='Р”РѕРјР°С€РЅСЏСЏ СЃС‚СЂР°РЅРёС†Р°';
+   twBlog:label17.Caption:='Р‘Р»РѕРі';
+   twProfile:label17.Caption:='РџСЂРѕС„РёР»СЊ';
+   twHome:label17.Caption:='Р›РёС‡РЅС‹Р№ СЃР°Р№С‚';
+   twWork:label17.Caption:='Р Р°Р±РѕС‡РёР№ СЃР°Р№С‚';
+   twOther:label17.Caption:='Р”СЂСѓРіРѕР№';
    twFtp:label17.Caption:='FTP';
  end;
 end;
@@ -170,21 +185,21 @@ end;
 procedure TForm3.ComboBox5Change(Sender: TObject);
 begin
   case Contact.Contacts[ListBox1.ItemIndex].Relations[ComboBox5.ItemIndex].Realition of
-   tr_None:label13.Caption:='Неизвестно';
-   tr_Assistant:label13.Caption:='Помощник';
-   tr_Brother:label13.Caption:='Брат';
-   tr_Child:label13.Caption:='Ребенок';
+   tr_None:label13.Caption:='РќРµРёР·РІРµСЃС‚РЅРѕ';
+   tr_Assistant:label13.Caption:='РџРѕРјРѕС‰РЅРёРє';
+   tr_Brother:label13.Caption:='Р‘СЂР°С‚';
+   tr_Child:label13.Caption:='Р РµР±РµРЅРѕРє';
    tr_domestic_partner:label13.Caption:='';
-   tr_Father:label13.Caption:='Партнер';
-   tr_Friend:label13.Caption:='Друг';
-   tr_Manager:label13.Caption:='Начальник';
-   tr_Mother:label13.Caption:='Мать';
-   tr_parent:label13.Caption:='Родитель';
-   tr_Partner:label13.Caption:='Партнер';
-   tr_referred_by:label13.Caption:='Приглашенный';
-   tr_Relative:label13.Caption:='Участник';
-   tr_Sister:label13.Caption:='Сестра';
-   tr_Spouse:label13.Caption:='Супруга';
+   tr_Father:label13.Caption:='РџР°СЂС‚РЅРµСЂ';
+   tr_Friend:label13.Caption:='Р”СЂСѓРі';
+   tr_Manager:label13.Caption:='РќР°С‡Р°Р»СЊРЅРёРє';
+   tr_Mother:label13.Caption:='РњР°С‚СЊ';
+   tr_parent:label13.Caption:='Р РѕРґРёС‚РµР»СЊ';
+   tr_Partner:label13.Caption:='РџР°СЂС‚РЅРµСЂ';
+   tr_referred_by:label13.Caption:='РџСЂРёРіР»Р°С€РµРЅРЅС‹Р№';
+   tr_Relative:label13.Caption:='РЈС‡Р°СЃС‚РЅРёРє';
+   tr_Sister:label13.Caption:='РЎРµСЃС‚СЂР°';
+   tr_Spouse:label13.Caption:='РЎСѓРїСЂСѓРіР°';
   end;
 end;
 
@@ -205,6 +220,14 @@ end;
 procedure TForm3.ComboBox7Change(Sender: TObject);
 begin
   label19.Caption:=Contact.Contacts[ListBox1.ItemIndex].UserFields[ComboBox7.ItemIndex].Value
+end;
+
+procedure TForm3.EndParse(const What: TParseElement; Element: TObject);
+begin
+  case What of
+    T_Group: fLog.Memo1.Lines.Add('РџРѕР»СѓС‡РµРЅР° РіСЂСѓРїРїР° '+ (Element as TContactGroup).Title.Value);
+    T_Contact:fLog.Memo1.Lines.Add('РџРѕР»СѓС‡РµРЅ РєРѕРЅС‚Р°РєС‚ '+ (Element as TContact).ContactName);
+  end;
 end;
 
 procedure TForm3.ListBox1Click(Sender: TObject);
@@ -280,13 +303,13 @@ end;
 
 procedure TForm3.ListBox1DblClick(Sender: TObject);
 begin
-  Contact.Contacts[ListBox1.ItemIndex].TagName.FullName.Value:='Иванов Иван Иванович';
-  Contact.Contacts[ListBox1.ItemIndex].TagName.GivenName.Value:='Иванов';
-  Contact.Contacts[ListBox1.ItemIndex].TagName.AdditionalName.Value:='Иван';
-  Contact.Contacts[ListBox1.ItemIndex].TagName.FamilyName.Value:='Иванович';
+  Contact.Contacts[ListBox1.ItemIndex].TagName.FullName.Value:='РРІР°РЅРѕРІ РРІР°РЅ РРІР°РЅРѕРІРёС‡';
+  Contact.Contacts[ListBox1.ItemIndex].TagName.GivenName.Value:='РРІР°РЅРѕРІ';
+  Contact.Contacts[ListBox1.ItemIndex].TagName.AdditionalName.Value:='РРІР°РЅ';
+  Contact.Contacts[ListBox1.ItemIndex].TagName.FamilyName.Value:='РРІР°РЅРѕРІРёС‡';
 
 
-//  Contact.Contacts[ListBox1.ItemIndex].TagTitle.Value:='Иванов Иван Иванович';
+//  Contact.Contacts[ListBox1.ItemIndex].TagTitle.Value:='РРІР°РЅРѕРІ РРІР°РЅ РРІР°РЅРѕРІРёС‡';
   Contact.Contacts[ListBox1.ItemIndex].PrimaryEmail:='vlad383@mail.ru';
   Contact.UpdateContact(ListBox1.ItemIndex);
   ListBox1.Items[ListBox1.ItemIndex]:=Contact.Contacts[ListBox1.ItemIndex].ContactName;
@@ -297,6 +320,16 @@ begin
 //  ListBox1.Items.Add(Contact.Contacts.Last.ContactName)
 end;
 
+procedure TForm3.ReadData(const TotalBytes, ReadBytes: int64);
+begin
+  fLog.Memo1.Lines.Add('РџСЂРѕС‡РёС‚Р°РЅРѕ '+IntToStr(ReadBytes)+' РёР· '+IntToStr(TotalBytes))
+end;
+
+procedure TForm3.RetriveXML(const FromURL: string);
+begin
+  fLog.Memo1.Lines.Add('РџРѕР»СѓС‡Р°РµРј РґР°РЅРЅС‹Рµ СЃ URL '+FromURL)
+end;
+
 procedure TForm3.ToolButton1Click(Sender: TObject);
 begin
 ProfileForm.Show;
@@ -305,13 +338,22 @@ end;
 procedure TForm3.ToolButton2Click(Sender: TObject);
 var i:integer;
      iCounterPerSec: TLargeInteger;
-     T1, T2: TLargeInteger; //значение счётчика ДО и ПОСЛЕ операции
+     T1, T2: TLargeInteger; //Р·РЅР°С‡РµРЅРёРµ СЃС‡С‘С‚С‡РёРєР° Р”Рћ Рё РџРћРЎР›Р• РѕРїРµСЂР°С†РёРё
 
 begin
   if Loginer.Login()=lrOk then
     begin
+
       Contact:=TGoogleContact.Create(self,Loginer.Auth,GmailContact);
-    //засекаем время
+      //Р·Р°С‚Р°С‡РёРІР°РµРј СЃРѕР±С‹С‚РёСЏ
+      Contact.OnRetriveXML:=RetriveXML;
+      Contact.OnBeginParse:=BeginParse;
+      Contact.OnEndParse:=EndParse;
+      Contact.OnReadData:=ReadData;
+      fLog.Show;
+
+
+    //Р·Р°СЃРµРєР°РµРј РІСЂРµРјСЏ
       QueryPerformanceFrequency(iCounterPerSec);
       QueryPerformanceCounter(T1);
 
@@ -320,16 +362,16 @@ begin
       StatusBar1.Panels[3].Text:=IntToStr(Contact.RetriveContacts);
       //Contact.LoadContactsFromFile('ContactList.xml');
 
-      //показываем
+      //РїРѕРєР°Р·С‹РІР°РµРј
       QueryPerformanceCounter(T2);
-      StatusBar1.Panels[5].Text:=(FormatFloat('0.0000', (T2 - T1) / iCounterPerSec) + ' сек.');
+      StatusBar1.Panels[5].Text:=(FormatFloat('0.0000', (T2 - T1) / iCounterPerSec) + ' СЃРµРє.');
 
 
       QueryPerformanceFrequency(iCounterPerSec);
       QueryPerformanceCounter(T1);
       Contact.SaveContactsToFile('ContactList.xml');
        QueryPerformanceCounter(T2);
-      ShowMessage((FormatFloat('0.0000', (T2 - T1) / iCounterPerSec) + ' сек.'));
+      ShowMessage((FormatFloat('0.0000', (T2 - T1) / iCounterPerSec) + ' СЃРµРє.'));
 
       ListBox1.Items.Clear;
       for i:=0 to Contact.Contacts.Count - 1 do
@@ -337,7 +379,7 @@ begin
           ListBox1.Items.Add(Contact.Contacts[i].ContactName)
         end;
       ComboBox1.Items.Clear;
-      ComboBox1.Items.Add('Все');
+      ComboBox1.Items.Add('Р’СЃРµ');
       for i:=0 to Contact.Groups.Count - 1 do
         ComboBox1.Items.Add(Contact.Groups[i].Title.Value);
       ComboBox1.ItemIndex:=1;

@@ -54,6 +54,10 @@
 			<DCCReference Include="..\..\source\GHelper.pas"/>
 			<DCCReference Include="..\..\addons\nativexml\NativeXml.pas"/>
 			<DCCReference Include="..\..\source\GDataCommon.pas"/>
+			<DCCReference Include="..\..\source\uLanguage.pas"/>
+			<DCCReference Include="uLog.pas">
+				<Form>fLog</Form>
+			</DCCReference>
 			<None Include="ModelSupport_contacts\default.txaPackage"/>
 			<None Include="ModelSupport_contacts\default.txvpck"/>
 			<None Include="ModelSupport_contacts\NativeXml\default.txvpck"/>

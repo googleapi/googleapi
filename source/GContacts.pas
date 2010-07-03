@@ -4,7 +4,7 @@ interface
 
 uses NativeXML, strUtils, httpsend, GHelper,Classes,SysUtils,
 GDataCommon,Generics.Collections,Dialogs,jpeg, Graphics, typinfo,
-IOUtils;
+IOUtils,uLanguage,blcksock;
 
 // 1. правильно обрабатывать конакты разбиые по группам
 // 2. писать обработчики событий
@@ -25,6 +25,14 @@ const
   {$ENDREGION}
 
 type
+  TParseElement = (T_Group, T_Contact);
+//события компонента
+  TOnRetriveXML = procedure (const FromURL:string) of object;
+  TOnBeginParse = procedure (const What: TParseElement; Total, Number: integer) of object;
+  TOnEndParse = procedure (const What: TParseElement; Element: TObject) of object;
+  TOnReadData = procedure (const TotalBytes, ReadBytes: int64) of object;
+
+type
   THTTPSender = class(THTTPSend)
   private
     FMethod: string;
@@ -37,6 +45,9 @@ type
     procedure SetExtendedHeaders(const Value: TStringList);
     procedure SetMethod(const Value: string);
     procedure SetURL(const Value: string);
+
+    function GetLength(const aURL:string):integer;
+    function HeadByName(const aHead:string;aHeaders:TStringList):string;
   public
     constructor Create(const aMethod,aAuthKey, aURL, aAPIVersion:string);
     procedure Clear;
@@ -78,7 +89,7 @@ type
   public
     constructor Create(const byNode: TXmlNode=nil);
     procedure Clear;
-    destructor Destroy;override;
+    destructor Destroy;
     function IsEmpty: boolean;
     //ToDate - перевод в формат TDate; Если задан укороченый формат, то
     //годом будет текущий
@@ -402,16 +413,18 @@ end;
 end;
 
 //TGoogleContact
-  TOnRetriveXML = procedure (const FromURL:string) of object;
-
-
   TGoogleContact = class(TComponent)
   private
     FAuth: string; //AUTH для доступа к API
     FEmail:string; //обязательно GMAIL!
+    FTotalBytes: int64;
+    FBytesCount: int64;
     FGroups: TList<TContactGroup>;//группы контактов
     FContacts: TList<TContact>;//все контакты
     FOnRetriveXML: TOnRetriveXML;
+    FOnBeginParse : TOnBeginParse;
+    FOnEndParse : TOnEndParse;
+    FOnReadData: TOnReadData;
     function GetNextLink(Stream:TStream):string;overload;
     function GetNextLink(aXMLDoc:TNativeXml):string;overload;
     function GetContactsByGroup(GroupName:string):TList<TContact>;
@@ -419,7 +432,8 @@ end;
     procedure ParseXMLContacts(const Data: TStream);
     function GetEditLink(aContact:TContact):string;
     function InsertPhotoEtag(aContact: TContact; const Response:TStream):boolean;
-
+    function GetTotalCount(aXMLDoc:TNativeXml):integer;
+    procedure ReadData(Sender: TObject; Reason: THookSocketReason; const Value: String);
   public
     constructor Create(AOwner:TComponent; const aAuth,aEmail: string);
     destructor Destroy;override;
@@ -452,24 +466,29 @@ end;
     property ContactsByGroup[GroupName:string]:TList<TContact> read GetContactsByGroup;
 
     {События компонента}
-    //загрузка XML-документа с сервера
+    //начало загрузки XML-документа с сервера
     property OnRetriveXML: TOnRetriveXML read FOnRetriveXML write FOnRetriveXML;
+    //старт парсинга XML
+    property OnBeginParse: TOnBeginParse read FOnBeginParse write FOnBeginParse;
+    //окончание парсинга XML
+    property OnEndParse: TOnEndParse read FOnEndParse write FOnEndParse;
+    property OnReadData: TOnReadData read FOnReadData write FOnReadData;
  end;
 
 //получение типа узла
-function GetContactNodeType(const NodeName: string):TcpTagEnum;
-function GetContactNodeName(const NodeType:TcpTagEnum):string;
+function GetContactNodeType(const NodeName: string):TcpTagEnum;inline;
+function GetContactNodeName(const NodeType:TcpTagEnum):string;inline;
 
 implementation
 
-function GetContactNodeName(const NodeType:TcpTagEnum):string;
+function GetContactNodeName(const NodeType:TcpTagEnum):string;inline;
 begin
     Result:=GetEnumName(TypeInfo(TcpTagEnum),ord(NodeType));
     Delete(Result,1,3);
     Result:=CpNodeAlias+Result;
 end;
 
-function GetContactNodeType(const NodeName: string):TcpTagEnum;
+function GetContactNodeType(const NodeName: string):TcpTagEnum;inline;
 var i: integer;
 begin
   if pos(CpNodeAlias,NodeName)>0 then
@@ -1816,6 +1835,14 @@ finally
 end;
 end;
 
+function TGoogleContact.GetTotalCount(aXMLDoc: TNativeXml): integer;
+begin
+  Result:=-1;
+  if aXMLDoc=nil then Exit;
+  //ищем вот такой узел <openSearch:totalResults>ЧИСЛО</openSearch:totalResults>
+  Result:=aXMLDoc.Root.NodeByName('openSearch:totalResults').ValueAsIntegerDef(-1)
+end;
+
 function TGoogleContact.GetNextLink(Stream: TStream): string;
 var i:integer;
     List: TXmlNodeList;
@@ -1912,7 +1939,16 @@ try
   List:=TXmlNodeList.Create;
   XMLDoc.Root.NodesByName(EntryNodeName,List);
   for i:=0 to List.Count - 1 do
-     FContacts.Add(TContact.Create(List.Items[i]));
+    begin
+      //Если событие определено - отправляем данные
+      if Assigned(FOnBeginParse) then
+        OnBeginParse(T_Contact,GetTotalCount(XMLDoc),FContacts.Count+1);
+      //парсим элемент контакта
+      FContacts.Add(TContact.Create(List.Items[i]));
+      //Если событие определено - отправляем данные. В Element кладем TContact
+      if Assigned(FOnEndParse) then
+        OnEndParse(T_Contact,FContacts.Last)
+    end;
 finally
   FreeAndNil(List);
   FreeAndNil(XMLDoc);
@@ -1924,6 +1960,17 @@ begin
   Result:=nil;
   if (index>=FContacts.Count)or(index<0) then Exit;
     Result:=RetriveContactPhoto(FContacts[index])
+end;
+
+procedure TGoogleContact.ReadData(Sender: TObject; Reason: THookSocketReason;
+  const Value: String);
+begin
+if Reason=HR_ReadCount then
+  begin
+    FBytesCount:=FBytesCount+StrToInt(Value);
+    if Assigned(FOnReadData) then
+      OnReadData(FTotalBytes,FBytesCount)
+  end;
 end;
 
 function TGoogleContact.RetriveContactPhoto(aContact: TContact): TJPEGImage;
@@ -1963,8 +2010,12 @@ try
  NextLink:=CPContactsLink;
  XMLDoc:=TStringStream.Create('',TEncoding.UTF8);
  repeat
+   FTotalBytes:=0;
+   FBytesCount:=0;
    with THTTPSender.Create('GET',FAuth,NextLink,CpProtocolVer)do
      begin
+       Sock.OnStatus:=ReadData;
+       FTotalBytes:=GetLength(NextLink);
        if Assigned(FOnRetriveXML) then
          OnRetriveXML(NextLink);
        if SendRequest then
@@ -1989,23 +2040,39 @@ end;
 
 function TGoogleContact.RetriveGroups: integer;
 var XMLDoc: TNativeXML;
-    i:integer;
+    List: TXMLNodeLIst;
+    i,count:integer;
     NextLink: string;
 begin
 try
  NextLink:=Format(CpGroupLink,[FEmail]);
  XMLDoc:=TNativeXml.Create;
  repeat
+   FTotalBytes:=0;
+   FBytesCount:=0;
    with THTTPSender.Create('GET',FAuth,NextLink,CpProtocolVer)do
      begin
+       Sock.OnStatus:=ReadData;
+       FTotalBytes:=GetLength(NextLink);
        if Assigned(FOnRetriveXML) then
          OnRetriveXML(NextLink);
        if SendRequest then
          begin
            XMLDoc.LoadFromStream(Document);
-           for i:=0 to XMLDoc.Root.NodeCount - 1 do
-              if XMLDoc.Root.Nodes[i].Name=EntryNodeName then
-                 FGroups.Add(TContactGroup.Create(XMLDoc.Root.Nodes[i]));
+           List:=TXmlNodeList.Create;
+           XMLDoc.Root.NodesByName(EntryNodeName,List);
+           count:=GetTotalCount(XMLDoc);
+           for i:=0 to List.Count - 1 do
+             begin
+               //если событие определено - отправляем данные
+               if Assigned(FOnBeginParse) then
+                 OnBeginParse(T_Group,count,FGroups.Count+1);
+               //парсим группу
+               FGroups.Add(TContactGroup.Create(List.Items[i]));
+               //если событие определено - отправляем данные
+               if Assigned(FOnEndParse) then
+                 OnEndParse(T_Group,FGroups.Last);
+             end;
            NextLink:=GetNextLink(XMLDoc);
          end
        else
@@ -2132,6 +2199,48 @@ begin
   FApiVersion:=aAPIVersion;
   FMethod:=aMethod;
   FExtendedHeaders:=TStringList.Create;
+end;
+
+function THTTPSender.GetLength(const aURL: string): integer;
+var i:integer;
+    size,content:string;
+    ch:char;
+    h:TStringList;
+begin
+  with THTTPSend.Create do
+    begin
+      Headers.Add('GData-Version: '+FApiVersion);
+      Headers.Add('Authorization: GoogleLogin auth=' + FAuthKey);
+      if HTTPMethod('HEAD',aURL) then
+        begin
+          h:=TStringList.Create;
+          h.Assign(Headers);
+          content:=HeadByName('content-length',H);
+          H.Delete(H.IndexOf(HeadByName('Connection',H)));
+          H.Delete(H.IndexOf(content));
+          for ch in content do
+            if ch in ['0'..'9'] then
+               size:=size+ch;
+          Result:=StrToIntDef(size,0)+
+               Length(BytesOf(H.Text));
+        end
+      else
+       Result:=-1;
+    end
+end;
+
+function THTTPSender.HeadByName(const aHead: string;aHeaders:TStringList): string;
+var str: string;
+begin
+Result:='';
+for str in aHeaders do
+   begin
+     if pos(LowerCase(aHead),lowercase(str))>0 then
+       begin
+         Result:=str;
+         break;
+       end;
+   end;
 end;
 
 function THTTPSender.SendRequest: boolean;
