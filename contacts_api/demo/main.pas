@@ -65,7 +65,6 @@ type
     procedure ToolButton3Click(Sender: TObject);
     procedure ToolButton4Click(Sender: TObject);
     procedure ListBox1DblClick(Sender: TObject);
-    procedure Button1Click(Sender: TObject);
   private
     { Private declarations }
   public
@@ -84,24 +83,6 @@ implementation
 uses Profile;
 
 {$R *.dfm}
-
-procedure TForm3.Button1Click(Sender: TObject);
-//var ContactNew: TContact;
-var XML:TNativeXML;
-begin
-XML:=TNativeXml.Create;
-XML.ReadFromString('Простая строка');
-//Contact.LoadContactsFromFile('ContactList.xml');
-//ContactNew:=TContact.Create(nil,nil);
-//ContactNew.LoadFromFile('MyContact.xml');
-//Contact.Contacts.Add(ContactNew);
-//StatusBar1.Panels[3].Text:=IntToStr(Contact.Contacts.Count);
-//ListBox1.Items.Add(ContactNew.ContactName);
-//if Contact.AddContact(ContactNew)then
-//
-////if Contact.AddContact(Contact.Contacts[ListBox1.ItemIndex])then
-//  ShowMessage('Created');
-end;
 
 procedure TForm3.ComboBox1Change(Sender: TObject);
 var i:integer;

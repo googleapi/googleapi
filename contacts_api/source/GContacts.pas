@@ -46,6 +46,7 @@ type
     FShortFormat: boolean;//укороченый формат дня рождения --MM-DD
   public
     constructor Create(const byNode: TXmlNode=nil);
+    procedure Clear;
     destructor Destroy;override;
     function IsEmpty: boolean;
     //ToDate - перевод в формат TDate; Если задан укороченый формат, то
@@ -69,6 +70,7 @@ type
   public
     constructor Create(const byNode: TXMLNode=nil);
     procedure ParseXML(const Node: TXmlNode);
+    procedure Clear;
     function  AddToXML(Root:TXmlNode):TXmlNode;
     function isEmpty:boolean;
     property Description: string read FDescr write FDescr;
@@ -89,6 +91,7 @@ type
     FWhen: TgdWhen;
   public
     constructor Create(const byNode: TXmlNode=nil);
+    procedure Clear;
     procedure ParseXML(const Node: TXMLNode);
     function IsEmpty: boolean;
     function AddToXML(Root: TXmlNode):TXmlNode;
@@ -105,6 +108,7 @@ type
     FValue: string;
   public
     constructor Create(const ByNode: TXMLNode=nil);
+    procedure Clear;
     procedure ParseXML(const Node: TXmlNode);
     function IsEmpty:boolean;
     function AddToXML(Root: TXmlNode):TXmlNode;
@@ -121,6 +125,7 @@ type
     FValue: TGenderType;
   public
     constructor Create(const ByNode: TXMLNode=nil);
+    procedure Clear;
     function IsEmpty:boolean;
     procedure ParseXML(const Node: TXmlNode);
     function AddToXML(Root: TXmlNode):TXmlNode;
@@ -134,6 +139,7 @@ type
     FHref: string;
   public
     constructor Create(const ByNode: TXMLNode=nil);
+    procedure Clear;
     procedure ParseXML(const Node: TXmlNode);
     function IsEmpty: boolean;
     function AddToXML(Root: TXmlNode):TXmlNode;
@@ -153,6 +159,7 @@ type
     FText: string;
   public
     constructor Create(const ByNode: TXMLNode=nil);
+    procedure Clear;
     procedure ParseXML(const Node: TXmlNode);
     function IsEmpty: boolean;
     function AddToXML(Root: TXmlNode):TXmlNode;
@@ -167,6 +174,7 @@ type
     Flabel: string;
   public
     constructor Create(const ByNode: TXMLNode=nil);
+    procedure Clear;
     function IsEmpty: boolean;
     procedure ParseXML(const Node: TXmlNode);
     function AddToXML(Root: TXmlNode):TXmlNode;
@@ -187,6 +195,7 @@ type
     FRel: TPriotityRel;
   public
     constructor Create(const ByNode: TXMLNode=nil);
+    procedure Clear;
     function IsEmpty:boolean;
     procedure ParseXML(const Node: TXmlNode);
     function AddToXML(Root: TXmlNode):TXmlNode;
@@ -212,6 +221,7 @@ type
     procedure SetDescr(const aDescr:string);
   public
     constructor Create(const ByNode: TXMLNode=nil);
+    procedure Clear;
     function IsEmpty:boolean;
     procedure ParseXML(const Node: TXmlNode);
     function AddToXML(Root: TXmlNode):TXmlNode;
@@ -227,6 +237,7 @@ type
     FRel: TSensitivityRel;
   public
     constructor Create(const ByNode: TXMLNode=nil);
+    procedure Clear;
     function IsEmpty:boolean;
     procedure ParseXML(const Node: TXmlNode);
     function AddToXML(Root: TXmlNode):TXmlNode;
@@ -245,6 +256,7 @@ type
     procedure SetId(aId:string);
   public
     constructor Create(const ByNode: TXMLNode=nil);
+    procedure Clear;
     function IsEmpty:boolean;
     procedure ParseXML(const Node: TXmlNode);
     function  AddToXML(Root: TXmlNode):TXmlNode;
@@ -258,6 +270,7 @@ type
     FValue: string;
   public
     constructor Create(const ByNode: TXMLNode=nil);
+    procedure Clear;
     function IsEmpty: boolean;
     procedure ParseXML(const Node: TXmlNode);
     function  AddToXML(Root: TXmlNode):TXmlNode;
@@ -279,6 +292,7 @@ type
     procedure SetRel(aRel:TWebSiteType);
   public
     constructor Create(const ByNode: TXMLNode=nil);
+    procedure Clear;
     function IsEmpty:boolean;
     procedure ParseXML(const Node: TXmlNode);
     function  AddToXML(Root: TXmlNode):TXmlNode;
@@ -325,7 +339,7 @@ type
     constructor Create(byNode: TXMLNode);
     destructor Destroy; override;
     function IsEmpty: boolean;
-
+    procedure Clear;
     procedure ParseXML(Node: TXMLNode);overload;
     procedure ParseXML(Stream:TStream);overload;
     function FindEmail(const aEmail:string; out Index:integer):TgdEmail;
@@ -477,12 +491,17 @@ if (Month>0)and(Day>0) then
   end;
 end;
 
-constructor TcpBirthday.Create(const byNode: TXmlNode);
+procedure TcpBirthday.Clear;
 begin
-  inherited Create;
   FYear:=0;
   FMonth:=0;
   FDay:=0;
+end;
+
+constructor TcpBirthday.Create(const byNode: TXmlNode);
+begin
+  inherited Create;
+  Clear;
   if byNode<>nil then
     ParseXML(byNode);
 end;
@@ -558,14 +577,19 @@ begin
     Result.WriteAttributeBool('primary',FPrimary);
 end;
 
+procedure TcpCalendarLink.Clear;
+begin
+  FDescr:='';
+  FHref:='';
+end;
+
 constructor TcpCalendarLink.Create(const byNode: TXMLNode);
 begin
   inherited Create;
-  FDescr:='';
-  FHref:='';
+  Clear;
   if byNode<>nil then
     ParseXML(byNode);
-end;
+ end;
 
 function TcpCalendarLink.isEmpty: boolean;
 begin
@@ -615,11 +639,16 @@ begin
   FWhen.AddToXML(Result,tdDate);
 end;
 
+procedure TcpEvent.Clear;
+begin
+  FEventType:=teNone;
+  Flabel:='';
+end;
+
 constructor TcpEvent.Create(const byNode: TXmlNode);
 begin
   inherited Create;
-  FEventType:=teNone;
-  Flabel:='';
+  Clear;
   FWhen:=TgdWhen.Create;
   if byNode<>nil then
     ParseXML(byNode);
@@ -647,7 +676,7 @@ begin
         FEventType:=TEventRel(GetEnumValue(TypeInfo(TEventRel),s));
       end;
 
-    WhenNode:=Node.FindNode(cGDTagNames[ord(egdWhen)]);
+    WhenNode:=Node.FindNode(GetGDNodeName(gd_When));
     if WhenNode<>nil then
        FWhen:=TgdWhen.Create(WhenNode)
     else
@@ -675,12 +704,17 @@ begin
   Result.WriteAttributeString('value',FValue);
 end;
 
-constructor TcpExternalId.Create(const ByNode: TXMLNode);
+procedure TcpExternalId.Clear;
 begin
-  inherited Create;
   Frel:=tiNone;
   FLabel:='';
   FValue:='';
+end;
+
+constructor TcpExternalId.Create(const ByNode: TXMLNode);
+begin
+  inherited Create;
+  Clear;
   if ByNode<>nil then
     ParseXML(ByNode);
 end;
@@ -718,10 +752,15 @@ if (Root=nil)or IsEmpty then Exit;
   Result.WriteAttributeString('value',GetEnumName(TypeInfo(TGenderType),Ord(FValue)));
 end;
 
+procedure TcpGender.Clear;
+begin
+ FValue:=none;
+end;
+
 constructor TcpGender.Create(const ByNode: TXMLNode);
 begin
   inherited Create;
-  FValue:=none;
+  Clear;
   if ByNode<>nil then
     ParseXML(ByNode);
 end;
@@ -754,10 +793,15 @@ begin
  Result.WriteAttributeBool('deleted',FDeleted);
 end;
 
+procedure TcpGroupMembershipInfo.Clear;
+begin
+  FHref:='';
+end;
+
 constructor TcpGroupMembershipInfo.Create(const ByNode: TXMLNode);
 begin
   inherited Create;
-  FHref:='';
+  Clear;
   if ByNode<>nil then
     ParseXML(ByNode);
 end;
@@ -798,11 +842,16 @@ begin
  Result.ValueAsString:=FText;
 end;
 
+procedure TcpJot.Clear;
+begin
+  FRel:=TjNone;
+  FText:='';
+end;
+
 constructor TcpJot.Create(const ByNode: TXMLNode);
 begin
   inherited Create;
-  FRel:=TjNone;
-  FText:='';
+  Clear;
   if ByNode<>nil then
     ParseXML(ByNode);
 end;
@@ -836,11 +885,16 @@ begin
   Result.WriteAttributeString('label',Flabel);
 end;
 
+procedure TcpLanguage.Clear;
+begin
+  Fcode:='';
+  Flabel:='';
+end;
+
 constructor TcpLanguage.Create(const ByNode: TXMLNode);
 begin
   inherited Create;
-  Fcode:='';
-  Flabel:='';
+  Clear;
   if ByNode<>nil then
     ParseXML(ByNode);
 end;
@@ -876,10 +930,15 @@ begin
   Result.WriteAttributeString('rel',sRel);
 end;
 
+procedure TcpPriority.Clear;
+begin
+ FRel:=tpNone;
+end;
+
 constructor TcpPriority.Create(const ByNode: TXMLNode);
 begin
   inherited Create;
-  FRel:=tpNone;
+  Clear;
   if ByNode<>nil then
     ParseXML(ByNode);
 end;
@@ -915,12 +974,17 @@ else
 Result.ValueAsString:=FValue;
 end;
 
-constructor TcpRelation.Create(const ByNode: TXMLNode);
+procedure TcpRelation.Clear;
 begin
-  inherited Create;
   FDescr:='';
   FValue:='';
   FRealition:=trNone;
+end;
+
+constructor TcpRelation.Create(const ByNode: TXMLNode);
+begin
+  inherited Create;
+  Clear;
   if ByNode<>nil then
     ParseXML(ByNode);
 end;
@@ -988,10 +1052,15 @@ begin
   Result.WriteAttributeString('rel',sRel);
 end;
 
+procedure TcpSensitivity.Clear;
+begin
+  FRel:=TsNone;
+end;
+
 constructor TcpSensitivity.Create(const ByNode: TXMLNode);
 begin
   inherited Create;
-  FRel:=TsNone;
+  Clear;
   if ByNode<>nil then
     ParseXML(ByNode);
 end;
@@ -1026,10 +1095,15 @@ Result:=Root.NodeNew(GetContactNodeName(cp_systemGroup));
   Result.WriteAttributeString('id',Fid);
 end;
 
+procedure TcpSystemGroup.Clear;
+begin
+  Fid:='';
+end;
+
 constructor TcpsystemGroup.Create(const ByNode: TXMLNode);
 begin
   inherited Create;
-  Fid:='';
+  Clear;
   if ByNode<>nil then
     ParseXML(ByNode);
 end;
@@ -1070,11 +1144,16 @@ begin
   Result.WriteAttributeString('value',FValue);
 end;
 
+procedure TcpUserDefinedField.Clear;
+begin
+  FKey:='';
+  FValue:='';
+end;
+
 constructor TcpUserDefinedField.Create(const ByNode: TXMLNode);
 begin
   inherited Create;
-  FKey:='';
-  FValue:='';
+  Clear;
   if ByNode<>nil then
     ParseXML(ByNode);
 end;
@@ -1115,13 +1194,18 @@ begin
     Result.WriteAttributeString('label',Flabel);
 end;
 
-constructor TcpWebsite.Create(const ByNode: TXMLNode);
+procedure TcpWebsite.Clear;
 begin
-  inherited Create;
   FHref:='';
   Flabel:='';
   FRel:='';
   FWebSiteType:=twOther;
+end;
+
+constructor TcpWebsite.Create(const ByNode: TXMLNode);
+begin
+  inherited Create;
+  Clear;
   if ByNode<>nil then
     ParseXML(ByNode);
 end;
@@ -1163,6 +1247,29 @@ FWebSiteType:=aRel;
 end;
 
 { TContact }
+
+procedure TContact.Clear;
+begin
+ FEtag:='';
+ FId:='';
+ FUpdated:=0;
+ FTitle.Clear;
+ FContent.Clear;
+ FLinks.Clear;
+ FName.Clear;
+ FNickName.Clear;
+ FBirthDay.Clear;
+ FOrganization.Clear;
+ FEmails.Clear;
+ FPhones.Clear;
+ FPostalAddreses.Clear;
+ FEvents.Clear;
+ FRelations.Clear;
+ FUserFields.Clear;
+ FWebSites.Clear;
+ FGroupMemberships.Clear;
+ FIMs.Clear;
+end;
 
 constructor TContact.Create(byNode: TXMLNode);
 begin
@@ -1298,13 +1405,6 @@ else
   Result:=FTitle.Value
 end;
 
-//function TContact.GetName: TgdName;
-//begin
-//Result:=TgdName.Create();
-//if FName<>nil then
-//  Result:=FName
-//end;
-
 function TContact.GetOrganization: TgdOrganization;
 begin
   Result:=TgdOrganization.Create();
@@ -1397,16 +1497,16 @@ try
  for I := 0 to List.Count - 1 do
    FId:=List.Items[i].ValueAsString;
  //вначале заполняем все списки
- Node.NodesByName(cGDTagNames[ord(egdEmail)],List);
+ Node.NodesByName(GetGDNodeName(gd_Email),List);
  for i:=0 to List.Count-1 do
    FEmails.Add(TgdEmail.Create(List.Items[i]));
- Node.NodesByName(cGDTagNames[ord(egdPhoneNumber)],List);
+ Node.NodesByName(GetGDNodeName(gd_PhoneNumber),List);
  for i:=0 to List.Count-1 do
     FPhones.Add(TgdPhoneNumber.Create(List.Items[i]));
- Node.NodesByName(cGDTagNames[ord(egdIm)],List);
+ Node.NodesByName(GetGDNodeName(gd_Im),List);
  for i:=0 to List.Count-1 do
     FIMs.Add(TgdIM.Create(List.Items[i]));
- Node.NodesByName(cGDTagNames[ord(egdStructuredPostalAddress)],List);
+ Node.NodesByName(GetGDNodeName(gd_StructuredPostalAddress),List);
  for i:=0 to List.Count-1 do
    FPostalAddreses.Add(TgdStructuredPostalAddress.Create(List.Items[i]));
  Node.NodesByName(GetContactNodeName(cp_Event),List);
@@ -1442,10 +1542,10 @@ try
             (LowerCase(Node.Nodes[i].Name)=LowerCase(CpAtomAlias+'content')) then
            FContent:=TTextTag.Create(Node.Nodes[i])
          else
-           if LowerCase(Node.Nodes[i].Name)=LowerCase(cGDTagNames[ord(egdName)]) then
+           if LowerCase(Node.Nodes[i].Name)=LowerCase(GetGDNodeName(gd_Name)) then
              FName:=TgdName.Create(Node.Nodes[i])
            else
-             if LowerCase(Node.Nodes[i].Name)=LowerCase(cGDTagNames[ord(egdOrganization)]) then
+             if LowerCase(Node.Nodes[i].Name)=LowerCase(GetGDNodeName(gd_Organization)) then
                FOrganization:=TgdOrganization.Create(Node.Nodes[i])
              else
                 if LowerCase(Node.Nodes[i].Name)=LowerCase(GetContactNodeName(cp_Birthday)) then
@@ -1975,7 +2075,10 @@ try
        begin
          Result:=ResultCode=200;
          if Result then
-           aContact.ParseXML(Document);
+           begin
+             aContact.Clear;
+             aContact.ParseXML(Document);
+           end;
          Document.SaveToFile('Response.xml');
        end
      else

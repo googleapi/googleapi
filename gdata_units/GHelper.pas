@@ -421,6 +421,7 @@ type
     constructor Create(const NodeName: string; NodeValue:string='');overload;
 
     function IsEmpty: boolean;
+    procedure Clear;
     procedure ParseXML(Node: TXMLNode);
     function AddToXML(Root: TXMLNode): TXMLNode;
     property Value: string read FValue write FValue;
@@ -683,12 +684,18 @@ end;
 constructor TTextTag.Create(const ByNode: TXMLNode);
 begin
   inherited Create;
-  FName:='';
-  FValue:='';
   FAtributes:=TList<TAttribute>.Create;
+  Clear;
   if ByNode = nil then
     Exit;
   ParseXML(ByNode);
+end;
+
+procedure TTextTag.Clear;
+begin
+  FName:='';
+  FValue:='';
+  FAtributes.Clear;
 end;
 
 constructor TTextTag.Create(const NodeName: string; NodeValue: string);
