@@ -9,7 +9,6 @@ IOUtils;
 // 1. правильно обрабатывать конакты разбиые по группам
 // 2. писать обработчики событий
 
-
 const
   {$REGION 'Константы'}
    CpProtocolVer = '3.0';
@@ -26,6 +25,30 @@ const
   {$ENDREGION}
 
 type
+  THTTPSender = class(THTTPSend)
+  private
+    FMethod: string;
+    FURL: string;
+    FAuthKey:string;
+    FApiVersion:string;
+    FExtendedHeaders:TStringList;
+    procedure SetApiVersion(const Value: string);
+    procedure SetAuthKey(const Value: string);
+    procedure SetExtendedHeaders(const Value: TStringList);
+    procedure SetMethod(const Value: string);
+    procedure SetURL(const Value: string);
+  public
+    constructor Create(const aMethod,aAuthKey, aURL, aAPIVersion:string);
+    procedure Clear;
+    function  SendRequest: boolean;
+    property  Method: string  read FMethod write SetMethod;
+    property  URL: string read FURL write SetURL;
+    property  AuthKey:string read FAuthKey write SetAuthKey;
+    property  ApiVersion:string read FApiVersion write SetApiVersion;
+    property  ExtendedHeaders:TStringList read FExtendedHeaders write SetExtendedHeaders;
+end;
+
+type
   TcpTagEnum = (cp_billingInformation,cp_birthday,cp_calendarLink,
   cp_directoryServer,cp_event,cp_externalId,cp_gender,
   cp_groupMembershipInfo,cp_hobby, cp_initials,
@@ -35,6 +58,15 @@ type
 
 type
   TcpBillingInformation = TTextTag;
+  TcpDirectoryServer = TTextTag;
+  TcpHobby = TTextTag;
+  TcpInitials = TTextTag;
+  TcpShortName = TTextTag;
+  TcpSubject = TTextTag;
+  TcpMaidenName = TTextTag;
+  TcpMileage = TTextTag;
+  TcpNickname = TTextTag;
+  TcpOccupation = TTextTag;
 
 type
   TcpBirthday =class
@@ -78,10 +110,6 @@ type
 end;
 
 type
-  TcpDirectoryServer = TTextTag;
-
-
-type
   TEventRel = (teNone,teAnniversary,teOther);
   TcpEvent = class
   private
@@ -116,7 +144,6 @@ type
     property Value: string read FValue write FValue;
 end;
 
-
 type
   TGenderType = (none,male,female);
   TcpGender = class
@@ -145,10 +172,6 @@ type
     property Href: string read FHref write FHref;
     property Deleted:boolean read FDeleted write FDeleted;
 end;
-
-type
-  TcpHobby = TTextTag;
-  TcpInitials = TTextTag;
 
 type
   TJotRel = (TjNone,Tjhome, Tjwork, Tjother, Tjkeywords, Tjuser);
@@ -180,12 +203,6 @@ type
     property Code: string read Fcode write Fcode;
     property Labl:string read Flabel write Flabel;
 end;
-
-type
-  TcpMaidenName = TTextTag;
-  TcpMileage = TTextTag;
-  TcpNickname = TTextTag;
-  TcpOccupation = TTextTag;
 
 type
   TPriotityRel = (TpNone,Tplow,Tpnormal,Tphigh);
@@ -236,10 +253,6 @@ type
     function AddToXML(Root: TXmlNode):TXmlNode;
     property Rel: TSensitivityRel read FRel write FRel;
 end;
-
-type
-  TcpShortName = TTextTag;
-  TcpSubject = TTextTag;
 
 type
   TcpSystemGroup = class
@@ -398,6 +411,7 @@ end;
     FEmail:string; //обязательно GMAIL!
     FGroups: TList<TContactGroup>;//группы контактов
     FContacts: TList<TContact>;//все контакты
+    FOnRetriveXML: TOnRetriveXML;
     function GetNextLink(Stream:TStream):string;overload;
     function GetNextLink(aXMLDoc:TNativeXml):string;overload;
     function GetContactsByGroup(GroupName:string):TList<TContact>;
@@ -436,6 +450,10 @@ end;
 
     property Contacts:TList<TContact> read FContacts write FContacts;
     property ContactsByGroup[GroupName:string]:TList<TContact> read GetContactsByGroup;
+
+    {События компонента}
+    //загрузка XML-документа с сервера
+    property OnRetriveXML: TOnRetriveXML read FOnRetriveXML write FOnRetriveXML;
  end;
 
 //получение типа узла
@@ -1611,26 +1629,25 @@ if (aContact=nil) Or aContact.IsEmpty  then Exit;
 try
   XML:=TNativeXml.Create;
   XML.ReadFromString(aContact.ToXMLText[tfAtom]);
-  with THTTPSend.Create do
+  with THTTPSender.Create('POST',FAuth,CpContactsLink,CpProtocolVer)do
     begin
-     Headers.Add('GData-Version: '+CpProtocolVer);
-     Headers.Add('Authorization: GoogleLogin auth=' + FAuth);
-     MimeType := 'application/atom+xml';
-     XML.SaveToStream(Document);
-     if HTTPMethod('POST',CpContactsLink) then
-       begin
-         Result:=(ResultCode=201);
-         if Result then
-           begin
-             XML.Clear;
-             XML.LoadFromStream(Document);
-             FContacts.Add(TContact.Create(XML.Root))
-           end;
-         {TODO -oVlad -cНедочёт : Необходимо обработать возможные исключения}
-//         Document.SaveToFile('G:\delphicelendar\contacts_api\node_atom.xml');
-       end
-     else
-       ShowMessage(IntToStr(ResultCode)+' '+ResultString)
+      MimeType := 'application/atom+xml';
+      XML.SaveToStream(Document);
+      if SendRequest then
+        begin
+          Result:=(ResultCode=201);
+          if Result then
+            begin
+              XML.Clear;
+              XML.LoadFromStream(Document);
+              FContacts.Add(TContact.Create(XML.Root))
+            end;
+        end
+      else
+        begin
+           { TODO -oVlad -cbugs : Корректно обработать исключение }
+           ShowMessage(IntToStr(ResultCode)+' '+ResultString)
+        end;
     end;
 finally
   FreeAndNil(XML)
@@ -1671,20 +1688,20 @@ if Length(aContact.Etag)>0 then
    begin
      if LowerCase(aContact.FLinks[i].Rel)='edit' then
        begin
-         with THTTPSend.Create do
-           begin
-             Headers.Add('GData-Version: '+CpProtocolVer);
-             Headers.Add('Authorization: GoogleLogin auth=' + Self.FAuth);
-             MimeType := 'application/atom+xml';
-             Headers.Add('If-Match: '+aContact.Etag);
-             if HTTPMethod('DELETE',aContact.FLinks[i].Href) then
-               begin
-         {TODO -oVlad -cНедочёт : Необходимо обработать возможные исключения}
-//         Document.SaveToFile('G:\delphicelendar\contacts_api\node_response.xml');
-               end
-             else
-               ShowMessage(IntToStr(ResultCode)+' '+ResultString)
-         end;
+          with THTTPSender.Create('DELETE',FAuth,aContact.FLinks[i].Href,CpProtocolVer)do
+            begin
+              MimeType := 'application/atom+xml';
+              ExtendedHeaders.Add('If-Match: '+aContact.Etag);
+              if SendRequest then
+                begin
+                  {TODO -oVlad -cНедочёт : Необходимо обработать возможные исключения}
+                end
+              else
+                begin
+                  { TODO -oVlad -cbugs : Корректно обработать исключение }
+                  ShowMessage(IntToStr(ResultCode)+' '+ResultString)
+                end;
+            end;
          break;
        end;
    end;
@@ -1716,16 +1733,14 @@ Result:=false;
 if aContact=nil then Exit;
   for I := 0 to aContact.FLinks.Count - 1 do
     begin
-      if (LowerCase(aContact.FLinks[i].Ltype)=CpImgRel)and
+     if (LowerCase(aContact.FLinks[i].Ltype)=CpImgRel)and
         (Length(aContact.FLinks[i].Etag)>0)  then
         begin
-          with THTTPSend.Create do
+          with THTTPSender.Create('DELETE',FAuth,aContact.FLinks[i].Href,CpProtocolVer) do
             begin
-              Headers.Add('GData-Version: '+CpProtocolVer);
-              Headers.Add('Authorization: GoogleLogin auth=' + FAuth);
               MimeType := CpImgRel;
-              Headers.Add('If-Match: *');
-              if HTTPMethod('DELETE',aContact.FLinks[i].Href) then
+              ExtendedHeaders.Add('If-Match: *');
+              if SendRequest then
                 begin
                   Result:=ResultCode=200;
                   if Result then
@@ -1846,6 +1861,7 @@ function TGoogleContact.InsertPhotoEtag(aContact: TContact;
 var XML: TNativeXML;
     i:integer;
     etag: string;
+    L: TStringList;
 begin
 Result:=false;
 try
@@ -1915,35 +1931,54 @@ var i:integer;
 begin
 Result:=nil;
 if aContact=nil then Exit;
-
   for i:=0 to aContact.FLinks.Count - 1 do
     begin
-      if aContact.FLinks[i].Rel=CpPhotoLink then
+      if (aContact.FLinks[i].Rel=CpPhotoLink)and(Length(aContact.FLinks[i].Etag)>0) then
         begin
-          if Length(aContact.FLinks[i].Etag)>0 then
-            begin
-              Result:=TJPEGImage.Create;
-              Result.LoadFromStream(SendRequest('GET',aContact.FLinks[i].Href,FAuth,CpProtocolVer,nil,nil));
-              break;
+           with THTTPSender.Create('GET',FAuth,aContact.FLinks[i].Href,CpProtocolVer)do
+              begin
+                if Assigned(FOnRetriveXML) then
+                   OnRetriveXML(aContact.FLinks[i].Href);
+                MimeType := 'application/atom+xml';
+                if SendRequest then
+                  begin
+                    Result:=TJPEGImage.Create;
+                    Result.LoadFromStream(Document);
+                  end
+                 else
+                   begin
+                     { TODO -oVlad -cbugs : Корректно обработать исключение }
+                   end;
+                 break;
+               end;
             end;
         end;
-    end;
 end;
 
 function TGoogleContact.RetriveContacts: integer;
 var XMLDoc: TStringStream;
-//    i:integer;
     NextLink: string;
 begin
 try
  NextLink:=CPContactsLink;
  XMLDoc:=TStringStream.Create('',TEncoding.UTF8);
  repeat
-//   inc(i);
-   XMLDoc.LoadFromStream(SendRequest('GET',NextLink,FAuth,CpProtocolVer, nil, nil));
-   ParseXMLContacts(XMLDoc);
-//   XMLDoc.SaveToFile('Retrive'+IntToStr(i)+'.xml');
-   NextLink:=GetNextLink(XMLDoc);
+   with THTTPSender.Create('GET',FAuth,NextLink,CpProtocolVer)do
+     begin
+       if Assigned(FOnRetriveXML) then
+         OnRetriveXML(NextLink);
+       if SendRequest then
+         begin
+           XMLDoc.LoadFromStream(Document);
+           ParseXMLContacts(XMLDoc);
+           NextLink:=GetNextLink(XMLDoc);
+         end
+       else
+         begin
+           { TODO -oVlad -cbugs : Корректно обработать исключение }
+           break;
+         end;
+     end;
   until NextLink='';
 Result:=FContacts.Count;
 finally
@@ -1961,11 +1996,21 @@ try
  NextLink:=Format(CpGroupLink,[FEmail]);
  XMLDoc:=TNativeXml.Create;
  repeat
-   XMLDoc.LoadFromStream(SendRequest('GET',NextLink,FAuth,CpProtocolVer, nil, nil));
-   for i:=0 to XMLDoc.Root.NodeCount - 1 do
-     if XMLDoc.Root.Nodes[i].Name=EntryNodeName then
-       FGroups.Add(TContactGroup.Create(XMLDoc.Root.Nodes[i]));
-    NextLink:=GetNextLink(XMLDoc);
+   with THTTPSender.Create('GET',FAuth,NextLink,CpProtocolVer)do
+     begin
+       if Assigned(FOnRetriveXML) then
+         OnRetriveXML(NextLink);
+       if SendRequest then
+         begin
+           XMLDoc.LoadFromStream(Document);
+           for i:=0 to XMLDoc.Root.NodeCount - 1 do
+              if XMLDoc.Root.Nodes[i].Name=EntryNodeName then
+                 FGroups.Add(TContactGroup.Create(XMLDoc.Root.Nodes[i]));
+           NextLink:=GetNextLink(XMLDoc);
+         end
+       else
+         break; { TODO -oVlad -cbugs : Корректно обработать исключение }
+     end;
   until NextLink='';
 Result:=FGroups.Count;
 finally
@@ -2013,18 +2058,17 @@ Result:=false;
     begin
       if aContact.FLinks[i].Ltype=CpImgRel then
         begin
-           with THTTPSend.Create do
-             begin
-               Headers.Add('GData-Version: '+CpProtocolVer);
-               Headers.Add('Authorization: GoogleLogin auth=' + FAuth);
-               MimeType := 'image/*';
-               Headers.Add('If-Match: *');
-               Document.LoadFromFile(PhotoFile);
-               if HTTPMethod('PUT',aContact.FLinks[i].Href) then
+           With THTTPSender.Create('PUT',FAuth,aContact.FLinks[i].Href,CpProtocolVer)do
+              begin
+                ExtendedHeaders.Add('If-Match: *');
+                MimeType:=CpImgRel;
+                Document.LoadFromFile(PhotoFile);
+                if SendRequest then
                   Result:=InsertPhotoEtag(aContact, Document)
-               else
-                ShowMessage(IntToStr(ResultCode)+' '+ResultString)
-             end;
+                else
+                  { TODO -oVlad -cbugs : Корректно обработать исключение }
+                  ShowMessage(IntToStr(ResultCode)+' '+ResultString);
+              end;
           break;
         end;
     end;
@@ -2046,28 +2090,90 @@ begin
 try
  Doc:=TNativeXml.Create;
  Doc.ReadFromString(aContact.ToXMLText[tfXML]);
- with THTTPSend.Create do
-   begin
-     Headers.Add('GData-Version: '+CpProtocolVer);
-     Headers.Add('Authorization: GoogleLogin auth=' + FAuth);
-     MimeType := 'application/atom+xml';
-     Headers.Add('If-Match: *'{+aContact.Etag});
-     Doc.SaveToStream(Document);
-     if HTTPMethod('PUT',GetEditLink(aContact)) then
-       begin
-         Result:=ResultCode=200;
-         if Result then
-           begin
-             aContact.Clear;
-             aContact.ParseXML(Document);
-           end;
-       end
-     else
-       ShowMessage(IntToStr(ResultCode)+' '+ResultString)
-   end;
+ with THTTPSender.Create('PUT',FAuth,GetEditLink(aContact),CpProtocolVer)do
+    begin
+      ExtendedHeaders.Add('If-Match: *');
+      MimeType:='application/atom+xml';
+      Doc.SaveToStream(Document);
+      if SendRequest then
+        begin
+          Result:=ResultCode=200;
+          if Result then
+            begin
+              aContact.Clear;
+              aContact.ParseXML(Document);
+            end;
+        end
+      else
+        ShowMessage(IntToStr(ResultCode)+' '+ResultString)
+    end;
 finally
   FreeAndNil(Doc)
 end;
 end;
+
+{ THTTPSender }
+
+procedure THTTPSender.Clear;
+begin
+  inherited Clear;
+  FMethod:='';
+  FURL:='';
+  FAuthKey:='';
+  FApiVersion:='';
+  FExtendedHeaders.Clear;
+end;
+
+constructor THTTPSender.Create(const aMethod, aAuthKey, aURL, aAPIVersion: string);
+begin
+  inherited Create;
+  FAuthKey:=aAuthKey;
+  FURL:=aURL;
+  FApiVersion:=aAPIVersion;
+  FMethod:=aMethod;
+  FExtendedHeaders:=TStringList.Create;
+end;
+
+function THTTPSender.SendRequest: boolean;
+var str: string;
+begin
+  if (Length(Trim(FMethod))=0)or
+     (Length(Trim(FURL))=0)or
+     (Length(Trim(FAuthKey))=0)or
+     (Length(Trim(FApiVersion))=0) then Exit;
+  Headers.Add('GData-Version: '+FApiVersion);
+  Headers.Add('Authorization: GoogleLogin auth=' + FAuthKey);
+  if FExtendedHeaders.Count>0 then
+    for str in FExtendedHeaders do
+      Headers.Add(str);
+  Result:=HTTPMethod(FMethod,FURL);
+end;
+
+procedure THTTPSender.SetApiVersion(const Value: string);
+begin
+  FApiVersion := Value;
+end;
+
+procedure THTTPSender.SetAuthKey(const Value: string);
+begin
+  FAuthKey := Value;
+end;
+
+procedure THTTPSender.SetExtendedHeaders(const Value: TStringList);
+begin
+  FExtendedHeaders := Value;
+end;
+
+procedure THTTPSender.SetMethod(const Value: string);
+begin
+  FMethod := Value;
+end;
+
+procedure THTTPSender.SetURL(const Value: string);
+begin
+  FURL := Value;
+end;
+
+
 
 end.
