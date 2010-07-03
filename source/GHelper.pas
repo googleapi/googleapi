@@ -3,7 +3,7 @@ unit GHelper;
 interface
 
 uses Graphics,strutils,Windows,DateUtils,SysUtils, Variants,
-Classes,StdCtrls,httpsend,Generics.Collections,xmlintf,xmldom,NativeXML,typinfo;
+Classes,StdCtrls,httpsend,Generics.Collections,xmlintf,xmldom,NativeXML;
 
 resourcestring
   rcErrPrepareNode = 'Ошибка обработки узла %s';
@@ -372,20 +372,13 @@ const
 
 //просранства имен для календарей
 clNameSpaces: array [0 .. 2, 0 .. 1] of string =
-    (('xmlns', 'http://www.w3.org/2005/Atom'), ('xmlns:gd',
-      'xmlns:http://schemas.google.com/g/2005'), ('xmlns:gCal',
+    (('', 'http://www.w3.org/2005/Atom'), ('gd',
+      'http://schemas.google.com/g/2005'), ('gCal',
       'http://schemas.google.com/gCal/2005'));
-contactNameSpaces: array [0 .. 2, 0 .. 1] of string =
-    (('xmlns', 'http://www.w3.org/2005/Atom'),
-    ('xmlns:gd', 'http://schemas.google.com/g/2005'),
-    ('xmlns:gContact','http://schemas.google.com/contact/2008'));
 //значения rel для узлов category календарея
 clCategories: array [0 .. 1, 0 .. 1] of string = (('scheme',
       'http://schemas.google.com/g/2005#kind'), ('term',
       'http://schemas.google.com/g/2005#event'));
-
-type
-  TNodePrefix=(tpnone,tpatom);
 
 type
  TTimeZone = packed record
@@ -418,16 +411,19 @@ type
   end;
 
 type
-  TTextTag = class(TPersistent)
+  TTextTag = class
   private
     FName: string;
     FValue: string;
     FAtributes: TList<TAttribute>;
   public
-    Constructor Create(const ByNode: TXMLNode=nil);
+    Constructor Create(const ByNode: TXMLNode=nil);overload;
+    constructor Create(const NodeName: string; NodeValue:string='');overload;
+
+    function IsEmpty: boolean;
+    procedure Clear;
     procedure ParseXML(Node: TXMLNode);
-    function AddToXML(Root: TXMLNode; NodePrefix:TNodePrefix=tpnone): TXMLNode;
-    function IsEmpty:boolean;
+    function AddToXML(Root: TXMLNode): TXMLNode;
     property Value: string read FValue write FValue;
     property Name: string read FName write FName;
     property Attributes: TList<TAttribute>read FAtributes write FAtributes;
@@ -523,7 +519,7 @@ begin
           HTTPMethod(aMethod,tmpURL);
         end;
         Result:=TStringStream.Create('');
-//        Headers.SaveToFile('headers.txt');
+        Headers.SaveToFile('headers.txt');
         Document.SaveToStream(Result);
         Result.Seek(0,soFromBeginning);
      end;
@@ -673,39 +669,47 @@ end;
 
 { TTextTag }
 
-function TTextTag.AddToXML(Root: TXMLNode;NodePrefix:TNodePrefix): TXMLNode;
+function TTextTag.AddToXML(Root: TXMLNode): TXMLNode;
 var
   i: integer;
-  prefix:string;
 begin
-  if IsEmpty then Exit;
-  if NodePrefix=tpnone then
-    Result:= Root.NodeNew(FName)
-  else
-    begin
-      prefix:=GetEnumName(TypeInfo(TNodePrefix),ord(NodePrefix));
-      Delete(prefix,1,2);
-      Result:= Root.NodeNew(prefix+':'+FName)
-    end;
+  if (Root=nil)or IsEmpty then Exit;
+  Result:= Root.NodeNew(FName);
   Result.ValueAsString:=AnsiToUtf8(FValue);
   for i := 0 to FAtributes.Count - 1 do
     Result.AttributeAdd(FAtributes[i].Name,FAtributes[i].Value);
+  //Root.ChildNodes.Add(Result);
 end;
 
 constructor TTextTag.Create(const ByNode: TXMLNode);
 begin
   inherited Create;
   FAtributes:=TList<TAttribute>.Create;
-  FName:='';
-  FValue:='';
+  Clear;
   if ByNode = nil then
     Exit;
   ParseXML(ByNode);
 end;
 
+procedure TTextTag.Clear;
+begin
+  FName:='';
+  FValue:='';
+  FAtributes.Clear;
+end;
+
+constructor TTextTag.Create(const NodeName: string; NodeValue: string);
+begin
+  inherited Create;
+  FName:=NodeName;
+  FValue:=NodeValue;
+  FAtributes:=TList<TAttribute>.Create;
+end;
+
 function TTextTag.IsEmpty: boolean;
 begin
-  Result:=(Length(Trim(FValue))=0)and(FAtributes.Count=0)
+  Result:=(Length(Trim(FName))=0)or
+   ((Length(Trim(FValue))=0)and(FAtributes.Count=0));
 end;
 
 procedure TTextTag.ParseXML(Node: TXMLNode);
@@ -765,11 +769,7 @@ end;
 
 function TEntryLink.AddToXML(Root: TXMLNode): TXMLNode;
 begin
-Result:= Root.NodeNew('link');
-Result.WriteAttributeString('rel',Self.Frel);
-Result.WriteAttributeString('type',Self.Ftype);
-Result.WriteAttributeString('href',Self.Fhref);
-Result.WriteAttributeString('gd:etag',Self.FEtag);
+
 end;
 
 constructor TEntryLink.Create(const ByNode: TXMLNode);

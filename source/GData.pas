@@ -332,7 +332,7 @@ var
     GDElemet: PGDElement;
   begin
     if (Node = nil)or(pos('gd:',Node.NodeName)<=0) then Exit;
-    Index:=GetGDNodeType(Node.NodeName);
+    Index:=ord(GetGDNodeType(Node.NodeName));
     if index>-1 then
       begin
         NodeType:=TgdEnum(index);
@@ -367,7 +367,7 @@ end;
 
 function TEntryElement.GetNodeName(aElementName: TgdEnum): string;
 begin
-Result:=cGDTagNames[ord(aElementName)];
+Result:=GetGDNodeName(aElementName);
 //  case aElementName of
 //    gdCountry:
 //      Result := 'gd:country';
