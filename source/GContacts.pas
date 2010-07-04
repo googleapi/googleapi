@@ -40,12 +40,13 @@ type
     FAuthKey:string;
     FApiVersion:string;
     FExtendedHeaders:TStringList;
+    FDocumentSize: int64;
+    FDownloaded: int64;
     procedure SetApiVersion(const Value: string);
     procedure SetAuthKey(const Value: string);
     procedure SetExtendedHeaders(const Value: TStringList);
     procedure SetMethod(const Value: string);
     procedure SetURL(const Value: string);
-
     function GetLength(const aURL:string):integer;
     function HeadByName(const aHead:string;aHeaders:TStringList):string;
   public
@@ -57,6 +58,8 @@ type
     property  AuthKey:string read FAuthKey write SetAuthKey;
     property  ApiVersion:string read FApiVersion write SetApiVersion;
     property  ExtendedHeaders:TStringList read FExtendedHeaders write SetExtendedHeaders;
+    property  DocumentSize: int64 read FDownloadSize write FDownloadSize;
+    property  Downloaded: int64 read FDownloaded write FDownloaded;
 end;
 
 type
