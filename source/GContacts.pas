@@ -40,8 +40,8 @@ type
     FAuthKey:string;
     FApiVersion:string;
     FExtendedHeaders:TStringList;
-    FDocumentSize: int64;
-    FDownloaded: int64;
+    FDocumentSize: int64;//общий размер документа
+    FDownloaded: int64;  //количество байт закачанных на данный момент
     procedure SetApiVersion(const Value: string);
     procedure SetAuthKey(const Value: string);
     procedure SetExtendedHeaders(const Value: TStringList);
