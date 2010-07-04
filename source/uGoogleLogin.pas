@@ -21,18 +21,18 @@ interface
 uses WinInet, StrUtils, SysUtils, Classes;
 
 resourcestring
- rcNone = 'Аутентификация не производилась или сброшена';
- rcOk = 'Аутентификация прошла успешно';
- rcBadAuthentication ='Не удалось распознать имя пользователя или пароль, использованные в запросе на вход';
- rcNotVerified ='Адрес электронной почты, связанный с аккаунтом, не был подтвержден';
- rcTermsNotAgreed ='Пользователь не принял условия использования службы';
- rcCaptchaRequired ='Требуется ответ на тест CAPTCHA';
- rcUnknown ='Неизвестная ошибка';
- rcAccountDeleted ='Аккаунт этого пользователя удален';
- rcAccountDisabled ='Аккаунт этого пользователя отключен';
- rcServiceDisabled ='Доступ пользователя к указанной службе запрещен';
- rcServiceUnavailable ='Служба недоступна, повторите попытку позже';
- rcDisconnect ='Соединение с сервером разорвано';
+  rcNone = 'Аутентификация не производилась или сброшена';
+  rcOk = 'Аутентификация прошла успешно';
+  rcBadAuthentication ='Не удалось распознать имя пользователя или пароль, использованные в запросе на вход';
+  rcNotVerified ='Адрес электронной почты, связанный с аккаунтом, не был подтвержден';
+  rcTermsNotAgreed ='Пользователь не принял условия использования службы';
+  rcCaptchaRequired ='Требуется ответ на тест CAPTCHA';
+  rcUnknown ='Неизвестная ошибка';
+  rcAccountDeleted ='Аккаунт этого пользователя удален';
+  rcAccountDisabled ='Аккаунт этого пользователя отключен';
+  rcServiceDisabled ='Доступ пользователя к указанной службе запрещен';
+  rcServiceUnavailable ='Служба недоступна, повторите попытку позже';
+  rcDisconnect ='Соединение с сервером разорвано';
 
 const
   DefaultAppName = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; ru; rv:1.9.2.6) Gecko/20100625 Firefox/3.6.6';
@@ -136,6 +136,16 @@ type
     property OnDisconnect: TDisconnect read FDisconnect write FDisconnect;
 end;
 
+//поток для получения ответа от сервера
+type
+  TGoogleLoginThread=class (TThread)
+  private
+  public
+    google:TGoogleLogin;
+    constructor Create(CreateSuspennded: Boolean);
+  end;
+
+
 procedure Register;
 
 implementation
@@ -173,135 +183,138 @@ begin
 end;
 
 constructor TGoogleLogin.Create(AOwner: TComponent);
+var
+  g:TGoogleLoginThread;
 begin
   inherited Create(AOwner);
   FAppname:=DefaultAppName;//дефолтное значение
+  g.google:=Self;
 end;
 
 function TGoogleLogin.ExpertLoginResult(const LoginResult: string): TLoginResult;
 var List: TStringList;
     i:integer;
 begin
-//грузим ответ сервера в список
+  //грузим ответ сервера в список
   List:=TStringList.Create;
   List.Text:=LoginResult;
-//анализируем построчно
-if pos('error',LowerCase(LoginResult))>0 then //есть сообщение об ошибке
+  //анализируем построчно
+  if pos('error',LowerCase(LoginResult))>0 then //есть сообщение об ошибке
   begin
     for i:=0 to List.Count-1 do
+    begin
+      if pos('error',LowerCase(List[i]))>0 then //строка с ошибкой
       begin
-        if pos('error',LowerCase(List[i]))>0 then //строка с ошибкой
-          begin
-            Result:=GetLoginError(List[i]);//получили тип ошибки
-            break;
-          end;
+        Result:=GetLoginError(List[i]);//получили тип ошибки
+        break;
       end;
-      if Result=lrCaptchaRequired then //требуется ввод каптчи
-        begin
-          FCaptchaURL:=GetCaptchaURL(List);
-          FLogintoken:=GetCaptchaToken(List);
-        end;
+    end;
+    if Result=lrCaptchaRequired then //требуется ввод каптчи
+    begin
+      FCaptchaURL:=GetCaptchaURL(List);
+      FLogintoken:=GetCaptchaToken(List);
+    end;
   end
-else
+  else
   begin
     Result:=lrOk;
     for i:=0 to List.Count-1 do
-      begin
-        if pos('SID',UpperCase(List[i]))>0 then
-          FSID:=Trim(copy(List[i],pos('=',List[i])+1,Length(List[i])-pos('=',List[i])))
-        else
-          if pos('LSID',UpperCase(List[i]))>0 then
-            FLSID:=Trim(copy(List[i],pos('=',List[i])+1,Length(List[i])-pos('=',List[i])))
-          else
-            if pos('AUTH',UpperCase(List[i]))>0 then
-              FAuth:=Trim(copy(List[i],pos('=',List[i])+1,Length(List[i])-pos('=',List[i])));
-      end;
+    begin
+      if pos('SID',UpperCase(List[i]))>0 then
+        FSID:=Trim(copy(List[i],pos('=',List[i])+1,Length(List[i])-pos('=',List[i])))
+      else
+      if pos('LSID',UpperCase(List[i]))>0 then
+        FLSID:=Trim(copy(List[i],pos('=',List[i])+1,Length(List[i])-pos('=',List[i])))
+      else
+      if pos('AUTH',UpperCase(List[i]))>0 then
+        FAuth:=Trim(copy(List[i],pos('=',List[i])+1,Length(List[i])-pos('=',List[i])));
+    end;
   end;
-FreeAndNil(List);
+  FreeAndNil(List);
 end;
 
 function TGoogleLogin.GetCaptchaToken(const cList: TStringList): String;
 var i:integer;
 begin
   for I := 0 to cList.Count - 1 do
+  begin
+    if pos('captchatoken',lowerCase(cList[i]))>0 then
     begin
-      if pos('captchatoken',lowerCase(cList[i]))>0 then
-        begin
-          Result:=Trim(copy(cList[i],pos('=',cList[i])+1,Length(cList[i])-pos('=',cList[i])));
-          break;
-        end;
+      Result:=Trim(copy(cList[i],pos('=',cList[i])+1,Length(cList[i])-pos('=',cList[i])));
+      break;
     end;
+  end;
 end;
 
 function TGoogleLogin.GetCaptchaURL(const cList: TStringList): string;
 var i:integer;
 begin
   for I := 0 to cList.Count - 1 do
+  begin
+    if pos('captchaurl',lowerCase(cList[i]))>0 then
     begin
-      if pos('captchaurl',lowerCase(cList[i]))>0 then
-        begin
-          Result:=Trim(copy(cList[i],pos('=',cList[i])+1,Length(cList[i])-pos('=',cList[i])));
-          break;
-        end;
+      Result:=Trim(copy(cList[i],pos('=',cList[i])+1,Length(cList[i])-pos('=',cList[i])));
+      break;
     end;
+  end;
 end;
 
 function TGoogleLogin.GetLoginError(const str: string): TLoginResult;
 var ErrorText:string;
 begin
-//получили текст ошибки
- ErrorText:=Trim(copy(str,pos('=',str)+1,Length(str)-pos('=',str)));
- Result:=TLoginResult(AnsiIndexStr(ErrorText,Errors)+2);
+  //получили текст ошибки
+  ErrorText:=Trim(copy(str,pos('=',str)+1,Length(str)-pos('=',str)));
+  Result:=TLoginResult(AnsiIndexStr(ErrorText,Errors)+2);
 end;
 
 function TGoogleLogin.GetResultText: string;
 begin
- case FLastResult of
-   lrNone: Result:=rcNone;
-   lrOk: Result:=rcOk;
-   lrBadAuthentication: Result:=rcBadAuthentication;
-   lrNotVerified: Result:=rcNotVerified;
-   lrTermsNotAgreed: Result:=rcTermsNotAgreed;
-   lrCaptchaRequired: Result:=rcCaptchaRequired;
-   lrUnknown: Result:=rcUnknown;
-   lrAccountDeleted: Result:=rcAccountDeleted;
-   lrAccountDisabled: Result:=rcAccountDisabled;
-   lrServiceDisabled: Result:=rcServiceDisabled;
-   lrServiceUnavailable: Result:=rcServiceUnavailable;
- end;
+  case FLastResult of
+    lrNone: Result:=rcNone;
+    lrOk: Result:=rcOk;
+    lrBadAuthentication: Result:=rcBadAuthentication;
+    lrNotVerified: Result:=rcNotVerified;
+    lrTermsNotAgreed: Result:=rcTermsNotAgreed;
+    lrCaptchaRequired: Result:=rcCaptchaRequired;
+    lrUnknown: Result:=rcUnknown;
+    lrAccountDeleted: Result:=rcAccountDeleted;
+    lrAccountDisabled: Result:=rcAccountDisabled;
+    lrServiceDisabled: Result:=rcServiceDisabled;
+    lrServiceUnavailable: Result:=rcServiceUnavailable;
+  end;
 end;
 
 function TGoogleLogin.Login(aLoginToken, aLoginCaptcha: string): TLoginResult;
 var cBody: TStringStream;
     ResponseText: string;
 begin
- //формируем запрос
- cBody:=TStringStream.Create('');
- case FAccountType of
-   atNone,atHOSTED_OR_GOOGLE:cBody.WriteString('accountType=HOSTED_OR_GOOGLE&');
-   atGOOGLE:cBody.WriteString('accountType=GOOGLE&');
-   atHOSTED:cBody.WriteString('accountType=HOSTED&');
- end;
- cBody.WriteString('Email='+FEmail+'&');
- cBody.WriteString('Passwd='+URLEncode(FPassword)+'&');
- cBody.WriteString('service='+ServiceIDs[ord(FService)]+'&');
+  //формируем запрос
+  cBody:=TStringStream.Create('');
+  case FAccountType of
+    atNone,atHOSTED_OR_GOOGLE:cBody.WriteString('accountType=HOSTED_OR_GOOGLE&');
+    atGOOGLE:cBody.WriteString('accountType=GOOGLE&');
+    atHOSTED:cBody.WriteString('accountType=HOSTED&');
+  end;
+  cBody.WriteString('Email='+FEmail+'&');
+  cBody.WriteString('Passwd='+URLEncode(FPassword)+'&');
+  cBody.WriteString('service='+ServiceIDs[ord(FService)]+'&');
 
- if Length(Trim(FSource))>0 then
-   cBody.WriteString('source='+FSource)
- else
-   cBody.WriteString('source='+DefaultAppName);
- if Length(Trim(aLoginToken))>0 then
-   begin
-     cBody.WriteString('&logintoken='+aLoginToken);
-     cBody.WriteString('&logincaptcha='+aLoginCaptcha);
-   end;
-//отправляем запрос на сервер
-ResponseText:=SendRequest(cBody.DataString);
-//проанализировали результат и заполнили необходимые поля
-Result:=ExpertLoginResult(ResponseText);
-FLastResult:=Result;
-if Assigned(FAfterLogin) then
-  OnAfterLogin(FLastResult,GetResultText)
+  if Length(Trim(FSource))>0 then
+    cBody.WriteString('source='+FSource)
+  else
+    cBody.WriteString('source='+DefaultAppName);
+  if Length(Trim(aLoginToken))>0 then
+  begin
+    cBody.WriteString('&logintoken='+aLoginToken);
+    cBody.WriteString('&logincaptcha='+aLoginCaptcha);
+  end;
+  //отправляем запрос на сервер
+  ResponseText:=SendRequest(cBody.DataString);
+  //проанализировали результат и заполнили необходимые поля
+  Result:=ExpertLoginResult(ResponseText);
+  FLastResult:=Result;
+  if Assigned(FAfterLogin) then
+    OnAfterLogin(FLastResult,GetResultText)
 end;
 
 function TGoogleLogin.SendRequest(const ParamStr: string): AnsiString;
@@ -311,42 +324,40 @@ function TGoogleLogin.SendRequest(const ParamStr: string): AnsiString;
   end;
 var hInternet,hConnect,hRequest : Pointer;
     dwBytesRead,I,L : Cardinal;
-    a:string;
 begin
-  a:=ParamStr;
-try
-hInternet := InternetOpen(PChar('GoogleLogin'),INTERNET_OPEN_TYPE_PRECONFIG,Nil,Nil,0);
- if Assigned(hInternet) then
-    begin
-      //Открываем сессию
-      hConnect := InternetConnect(hInternet,PChar('www.google.com'),Flags_connection,nil,nil,INTERNET_SERVICE_HTTP,0,1);
-      if Assigned(hConnect) then
+  try
+    hInternet := InternetOpen(PChar('GoogleLogin'),INTERNET_OPEN_TYPE_PRECONFIG,Nil,Nil,0);
+     if Assigned(hInternet) then
         begin
-          //Формируем запрос
-          hRequest := HttpOpenRequest(hConnect,PChar(uppercase('post')),PChar('accounts/ClientLogin?'+ParamStr),HTTP_VERSION,nil,Nil,Flags_Request,1);
-          if Assigned(hRequest) then
+          //Открываем сессию
+          hConnect := InternetConnect(hInternet,PChar('www.google.com'),Flags_connection,nil,nil,INTERNET_SERVICE_HTTP,0,1);
+          if Assigned(hConnect) then
             begin
-              //Отправляем запрос
-              I := 1;
-              if HttpSendRequest(hRequest,nil,0,nil,0) then
+              //Формируем запрос
+              hRequest := HttpOpenRequest(hConnect,PChar(uppercase('post')),PChar('accounts/ClientLogin?'+ParamStr),HTTP_VERSION,nil,Nil,Flags_Request,1);
+              if Assigned(hRequest) then
                 begin
-                  repeat
-                    DataAvailable(hRequest, L);//Получаем кол-во принимаемых данных
-                    if L = 0 then break;
-                    SetLength(Result,L + I);
-                    if not InternetReadFile(hRequest,@Result[I],sizeof(L),dwBytesRead) then break;//Получаем данные с сервера
-                    inc(I,dwBytesRead);
-                  until dwBytesRead = 0;
-                  Result[I] := #0;
+                  //Отправляем запрос
+                  I := 1;
+                  if HttpSendRequest(hRequest,nil,0,nil,0) then
+                    begin
+                      repeat
+                        DataAvailable(hRequest, L);//Получаем кол-во принимаемых данных
+                        if L = 0 then break;
+                        SetLength(Result,L + I);
+                        if not InternetReadFile(hRequest,@Result[I],sizeof(L),dwBytesRead) then break;//Получаем данные с сервера
+                        inc(I,dwBytesRead);
+                      until dwBytesRead = 0;
+                      Result[I] := #0;
+                    end;
                 end;
             end;
         end;
-    end;
-finally
-  InternetCloseHandle(hRequest);
-  InternetCloseHandle(hConnect);
-  InternetCloseHandle(hInternet);
-end;
+  finally
+    InternetCloseHandle(hRequest);
+    InternetCloseHandle(hConnect);
+    InternetCloseHandle(hInternet);
+  end;
 end;
 
 //устанавливаем значение строки символов, которая передается серверу
@@ -391,9 +402,9 @@ end;
 
 procedure TGoogleLogin.SetSource(cSource: string);
 begin
-FSource:=cSource;
-if FLastResult=lrOk then
-  Disconnect;//обнуляем результаты
+  FSource:=cSource;
+  if FLastResult=lrOk then
+    Disconnect;//обнуляем результаты
 end;
 
 function TGoogleLogin.URLDecode(const S: string): string;
@@ -502,6 +513,14 @@ begin
       Result[idx + 2] := DigitToHex(Ord(S[i]) mod 16);
       idx := idx + 3;
     end;
+end;
+
+{ TGoogleLoginThread }
+
+constructor TGoogleLoginThread.Create(CreateSuspennded: Boolean);
+begin
+  inherited Create(CreateSuspennded);
+
 end;
 
 end.

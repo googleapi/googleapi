@@ -21,7 +21,7 @@
 		</PropertyGroup>
 		<PropertyGroup Condition="'$(Base)'!=''">
 			<DCC_UnitAlias>WinTypes=Windows;WinProcs=Windows;DbiTypes=BDE;DbiProcs=BDE;DbiErrs=BDE;$(DCC_UnitAlias)</DCC_UnitAlias>
-			<DCC_DependencyCheckOutputName>C:\Users\Public\Documents\RAD Studio\7.0\Bpl\GoogleLogin.bpl</DCC_DependencyCheckOutputName>
+			<DCC_DependencyCheckOutputName>C:\Documents and Settings\All Users\Документы\RAD Studio\7.0\Bpl\GoogleLogin.bpl</DCC_DependencyCheckOutputName>
 			<DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
 			<GenDll>true</GenDll>
 			<GenPackage>true</GenPackage>
