@@ -136,15 +136,6 @@ type
     property OnDisconnect: TDisconnect read FDisconnect write FDisconnect;
 end;
 
-//поток для получения ответа от сервера
-type
-  TGoogleLoginThread=class (TThread)
-  private
-  public
-    google:TGoogleLogin;
-    constructor Create(CreateSuspennded: Boolean);
-  end;
-
 
 procedure Register;
 
@@ -183,12 +174,9 @@ begin
 end;
 
 constructor TGoogleLogin.Create(AOwner: TComponent);
-var
-  g:TGoogleLoginThread;
 begin
   inherited Create(AOwner);
   FAppname:=DefaultAppName;//дефолтное значение
-  g.google:=Self;
 end;
 
 function TGoogleLogin.ExpertLoginResult(const LoginResult: string): TLoginResult;
@@ -513,14 +501,6 @@ begin
       Result[idx + 2] := DigitToHex(Ord(S[i]) mod 16);
       idx := idx + 3;
     end;
-end;
-
-{ TGoogleLoginThread }
-
-constructor TGoogleLoginThread.Create(CreateSuspennded: Boolean);
-begin
-  inherited Create(CreateSuspennded);
-
 end;
 
 end.
