@@ -49,7 +49,6 @@ object Form3: TForm3
       item
         Width = 50
       end>
-    ExplicitTop = 331
   end
   object ToolBar1: TToolBar
     Left = 0
@@ -105,7 +104,6 @@ object Form3: TForm3
     Align = alLeft
     BevelOuter = bvNone
     TabOrder = 2
-    ExplicitHeight = 293
     object Label5: TLabel
       Left = 0
       Top = 0
@@ -133,7 +131,6 @@ object Form3: TForm3
       Align = alClient
       Caption = #1050#1086#1085#1090#1072#1082#1090#1099
       TabOrder = 1
-      ExplicitHeight = 259
       object ListBox1: TListBox
         Left = 2
         Top = 15
@@ -144,7 +141,6 @@ object Form3: TForm3
         TabOrder = 0
         OnClick = ListBox1Click
         OnDblClick = ListBox1DblClick
-        ExplicitHeight = 242
       end
     end
   end
@@ -156,7 +152,6 @@ object Form3: TForm3
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 3
-    ExplicitHeight = 293
     object Label1: TLabel
       Left = 12
       Top = 6
@@ -366,7 +361,7 @@ object Form3: TForm3
     Left = 20
     Top = 240
     Bitmap = {
-      494C010104001C00B00020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010104001C00B40020002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       0000000000003600000028000000800000004000000001002000000000000080
       0000000000000000000000000000000000000000000000000000000000000000
       0000000000000000000000000000000000000000000000000000000000000000
@@ -1430,6 +1425,15 @@ object Form3: TForm3
       000000000000}
   end
   object OpenPictureDialog1: TOpenPictureDialog
+    Filter = 
+      'All (*.png;*.gif;*.png;*.jpg;*.jpeg;*.bmp;*.tif;*.tiff;*.ico;*.e' +
+      'mf;*.wmf)|*.png;*.gif;*.png;*.jpg;*.jpeg;*.bmp;*.tif;*.tiff;*.ic' +
+      'o;*.emf;*.wmf|Portable network graphics (AlphaControls) (*.png)|' +
+      '*.png|GIF Image (*.gif)|*.gif|Portable Network Graphics (*.png)|' +
+      '*.png|JPEG Image File (*.jpg)|*.jpg|JPEG Image File (*.jpeg)|*.j' +
+      'peg|Bitmaps (*.bmp)|*.bmp|TIFF Images (*.tif)|*.tif|TIFF Images ' +
+      '(*.tiff)|*.tiff|Icons (*.ico)|*.ico|Enhanced Metafiles (*.emf)|*' +
+      '.emf|Metafiles (*.wmf)|*.wmf'
     Left = 136
     Top = 112
   end

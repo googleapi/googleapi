@@ -40,26 +40,23 @@ type
     FAuthKey:string;
     FApiVersion:string;
     FExtendedHeaders:TStringList;
-    FDocumentSize: int64;//общий размер документа
-    FDownloaded: int64;  //количество байт закачанных на данный момент
     procedure SetApiVersion(const Value: string);
     procedure SetAuthKey(const Value: string);
     procedure SetExtendedHeaders(const Value: TStringList);
     procedure SetMethod(const Value: string);
     procedure SetURL(const Value: string);
-    function GetLength(const aURL:string):integer;
     function HeadByName(const aHead:string;aHeaders:TStringList):string;
+    procedure AddGoogleHeaders;
   public
     constructor Create(const aMethod,aAuthKey, aURL, aAPIVersion:string);
     procedure Clear;
+    function GetLength(const aURL:string):integer;
     function  SendRequest: boolean;
     property  Method: string  read FMethod write SetMethod;
     property  URL: string read FURL write SetURL;
     property  AuthKey:string read FAuthKey write SetAuthKey;
     property  ApiVersion:string read FApiVersion write SetApiVersion;
     property  ExtendedHeaders:TStringList read FExtendedHeaders write SetExtendedHeaders;
-    property  DocumentSize: int64 read FDownloadSize write FDownloadSize;
-    property  Downloaded: int64 read FDownloaded write FDownloaded;
 end;
 
 type
@@ -319,14 +316,17 @@ type
     property  Href: string read FHref write FHref;
     property  Primary: boolean read FPrimary write FPrimary;
     property  Labl: string read Flabel write Flabel;
-    property SiteType: TWebSiteType read FWebSiteType write SetRel;
+    property  SiteType: TWebSiteType read FWebSiteType write SetRel;
 end;
 
 type
   TGoogleContact = class;
   TContactGroup = class;
-
+  //тип формируемого файла
   TFileType = (tfAtom, tfXML);
+  //тип сортировки конактов
+  TSortOrder = (Ts_None, Ts_ascending,Ts_descending);
+
   TContact = class
   private
     FEtag: string;
@@ -428,6 +428,11 @@ end;
     FOnBeginParse : TOnBeginParse;
     FOnEndParse : TOnEndParse;
     FOnReadData: TOnReadData;
+    FMaximumResults: integer;
+    FStartIndex: integer;
+    FUpdatesMin: TDateTime;
+    FSortOrder: TSortOrder;
+    FShowDeleted: boolean;
     function GetNextLink(Stream:TStream):string;overload;
     function GetNextLink(aXMLDoc:TNativeXml):string;overload;
     function GetContactsByGroup(GroupName:string):TList<TContact>;
@@ -437,11 +442,22 @@ end;
     function InsertPhotoEtag(aContact: TContact; const Response:TStream):boolean;
     function GetTotalCount(aXMLDoc:TNativeXml):integer;
     procedure ReadData(Sender: TObject; Reason: THookSocketReason; const Value: String);
+    function RetriveContactPhoto(index:integer):TJPEGImage;overload;
+    function RetriveContactPhoto(aContact:TContact):TJPEGImage;overload;
+    procedure SetMaximumResults(const Value: integer);
+    procedure SetShowDeleted(const Value: boolean);
+    procedure SetSortOrder(const Value: TSortOrder);
+    procedure SetStartIndex(const Value: integer);
+    procedure SetUpdatesMin(const Value: TDateTime);
+    function  ParamsToStr:TStringList;
   public
     constructor Create(AOwner:TComponent; const aAuth,aEmail: string);
     destructor Destroy;override;
-    function RetriveGroups:integer;   //получение всех групп пользователя
-    function RetriveContacts: integer;//получение всех контактов пользователя
+    //получение всех групп пользователя
+    function RetriveGroups:integer;
+    //получение всех контактов пользователя
+    function RetriveContacts: integer;overload;
+
     //удаление контакта
     function DeleteContact(index:integer):boolean;overload;//по индексу в списке FContacts
     function DeleteContact(aContact:TContact):boolean;overload;
@@ -451,8 +467,8 @@ end;
     function UpdateContact(aContact:TContact):boolean;overload;
     function UpdateContact(index:integer):boolean;overload;
     //получение фотографии контакта
-    function RetriveContactPhoto(index:integer):TJPEGImage;overload;
-    function RetriveContactPhoto(aContact:TContact):TJPEGImage;overload;
+    function RetriveContactPhoto(aContact:TContact; DefaultImage: TFileName):TJPEGImage; overload;
+    function RetriveContactPhoto(index:integer; DefaultImage: TFileName):TJPEGImage; overload;
     //обновление фото контакта
     function UpdatePhoto(index:integer; const PhotoFile: TFileName):boolean;overload;
     function UpdatePhoto(aContact:TContact; const PhotoFile: TFileName):boolean;overload;
@@ -462,13 +478,24 @@ end;
     //сохранение/загрузка контактов в/из файл/-а
     procedure SaveContactsToFile(const FileName:string);
     procedure LoadContactsFromFile(const FileName:string);
-
+    { ----------------Свойства компонента-------------------------}
+    //группы контактов
     property Groups: TList<TContactGroup> read FGroups write FGroups;
-
+    //все контакты пользователя
     property Contacts:TList<TContact> read FContacts write FContacts;
+    //контакты, находящиеся в группе GroupName
     property ContactsByGroup[GroupName:string]:TList<TContact> read GetContactsByGroup;
-
-    {События компонента}
+    //максимальное количество записей контактов возвращаемое в одном фиде
+    property MaximumResults: integer read FMaximumResults write SetMaximumResults;
+    //начальный номер контакта с которого начинать принятие данных
+    property StartIndex: integer read FStartIndex write SetStartIndex;
+    //нижняя граница обновления контактов
+    property UpdatesMin: TDateTime read FUpdatesMin write SetUpdatesMin;
+    //определяет будут ли показываться в списке удаленные контакты
+    property ShowDeleted: boolean read FShowDeleted write SetShowDeleted;
+    //сортировка контактов
+    property SortOrder:TSortOrder read FSortOrder write SetSortOrder;
+    { ----------------События компонента-------------------------}
     //начало загрузки XML-документа с сервера
     property OnRetriveXML: TOnRetriveXML read FOnRetriveXML write FOnRetriveXML;
     //старт парсинга XML
@@ -480,6 +507,7 @@ end;
 
 //получение типа узла
 function GetContactNodeType(const NodeName: string):TcpTagEnum;inline;
+//получение имени узла по его типу
 function GetContactNodeName(const NodeType:TcpTagEnum):string;inline;
 
 implementation
@@ -1683,6 +1711,13 @@ begin
   inherited Create(AOwner);
   FEmail:=aEmail;
   FAuth:=aAuth;
+
+  FMaximumResults:=-1;
+  FStartIndex:=1;
+  FUpdatesMin:=0;
+  FShowDeleted:=false;
+  FSortOrder:=Ts_None;
+
   FGroups:=TList<TContactGroup>.Create;
   FContacts:=TList<TContact>.Create;
 end;
@@ -1930,6 +1965,28 @@ begin
   end;
 end;
 
+function TGoogleContact.ParamsToStr: TStringList;
+var S:string;
+begin
+Result:=TStringList.Create;
+Result.Delimiter:='&';
+  if FMaximumResults>0 then
+    Result.Add('max-results='+IntToStr(FMaximumResults));
+  if FStartIndex>1 then
+    Result.Add('start-index='+IntToStr(FStartIndex));
+  if ShowDeleted then
+    Result.Add('showdeleted=true');
+  if FUpdatesMin>0 then
+     Result.Add('updated-min='+DateTimeToServerDate(FUpdatesMin));
+  if FSortOrder<>Ts_None then
+    begin
+      S:=GetEnumName(TypeInfo(TSortOrder),ord(FSortOrder));
+      Delete(S,1,3);
+      Result.Add('sortorder='+S);
+    end;
+
+end;
+
 procedure TGoogleContact.ParseXMLContacts(const Data: TStream);
 var XMLDoc: TNativeXML;
     List: TXMLNodeList;
@@ -1972,7 +2029,7 @@ if Reason=HR_ReadCount then
   begin
     FBytesCount:=FBytesCount+StrToInt(Value);
     if Assigned(FOnReadData) then
-      OnReadData(FTotalBytes,FBytesCount)
+     OnReadData(FTotalBytes,FBytesCount)
   end;
 end;
 
@@ -1985,12 +2042,16 @@ if aContact=nil then Exit;
     begin
       if (aContact.FLinks[i].Rel=CpPhotoLink)and(Length(aContact.FLinks[i].Etag)>0) then
         begin
+           FTotalBytes:=0;
+           FBytesCount:=0;
            with THTTPSender.Create('GET',FAuth,aContact.FLinks[i].Href,CpProtocolVer)do
               begin
+                Sock.OnStatus:=ReadData;//ставим хук на соккет
+                FTotalBytes:=GetLength(aContact.FLinks[i].Href);//получаем размер документа
                 if Assigned(FOnRetriveXML) then
                    OnRetriveXML(aContact.FLinks[i].Href);
                 MimeType := 'application/atom+xml';
-                if SendRequest then
+                if SendRequest and (FTotalBytes>0) then
                   begin
                     Result:=TJPEGImage.Create;
                     Result.LoadFromStream(Document);
@@ -2005,20 +2066,50 @@ if aContact=nil then Exit;
         end;
 end;
 
+function TGoogleContact.RetriveContactPhoto(aContact: TContact;
+  DefaultImage: TFileName): TJPEGImage;
+var Img: TJPEGImage;
+begin
+try
+  if aContact=nil then Exit;
+  if Length(Trim(DefaultImage))=0 then
+    raise Exception.Create(rcErrFileNull);
+  if not FileExists(DefaultImage) then
+    raise Exception.Create(Format(rcErrFileName,[DefaultImage]));
+  Img:=TJPEGImage.Create;
+  Result:=TJPEGImage.Create;
+  img:=RetriveContactPhoto(aContact);
+  if Img=nil then
+    Result.LoadFromFile(DefaultImage)
+  else
+    Result.Assign(img);
+finally
+  FreeAndNil(Img)
+end;
+end;
+
 function TGoogleContact.RetriveContacts: integer;
 var XMLDoc: TStringStream;
     NextLink: string;
+    Params:TStringList;
 begin
 try
  NextLink:=CPContactsLink;
+ Params:=TStringList.Create;
+ Params.Assign(ParamsToStr);
+ if Params.Count>0 then
+    NextLink:=NextLink+'?'+Params.DelimitedText;
+
  XMLDoc:=TStringStream.Create('',TEncoding.UTF8);
  repeat
    FTotalBytes:=0;
    FBytesCount:=0;
+
    with THTTPSender.Create('GET',FAuth,NextLink,CpProtocolVer)do
      begin
-       Sock.OnStatus:=ReadData;
-       FTotalBytes:=GetLength(NextLink);
+       Sock.OnStatus:=ReadData;//ставим хук на соккет
+       FTotalBytes:=GetLength(NextLink);//получаем размер документа
+       //сигналим о начале загрузки
        if Assigned(FOnRetriveXML) then
          OnRetriveXML(NextLink);
        if SendRequest then
@@ -2055,8 +2146,9 @@ try
    FBytesCount:=0;
    with THTTPSender.Create('GET',FAuth,NextLink,CpProtocolVer)do
      begin
-       Sock.OnStatus:=ReadData;
-       FTotalBytes:=GetLength(NextLink);
+       Sock.OnStatus:=ReadData;//ставим хук на соккет
+       FTotalBytes:=GetLength(NextLink);//получаем размер документа
+       //отправляем сообщение о начале загрузки
        if Assigned(FOnRetriveXML) then
          OnRetriveXML(NextLink);
        if SendRequest then
@@ -2108,6 +2200,31 @@ begin
   finally
     FreeAndNil(Stream)
   end;
+end;
+
+procedure TGoogleContact.SetMaximumResults(const Value: integer);
+begin
+  FMaximumResults := Value;
+end;
+
+procedure TGoogleContact.SetShowDeleted(const Value: boolean);
+begin
+  FShowDeleted := Value;
+end;
+
+procedure TGoogleContact.SetSortOrder(const Value: TSortOrder);
+begin
+  FSortOrder := Value;
+end;
+
+procedure TGoogleContact.SetStartIndex(const Value: integer);
+begin
+  FStartIndex := Value;
+end;
+
+procedure TGoogleContact.SetUpdatesMin(const Value: TDateTime);
+begin
+  FUpdatesMin := Value;
 end;
 
 function TGoogleContact.UpdateContact(index: integer): boolean;
@@ -2182,7 +2299,21 @@ finally
 end;
 end;
 
+function TGoogleContact.RetriveContactPhoto(index: integer;
+  DefaultImage: TFileName): TJPEGImage;
+begin
+  if (index>=FContacts.Count)or(index<0) then Exit;
+  Result:=TJPEGImage.Create;
+  Result.Assign(RetriveContactPhoto(FContacts[index],DefaultImage));
+end;
+
 { THTTPSender }
+
+procedure THTTPSender.AddGoogleHeaders;
+begin
+  Headers.Add('GData-Version: '+FApiVersion);
+  Headers.Add('Authorization: GoogleLogin auth=' + FAuthKey);
+end;
 
 procedure THTTPSender.Clear;
 begin
@@ -2214,7 +2345,7 @@ begin
     begin
       Headers.Add('GData-Version: '+FApiVersion);
       Headers.Add('Authorization: GoogleLogin auth=' + FAuthKey);
-      if HTTPMethod('HEAD',aURL) then
+      if HTTPMethod('HEAD',aURL)and (ResultCode=200) then
         begin
           h:=TStringList.Create;
           h.Assign(Headers);
@@ -2224,8 +2355,7 @@ begin
           for ch in content do
             if ch in ['0'..'9'] then
                size:=size+ch;
-          Result:=StrToIntDef(size,0)+
-               Length(BytesOf(H.Text));
+          Result:=StrToIntDef(size,0)+Length(BytesOf(H.Text));
         end
       else
        Result:=-1;
@@ -2253,8 +2383,8 @@ begin
      (Length(Trim(FURL))=0)or
      (Length(Trim(FAuthKey))=0)or
      (Length(Trim(FApiVersion))=0) then Exit;
-  Headers.Add('GData-Version: '+FApiVersion);
-  Headers.Add('Authorization: GoogleLogin auth=' + FAuthKey);
+  //добавляем необходимые заголовки
+  AddGoogleHeaders;
   if FExtendedHeaders.Count>0 then
     for str in FExtendedHeaders do
       Headers.Add(str);
