@@ -354,7 +354,7 @@ type
     function GetContactName:string;
     function GenerateText(TypeFile:TFileType): string;
   public
-    constructor Create(byNode: TXMLNode);
+    constructor Create(byNode: TXMLNode=nil);
     destructor Destroy; override;
     function IsEmpty: boolean;
     procedure Clear;
@@ -450,6 +450,7 @@ end;
     procedure SetStartIndex(const Value: integer);
     procedure SetUpdatesMin(const Value: TDateTime);
     function  ParamsToStr:TStringList;
+    function GetContact(GroupName:string;Index:integer):TContact;
   public
     constructor Create(AOwner:TComponent; const aAuth,aEmail: string);
     destructor Destroy;override;
@@ -478,11 +479,13 @@ end;
     //сохранение/загрузка контактов в/из файл/-а
     procedure SaveContactsToFile(const FileName:string);
     procedure LoadContactsFromFile(const FileName:string);
+
     { ----------------Свойства компонента-------------------------}
     //группы контактов
     property Groups: TList<TContactGroup> read FGroups write FGroups;
     //все контакты пользователя
     property Contacts:TList<TContact> read FContacts write FContacts;
+    property ContactByGroupIndex[Group:string; I:integer]:TContact read GetContact;
     //контакты, находящиеся в группе GroupName
     property ContactsByGroup[GroupName:string]:TList<TContact> read GetContactsByGroup;
     //максимальное количество записей контактов возвращаемое в одном фиде
@@ -1443,6 +1446,7 @@ end;
 
 function TContact.GetContactName: string;
 begin
+Result:=CpDefaultCName;
 if FTitle.IsEmpty then
   if PrimaryEmail<>'' then
     Result:=PrimaryEmail
@@ -1706,8 +1710,8 @@ end;
 
 constructor TGoogleContact.Create(AOwner:TComponent;const aAuth,aEmail: string);
 begin
-  if Trim(aAuth)='' then
-    raise Exception.Create(rcErrNullAuth);
+//  if Trim(aAuth)='' then
+//    raise Exception.Create(rcErrNullAuth);
   inherited Create(AOwner);
   FEmail:=aEmail;
   FAuth:=aAuth;
@@ -1820,6 +1824,22 @@ begin
   FContacts.Free;
   FGroups.Free;
   inherited Destroy;
+end;
+
+function TGoogleContact.GetContact(GroupName: string;
+  Index: integer): TContact;
+var List:TList<TContact>;
+begin
+  Result:=nil;
+try
+  List:=TList<TContact>.Create;
+  List:=GetContactsByGroup(GroupName);
+  if (Index>List.Count)or(Index<0) then Exit;
+  Result:=TContact.Create();
+  Result:=List[index];
+finally
+  FreeAndNil(List);
+end;
 end;
 
 function TGoogleContact.GetContactsByGroup(GroupName: string): TList<TContact>;

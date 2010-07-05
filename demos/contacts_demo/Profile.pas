@@ -1,10 +1,10 @@
-unit Profile;
+﻿unit Profile;
 
 interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls,GoogleLogin;
+  Dialogs, StdCtrls,GoogleLogin,GContacts;
 
 type
   TProfileForm = class(TForm)
@@ -36,6 +36,10 @@ begin
   Loginer:=TGoogleLogin.Create(Edit1.Text,Edit2.Text);
   Loginer.Service:=tsContacts;
   GmailContact:=Edit3.Text;
+
+  if Loginer.LastResult=lrOk then
+    Contact:=TGoogleContact.Create(self,Loginer.Auth,GmailContact);
+
   Hide;
 end;
 
