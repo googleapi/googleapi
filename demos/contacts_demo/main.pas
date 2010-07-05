@@ -74,6 +74,7 @@ type
     procedure ToolButton8Click(Sender: TObject);
     procedure ToolButton9Click(Sender: TObject);
     procedure ToolButton7Click(Sender: TObject);
+    procedure ToolButton6Click(Sender: TObject);
   private
     //TOnRetriveXML
     procedure RetriveXML (const FromURL:string);
@@ -97,7 +98,7 @@ var
 
 implementation
 
-uses Profile, uLog, uQueryForm, uUpdate;
+uses Profile, uLog, uQueryForm, uUpdate, NewContact;
 
 {$R *.dfm}
 
@@ -401,6 +402,11 @@ end;
 procedure TForm3.ToolButton4Click(Sender: TObject);
 begin
   Contact.DeletePhoto(ListBox1.ItemIndex);
+end;
+
+procedure TForm3.ToolButton6Click(Sender: TObject);
+begin
+fNewContact.Show
 end;
 
 procedure TForm3.ToolButton7Click(Sender: TObject);

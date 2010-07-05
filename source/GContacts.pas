@@ -462,7 +462,7 @@ end;
     //удаление контакта
     function DeleteContact(index:integer):boolean;overload;//по индексу в списке FContacts
     function DeleteContact(aContact:TContact):boolean;overload;
-    //добавление контакта
+    //добавление контакта на сервер
     function AddContact(aContact:TContact):boolean;
     //обновление информации о контакте
     function UpdateContact(aContact:TContact):boolean;overload;

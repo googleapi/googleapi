@@ -121,6 +121,7 @@ object Form3: TForm3
       Caption = #1044#1086#1073#1072#1074#1080#1090#1100' '#1085#1086#1074#1099#1081' '#1082#1086#1085#1090#1072#1082#1090
       Enabled = False
       ImageIndex = 3
+      OnClick = ToolButton6Click
     end
     object ToolButton8: TToolButton
       Left = 240

@@ -12,7 +12,8 @@ uses
   uLanguage in '..\..\source\uLanguage.pas',
   uLog in 'uLog.pas' {fLog},
   uQueryForm in 'uQueryForm.pas' {fQuery},
-  uUpdate in 'uUpdate.pas' {fUpdateContact};
+  uUpdate in 'uUpdate.pas' {fUpdateContact},
+  NewContact in 'NewContact.pas' {fNewContact};
 
 {$R *.res}
 
@@ -24,5 +25,6 @@ begin
   Application.CreateForm(TfLog, fLog);
   Application.CreateForm(TfQuery, fQuery);
   Application.CreateForm(TfUpdateContact, fUpdateContact);
+  Application.CreateForm(TfNewContact, fNewContact);
   Application.Run;
 end.

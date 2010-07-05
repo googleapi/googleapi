@@ -44,12 +44,14 @@ begin
     Contact.UpdatesMin:=DateTimePicker1.DateTime;
   Contact.SortOrder:=TSortOrder(ComboBox1.ItemIndex);
   Contact.ShowDeleted:=CheckBox1.Checked;
+  Contact.Contacts.Clear;
   ModalResult:=mrOk;
   Hide;
 end;
 
 procedure TfQuery.FormHide(Sender: TObject);
 begin
+
   Form3.RetriveMyContacts;
 end;
 
