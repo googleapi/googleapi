@@ -37,8 +37,16 @@ begin
   Loginer.Service:=tsContacts;
   GmailContact:=Edit3.Text;
 
+  Form3.ToolButton2.Enabled:=(Loginer.LastResult=lrOk);
+  Form3.ToolButton3.Enabled:=(Loginer.LastResult=lrOk);
+  Form3.ToolButton4.Enabled:=(Loginer.LastResult=lrOk);
+  Form3.ToolButton6:=(Loginer.LastResult=lrOk);
+
   if Loginer.LastResult=lrOk then
-    Contact:=TGoogleContact.Create(self,Loginer.Auth,GmailContact);
+    begin
+      Contact:=TGoogleContact.Create(self,Loginer.Auth,GmailContact);
+
+    end;
 
   Hide;
 end;
