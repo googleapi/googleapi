@@ -2,3 +2,6 @@
 *.local
 *.exe
 *.identcache
+
+*.patch
+*.diff
