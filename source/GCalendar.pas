@@ -215,6 +215,7 @@ type
 type
   TCelenrarEvent = class
   private
+    FVersion : shortstring;
     Fid: string;
     FEtag: string;
     FAuth: string;
@@ -252,6 +253,7 @@ type
     procedure ParseXML(Node: IXMLNode);
     function Update:boolean;
     function DeleteThis:boolean;
+    property Version: shortstring read FVersion;
     property ID: string read Fid;
     property Etag: string read FEtag;
     property PublishedTime: TDateTime read Fpublished;
@@ -284,6 +286,7 @@ type
 type
   TCelendar = class
   private
+    FVersion: shortstring;
     FAuth: string;
     Fid: string;
     FEtag: string;
@@ -320,6 +323,7 @@ type
     function AddSingleEvent(aEvent: TCelenrarEvent): boolean;
     function RetrieveEvents: integer;
     function SendToGoogle(const GoogleAuth: string): boolean;
+    property Version: shortstring read FVersion;
     property Auth: string read FAuth write FAuth;
     property title: string read GetTitle write SetTitle;
     property Description: string read GetDescription write SetDescription;
@@ -346,12 +350,14 @@ type
 type
   TGoogleCalendar = class
   private
+    FVersion: shortstring;
     FAccount: TGoogleLogin;
     FCelendars: TCelendarList; // календари пользователя
   public
     constructor Create(const Email, password: string);
     function Login: boolean;
     procedure RetriveCelendars(const Owner: boolean);
+    property Version: shortstring read FVersion;
     property Account: TGoogleLogin read FAccount write FAccount;
     property Celendars: TCelendarList read FCelendars;
   end;
@@ -359,6 +365,7 @@ type
 function GetGClalNodeType(NodeName: string): TgCalEnum;
 
 implementation
+unit uVersion;
 
 function GetGClalNodeType(NodeName: string): TgCalEnum;
 var
@@ -374,6 +381,7 @@ end;
 constructor TGoogleCalendar.Create(const Email, password: string);
 begin
   inherited Create;
+  FVersion = cVersion;
   try
     FAccount:= TGoogleLogin.Create(Email, password);
     FAccount.Service := tsCelendar;
@@ -457,6 +465,7 @@ end;
 constructor TCelendar.Create(const ByNode: IXMLNode; aAuth: string);
 begin
   inherited Create;
+  FVersion = cVersion;
   FAuth := aAuth;
   FLinks := TCelendarLinksList.Create;
   FAuthor := TAuthorTag.Create;
@@ -1164,6 +1173,7 @@ constructor TCelenrarEvent.Create(const ByNode: IXMLNode; aAuth: string);
 var Attr: TAttribute;
 begin
   inherited Create;
+  FVersion = cVersion;
   FAuth := aAuth;
   Attr.Name:='type';
   Attr.Value:='text';

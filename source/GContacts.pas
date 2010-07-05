@@ -329,6 +329,7 @@ type
 
   TContact = class
   private
+    FVersion: shortstring;
     FEtag: string;
     FId: string;
     FUpdated: TDateTime;
@@ -365,6 +366,7 @@ type
     procedure SaveToFile(const FileName:string; FileType:TFileType=tfAtom);
     procedure LoadFromFile(const FileName:string);
 
+    property Version: shortstring read FVersion;
     property TagTitle: TTextTag read FTitle write FTitle;
     property TagContent:TTextTag read FContent write FContent;
     property TagName: TgdName read FName write FName;
@@ -511,6 +513,7 @@ function GetContactNodeType(const NodeName: string):TcpTagEnum;inline;
 function GetContactNodeName(const NodeType:TcpTagEnum):string;inline;
 
 implementation
+unit uVersion;
 
 function GetContactNodeName(const NodeType:TcpTagEnum):string;inline;
 begin
@@ -1323,6 +1326,7 @@ end;
 constructor TContact.Create(byNode: TXMLNode);
 begin
   inherited Create();
+  FVersion = cVersion;
   FLinks:=TList<TEntryLink>.Create;
   FEmails:= TList<TgdEmail>.Create;
   FPhones:= TList<TgdPhoneNumber>.Create;

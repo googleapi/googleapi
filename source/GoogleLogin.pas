@@ -56,6 +56,7 @@ type
 type
   TGoogleLogin = class
   private
+    FVersion      : shortstring;
     //регистрационные данные
     FAccountType  : TAccountType;
     FLastResult   : TLoginResult;
@@ -86,6 +87,7 @@ type
     constructor Create(const aEmail, aPassword: string);
     function Login(aLoginToken:string='';aLoginCaptcha:string=''):TLoginResult;
     procedure Disconnect;//удаляет все данные по авторизации
+    property Version: shortstring read FVersion;
     property AccountType: TAccountType read FAccountType write FAccountType;
     property LastResult: TLoginResult read FLastResult;
     property LastResultText:string read GetResultText;
@@ -103,6 +105,9 @@ end;
 
 
 implementation
+
+uses uVersion;
+  
 
 { TGoogleLogin }
 
@@ -122,6 +127,7 @@ end;
 constructor TGoogleLogin.Create(const aEmail, aPassword: string);
 begin
 inherited Create;
+  FVersion = cVersion;
   if (Length(Trim(aEmail))>0)and(Length(Trim(aPassword))>0) then
     begin
       FEmail:=aEmail;
