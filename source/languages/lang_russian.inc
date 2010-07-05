@@ -11,6 +11,8 @@
   rcRightAttrValues = 'Допустимые значения атрибута: %s';
   rcErrCGroupCreate ='Пустой XML-документ. Чтение групп контактов прервано';
   rcErrNullAuth = 'Параметр Auth не может быть пустым';
+  rcErrFileName = 'Файл %s отсутствует';
+  rcErrFileNull = 'Не задан файл по умолчанию';
 
 const
   GoogleTimeZones: array [0..308,0..3]of string =

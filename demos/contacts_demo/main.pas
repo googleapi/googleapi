@@ -235,10 +235,9 @@ var img: TJPEGImage;
     i:integer;
 begin
 try
-  if Contact.RetriveContactPhoto(ListBox1.ItemIndex)<>nil then
-    Image1.Picture.Assign(Contact.RetriveContactPhoto(ListBox1.ItemIndex))
-  else
-    Image1.Picture.LoadFromFile(ExtractFilePath(Application.ExeName)+'noimage.jpg');
+  Image1.Picture.Assign(
+          Contact.RetriveContactPhoto(ListBox1.ItemIndex,
+                                      ExtractFilePath(Application.ExeName)+'noimage.jpg'));
   label2.Caption:=Contact.Contacts[ListBox1.ItemIndex].TagName.FullNameString;
   label4.Caption:=Contact.Contacts[ListBox1.ItemIndex].TagOrganization.OrgName.Value+' '+Contact.Contacts[ListBox1.ItemIndex].TagOrganization.OrgTitle.Value;
 
@@ -350,6 +349,11 @@ begin
       Contact.OnBeginParse:=BeginParse;
       Contact.OnEndParse:=EndParse;
       Contact.OnReadData:=ReadData;
+
+      Contact.MaximumResults:=100;
+      Contact.StartIndex:=10;
+     // Contact.UpdatesMin:=Now;
+
       fLog.Show;
 
 
