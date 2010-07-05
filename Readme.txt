@@ -2,7 +2,7 @@
 {                                                       }
 {             Delphi & Google API                       }
 {                                                       }
-{          Copyright (c) WebDelphi.ru                   }
+{          Copyright (c)2010, WebDelphi.ru              }
 {             All Rights Reserved.                      }
 ---------------------------------------------------------                      
 {                                                       }
