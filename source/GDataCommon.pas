@@ -225,7 +225,7 @@ type
   TIMtype = (timHome,timNetmeeting,timOther,timWork);
 
 type
-  TgdIm = class(TPersistent)
+  TgdIm = class
   private
     FAddress: string;
     FLabel: string;
@@ -252,7 +252,7 @@ end;
   TgdOrgTitle = TTextTag;
 
 type
-  TgdOrganization = class(TPersistent)
+  TgdOrganization = class
   private
      FLabel: string;
      Frel: string;

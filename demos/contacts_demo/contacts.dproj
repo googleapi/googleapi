@@ -58,6 +58,15 @@
 			<DCCReference Include="uLog.pas">
 				<Form>fLog</Form>
 			</DCCReference>
+			<DCCReference Include="uQueryForm.pas">
+				<Form>fQuery</Form>
+			</DCCReference>
+			<DCCReference Include="uUpdate.pas">
+				<Form>fUpdateContact</Form>
+			</DCCReference>
+			<DCCReference Include="NewContact.pas">
+				<Form>fNewContact</Form>
+			</DCCReference>
 			<None Include="ModelSupport_contacts\default.txaPackage"/>
 			<None Include="ModelSupport_contacts\default.txvpck"/>
 			<None Include="ModelSupport_contacts\NativeXml\default.txvpck"/>
