@@ -235,35 +235,35 @@ object Form3: TForm3
     end
     object Label6: TLabel
       Left = 12
-      Top = 48
+      Top = 68
       Width = 28
       Height = 13
       Caption = 'E-mail'
     end
     object Label7: TLabel
       Left = 255
-      Top = 47
+      Top = 67
       Width = 12
       Height = 13
       Caption = '---'
     end
     object Label8: TLabel
       Left = 12
-      Top = 75
+      Top = 95
       Width = 73
       Height = 13
       Caption = #1058#1077#1083#1077#1092#1086#1085'/'#1060#1072#1082#1089
     end
     object Label9: TLabel
       Left = 255
-      Top = 74
+      Top = 94
       Width = 12
       Height = 13
       Caption = '---'
     end
     object Label10: TLabel
       Left = 12
-      Top = 100
+      Top = 120
       Width = 37
       Height = 13
       Caption = #1040#1076#1088#1077#1089#1072
@@ -330,9 +330,23 @@ object Form3: TForm3
       Height = 13
       Caption = '---'
     end
+    object Label16: TLabel
+      Left = 12
+      Top = 44
+      Width = 80
+      Height = 13
+      Caption = #1044#1077#1085#1100' '#1088#1086#1078#1076#1077#1085#1080#1103
+    end
+    object Label20: TLabel
+      Left = 103
+      Top = 44
+      Width = 12
+      Height = 13
+      Caption = '---'
+    end
     object ComboBox2: TComboBox
       Left = 91
-      Top = 44
+      Top = 64
       Width = 158
       Height = 21
       Style = csDropDownList
@@ -341,7 +355,7 @@ object Form3: TForm3
     end
     object ComboBox3: TComboBox
       Left = 91
-      Top = 71
+      Top = 91
       Width = 158
       Height = 21
       Style = csDropDownList
@@ -350,9 +364,9 @@ object Form3: TForm3
     end
     object ListBox2: TListBox
       Left = 12
-      Top = 119
+      Top = 139
       Width = 433
-      Height = 58
+      Height = 34
       ItemHeight = 13
       TabOrder = 2
     end
@@ -406,7 +420,7 @@ object Form3: TForm3
     Left = 96
     Top = 236
     Bitmap = {
-      494C010109001C000C0120002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010109001C00100120002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       00000000000036000000280000008000000060000000010020000000000000C0
       000000000000000000000000000000000000000000002B2E33FF34363BFF3436
       3BFF2D2F34FF838487FF828487FF828387FF828386FF818386FF818386FF8082

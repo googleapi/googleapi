@@ -86,20 +86,21 @@ type
     FMonth : word;
     FDay   : word;
     FShortFormat: boolean;//укороченый формат дня рождения --MM-DD
+    //ToDate - перевод в формат TDate; Если задан укороченый формат, то
+    //годом будет текущий
+    function ToDate:TDate;
+    procedure SetDate(aDate:TDate);
+    function GetServerDate: string;
   public
     constructor Create(const byNode: TXmlNode=nil);
     procedure Clear;
     destructor Destroy;
     function IsEmpty: boolean;
-    //ToDate - перевод в формат TDate; Если задан укороченый формат, то
-    //годом будет текущий
-    function ToDate:TDate;
     procedure ParseXML(const Node: TXmlNode);
     function AddToXML(Root: TXMLNode):TXMLNode;
     property ShotrFormat: boolean read FShortFormat;
-    property Year: word read FYear write FYear;
-    property Month: word read FMonth write FMonth;
-    property Day: word read FDay write FDay;
+    property Date: TDate read ToDate write SetDate;
+    property ServerDate : string read GetServerDate;
 end;
 
 type
@@ -545,16 +546,8 @@ var When: string;
     NodeName: string;
 begin
 if (Root=nil)or IsEmpty then Exit;
-
-if (Month>0)and(Day>0) then
-  begin
-    Result:=Root.NodeNew(GetContactNodeName(cp_Birthday));
-    if FShortFormat then //укороченный формат даты
-      When:=FormatDateTime('--mm-dd',EncodeDate(1898,Month,Day))
-    else
-      When:=FormatDateTime('yyyy-mm-dd',EncodeDate(Year,Month,Day));
-    Result.AttributeAdd('when',When);
-  end;
+Result:=Root.NodeNew(GetContactNodeName(cp_Birthday));
+Result.AttributeAdd('when',ServerDate);
 end;
 
 procedure TcpBirthday.Clear;
@@ -577,9 +570,22 @@ begin
   inherited Destroy;
 end;
 
+function TcpBirthday.GetServerDate: string;
+var NodeName: string;
+begin
+Result:='';
+if not IsEmpty then
+  begin
+    if FShortFormat then //укороченный формат даты
+      Result:=FormatDateTime('--mm-dd',EncodeDate(FYear,FMonth,FDay))
+    else
+      Result:=FormatDateTime('yyyy-mm-dd',EncodeDate(FYear,FMonth,FDay));
+  end;
+end;
+
 function TcpBirthday.IsEmpty: boolean;
 begin
-  Result:=(Year<=0)and(Month<=0)and(Day<=0);
+  Result:=(FMonth<=0)and(FDay<=0);
 end;
 
 procedure TcpBirthday.ParseXML(const Node: TXmlNode);
@@ -614,6 +620,15 @@ begin
   except
     Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
   end;
+end;
+
+procedure TcpBirthday.SetDate(aDate: TDate);
+var aYear, aMonth, aDay: word;
+begin
+  DecodeDate(aDate,aYear,aMonth,aDay);
+  FYear:=aYear;
+  FMonth:=aMonth;
+  FDay:=aDay;
 end;
 
 function TcpBirthday.ToDate: TDate;
@@ -1474,14 +1489,15 @@ begin
 Result:='';
 if FEmails=nil then Exit;
 if FEmails.Count=0 then Exit;
-for i:=0 to FEmails.Count - 1 do
-  begin
-    if FEmails[i].Primary then
+Result:=FEmails[0].Address;
+    for i:=0 to FEmails.Count - 1 do
       begin
-        Result:=FEmails[i].Address;
-        break;
+        if FEmails[i].Primary then
+          begin
+            Result:=FEmails[i].Address;
+            break;
+          end;
       end;
-  end;
 end;
 
 function TContact.IsEmpty: boolean;

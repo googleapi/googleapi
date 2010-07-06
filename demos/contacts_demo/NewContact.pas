@@ -45,12 +45,11 @@ begin
   NewContact.TagName.AdditionalName.Value:=Edit3.Text;
   NewContact.TagName.FullName.Value:=Edit1.Text+' '+Edit2.Text+' '+Edit3.Text;
   NewContact.PrimaryEmail:=Edit4.Text;
-  //NewContact.TagBirthDay.
+  NewContact.TagBirthDay.Date:=DateTimePicker1.Date;
   Phone:=TgdPhoneNumber.Create();
   Phone.PhoneType:=tpHome;
   Phone.Text:=Edit5.Text;
   NewContact.Phones.Add(Phone);
-//  Contact.Contacts.Add(NewContact);
   Contact.AddContact(NewContact);
   Hide;
 

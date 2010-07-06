@@ -58,6 +58,8 @@ type
     ToolButton9: TToolButton;
     SaveDialog1: TSaveDialog;
     OpenDialog1: TOpenDialog;
+    Label16: TLabel;
+    Label20: TLabel;
     procedure ComboBox1Change(Sender: TObject);
     procedure ToolButton1Click(Sender: TObject);
     procedure ToolButton2Click(Sender: TObject);
@@ -260,6 +262,7 @@ try
   label2.Caption:=Selected.TagName.FullNameString;
   label4.Caption:=Selected.TagOrganization.OrgName.Value+' '
                       +Selected.TagOrganization.OrgTitle.Value;
+  Label20.Caption:=Selected.TagBirthDay.ServerDate;
 
   ComboBox2.Items.Clear;
   for I := 0 to Selected.Emails.Count-1 do
@@ -415,6 +418,7 @@ fUpdateContact.Edit1.Text:=Selected.TagName.FamilyName.Value;
 fUpdateContact.Edit2.Text:=Selected.TagName.GivenName.Value;
 fUpdateContact.Edit3.Text:=Selected.TagName.AdditionalName.Value;
 fUpdateContact.Edit4.Text:=Selected.PrimaryEmail;
+fUpdateContact.DateTimePicker1.Date:=Selected.TagBirthDay.Date;
 fUpdateContact.ShowModal;
 end;
 

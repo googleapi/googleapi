@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls,main;
+  Dialogs, StdCtrls,main, ComCtrls;
 
 type
   TfUpdateContact = class(TForm)
@@ -17,6 +17,8 @@ type
     Label1: TLabel;
     Edit4: TEdit;
     Button1: TButton;
+    Label5: TLabel;
+    DateTimePicker1: TDateTimePicker;
     procedure Button1Click(Sender: TObject);
   private
     { Private declarations }
@@ -38,6 +40,7 @@ begin
   Selected.TagName.AdditionalName.Value:=Edit3.Text;
   Selected.TagName.FullName.Value:=Edit1.Text+' '+Edit2.Text+' '+Edit3.Text;
   Selected.PrimaryEmail:=Edit4.Text;
+  Selected.TagBirthDay.Date:=DateTimePicker1.DateTime;
   Contact.UpdateContact(Selected);
   ModalResult:=mrOk;
   Form3.ListBox1.Items[Form3.ListBox1.ItemIndex]:=Selected.ContactName;
