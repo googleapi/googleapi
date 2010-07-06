@@ -4,7 +4,7 @@ interface
 
 uses NativeXML, strUtils, httpsend, GHelper,Classes,SysUtils,
 GDataCommon,Generics.Collections,Dialogs,jpeg, Graphics, typinfo,
-IOUtils,uLanguage,blcksock;
+IOUtils,uLanguage,blcksock,Windows;
 
 // 1. правильно обрабатывать конакты разбиые по группам
 // 2. писать обработчики событий
@@ -82,13 +82,8 @@ type
 type
   TcpBirthday =class
   private
-    FYear  : word;
-    FMonth : word;
-    FDay   : word;
+    FDate  : TDate;
     FShortFormat: boolean;//укороченый формат дня рождения --MM-DD
-    //ToDate - перевод в формат TDate; Если задан укороченый формат, то
-    //годом будет текущий
-    function ToDate:TDate;
     procedure SetDate(aDate:TDate);
     function GetServerDate: string;
   public
@@ -98,8 +93,8 @@ type
     function IsEmpty: boolean;
     procedure ParseXML(const Node: TXmlNode);
     function AddToXML(Root: TXMLNode):TXMLNode;
-    property ShotrFormat: boolean read FShortFormat;
-    property Date: TDate read ToDate write SetDate;
+    property ShotrFormat: boolean read FShortFormat write FShortFormat;
+    property Date: TDate read FDate write SetDate;
     property ServerDate : string read GetServerDate;
 end;
 
@@ -552,9 +547,10 @@ end;
 
 procedure TcpBirthday.Clear;
 begin
-  FYear:=0;
-  FMonth:=0;
-  FDay:=0;
+  FDate:=0;
+//  FYear:=0;
+//  FMonth:=0;
+//  FDay:=0;
 end;
 
 constructor TcpBirthday.Create(const byNode: TXmlNode);
@@ -577,44 +573,47 @@ Result:='';
 if not IsEmpty then
   begin
     if FShortFormat then //укороченный формат даты
-      Result:=FormatDateTime('--mm-dd',EncodeDate(FYear,FMonth,FDay))
+      Result:=FormatDateTime('--mm-dd',FDate)
     else
-      Result:=FormatDateTime('yyyy-mm-dd',EncodeDate(FYear,FMonth,FDay));
+      Result:=FormatDateTime('yyyy-mm-dd',FDate);
   end;
 end;
 
 function TcpBirthday.IsEmpty: boolean;
 begin
-  Result:=(FMonth<=0)and(FDay<=0);
+  Result:=FDate<=0;
 end;
 
 procedure TcpBirthday.ParseXML(const Node: TXmlNode);
 var DateStr: string;
+    FormatSet: TFormatSettings;
 begin
   if GetContactNodeType(Node.Name) <> cp_Birthday then
       raise Exception.Create
         (Format(rcErrCompNodes, [GetContactNodeName(cp_Birthday)]));
   try
+    {читаем локальные настройки форматов}
+    GetLocaleFormatSettings(LOCALE_SYSTEM_DEFAULT,FormatSet);
+    {чиаем дату}
     DateStr:= Node.ReadAttributeString('when');
-    if (Length(Trim(DateStr))>0)then
+    if (Length(Trim(DateStr))>0)then //что-то есть - можно парсить дату
       begin
-        if (pos('--',DateStr)>0) then//сокращенный формат - только месяц и число рождения
+        //сокращенный формат - только месяц и число рождения
+        if (pos('--',DateStr)>0) then
           begin
-            FYear:=0;
-            Delete(DateStr,1,2);
-            FMonth:=StrToInt(copy(DateStr,1,2));
-            Delete(DateStr,1,3);
-            FDay:=StrToInt(copy(DateStr,1,2));
+            FormatSet.DateSeparator:='-';//устанавливаем новый разделиель
+            Delete(DateStr,1,2);//срезаем первые два символа
+            FormatSet.ShortDateFormat:='mm-dd';
+            FDate:=StrToDate(DateStr,FormatSet);
             FShortFormat:=true;
           end
+        //полный формат даты
         else
           begin
-            FYear:=StrToInt(copy(DateStr,1,4));
-            Delete(DateStr,1,5);
-            FMonth:=StrToInt(copy(DateStr,1,2));
-            Delete(DateStr,1,3);
-            FDay:=StrToInt(copy(DateStr,1,2));
-            FShortFormat:=false
+            FormatSet.DateSeparator:='-';
+            FormatSet.ShortDateFormat:='yyyy-mm-dd';
+            FDate:=StrToDate(DateStr,FormatSet);
+            FShortFormat:=false;
           end;
       end;
   except
@@ -623,24 +622,8 @@ begin
 end;
 
 procedure TcpBirthday.SetDate(aDate: TDate);
-var aYear, aMonth, aDay: word;
 begin
-  DecodeDate(aDate,aYear,aMonth,aDay);
-  FYear:=aYear;
-  FMonth:=aMonth;
-  FDay:=aDay;
-end;
-
-function TcpBirthday.ToDate: TDate;
-var aYear, aMonth, aDay: word;
-begin
-  if FShortFormat then //укороченный формат
-    begin
-      DecodeDate(Now,aYear,aMonth,aDay);
-      Result:=EncodeDate(aYear,FMonth,FDay);
-    end
-  else
-    Result:=EncodeDate(FYear,FMonth,FDay)
+   FDate:=aDate;
 end;
 
 { TcpCalendarLink }

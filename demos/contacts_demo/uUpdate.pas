@@ -41,6 +41,7 @@ begin
   Selected.TagName.FullName.Value:=Edit1.Text+' '+Edit2.Text+' '+Edit3.Text;
   Selected.PrimaryEmail:=Edit4.Text;
   Selected.TagBirthDay.Date:=DateTimePicker1.DateTime;
+  Selected.TagBirthDay.ShotrFormat:=true;
   Contact.UpdateContact(Selected);
   ModalResult:=mrOk;
   Form3.ListBox1.Items[Form3.ListBox1.ItemIndex]:=Selected.ContactName;
