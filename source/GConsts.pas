@@ -21,6 +21,7 @@ const
   sEntryNodeName = 'entry';//имя узла, который необходимо разобрать
   sNodeRelAttr = 'rel';//аттрибут rel узла
   sNodeLabelAttr ='label';//аттрибут label узла
+  sNodeHrefAttr = 'href';//атрибут наличия ссылки в узле.
   sSchemaHref ='http://schemas.google.com/g/2005#';
 
   {цвета в HEX поддерживаемые Google API}

@@ -81,19 +81,21 @@ type
 end;
 
 type
+  TCalendarRel = (tc_none,tc_work,tc_home,tc_free_busy);
   TcpCalendarLink = class
-  private         { TODO -oЯ -cНедочёт : избавиться от строкового поля }
-    FDescr: string;//содержит либо значение атрибута rel либо label
+  private
+    FRel: TCalendarRel;
+    FLabel: string;
     FPrimary: boolean;
     FHref: string;
-    const RelValues: array [0..2] of string = ('work','home','free-busy');
   public
     constructor Create(const byNode: TXMLNode=nil);
     procedure ParseXML(const Node: TXmlNode);
+    function  RelToString(aRel:TCalendarRel):string;
     procedure Clear;
     function  AddToXML(Root:TXmlNode):TXmlNode;
     function isEmpty:boolean;
-    property Description: string read FDescr write FDescr;
+    property Rel: TCalendarRel read FRel write Frel;
     property Primary: boolean read FPrimary write FPrimary;
     property Href: string read FHref write FHref;
 end;
@@ -608,21 +610,27 @@ end;
 { TcpCalendarLink }
 
 function TcpCalendarLink.AddToXML(Root: TXmlNode): TXmlNode;
+var tmp:string;
 begin
   if (Root=nil)or isEmpty then Exit;
   Result:=Root.NodeNew(GetContactNodeName(cp_CalendarLink));
-  if AnsiIndexStr(FDescr,RelValues)>=0 then
-    Result.AttributeAdd(sNodeRelAttr,FDescr)
+  if FRel<>tc_none then
+    begin
+      tmp:=ReplaceStr(GetEnumName(TypeInfo(TCalendarRel),ord(FRel)),'_','-');
+      Delete(tmp,1,3);
+      Result.AttributeAdd(sNodeRelAttr,tmp)
+    end
   else
-    Result.AttributeAdd(sNodeLabelAttr,FDescr);
-  Result.AttributeAdd('href',FHref);
+    Result.AttributeAdd(sNodeLabelAttr,FLabel);
+  Result.AttributeAdd(sNodeHrefAttr,FHref);
   if FPrimary then
     Result.WriteAttributeBool('primary',FPrimary);
 end;
 
 procedure TcpCalendarLink.Clear;
 begin
-  FDescr:='';
+  FLabel:='';
+  FRel:=tc_none;
   FHref:='';
 end;
 
@@ -636,7 +644,7 @@ begin
 
 function TcpCalendarLink.isEmpty: boolean;
 begin
-  Result:=(Length(Trim(FDescr))=0)and(Length(Trim(FHref))=0);
+  Result:=((Length(Trim(FLabel))=0)or (FRel=tc_none))and(Length(Trim(FHref))=0);
 end;
 
 procedure TcpCalendarLink.ParseXML(const Node: TXmlNode);
@@ -646,15 +654,29 @@ begin
         (Format(rcErrCompNodes, [GetContactNodeName(cp_CalendarLink)]));
   try
     FPrimary:=false;
+    FRel:=tc_none;
     if Length(Trim(Node.AttributeByName[sNodeRelAttr]))>0 then
-      FDescr:=Trim(Node.AttributeByName[sNodeRelAttr])
-    else
-      FDescr:=Trim(Node.AttributeByName[sNodeLabelAttr]);
+       begin //считываем данные о rel
+         FRel:=TCalendarRel(GetEnumValue(TypeInfo(TCalendarRel),
+         'tc_'+ReplaceStr((Trim(Node.AttributeByName[sNodeRelAttr])),'-','_')))
+       end
+    else //rel отсутствует, следовательно читаем label
+      FLabel:=Trim(Node.AttributeByName[sNodeLabelAttr]);
     if Node.HasAttribute('primary') then
       FPrimary:=Node.ReadAttributeBool('primary');
-    FHref:=Node.ReadAttributeString('href');
+    FHref:=Node.ReadAttributeString(sNodeHrefAttr);
   except
     Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
+  end;
+end;
+
+function TcpCalendarLink.RelToString(aRel: TCalendarRel): string;
+begin
+  case aRel of
+    tc_none: Result:=FLabel;//описание содержится в label - свободный текст
+    tc_work: Result:=rcWork;
+    tc_home: Result:=rcHome;
+    tc_free_busy: Result:=rcFreeBusy;
   end;
 end;
 
@@ -791,7 +813,7 @@ begin
 if (Root=nil)or IsEmpty then Exit;
   if Ord(FValue)<0 then
     raise Exception.Create
-        (Format(rcErrWriteNode, [GetContactNodeName(cp_Gender)])+' '+Format(rcWrongAttr,['value']));
+        (Format(rcErrWriteNode, [GetContactNodeName(cp_Gender)])+' '+Format(rcWrongAttr,[sNodeValueAttr]));
   Result:=Root.NodeNew(GetContactNodeName(cp_Gender));
   Result.WriteAttributeString(sNodeValueAttr,GetEnumName(TypeInfo(TGenderType),Ord(FValue)));
 end;
@@ -833,7 +855,7 @@ function TcpGroupMembershipInfo.AddToXML(Root: TXmlNode): TXmlNode;
 begin
  if (Root=nil)or(IsEmpty) then Exit;
  Result:=Root.NodeNew(GetContactNodeName(cp_GroupMembershipInfo));
- Result.WriteAttributeString('href',FHref);
+ Result.WriteAttributeString(sNodeHrefAttr,FHref);
  Result.WriteAttributeBool('deleted',FDeleted);
 end;
 
@@ -862,7 +884,7 @@ begin
      raise Exception.Create
           (Format(rcErrCompNodes, [GetContactNodeName(cp_GroupMembershipInfo)]));
   try
-    FHref:=Node.ReadAttributeString('href');
+    FHref:=Node.ReadAttributeString(sNodeHrefAttr);
     FDeleted:=Node.ReadAttributeBool('deleted')
   except
     Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
@@ -1216,7 +1238,7 @@ begin
     raise Exception.Create
     (Format(rcErrWriteNode, [GetContactNodeName(cp_Website)])+' '+Format(rcWrongAttr,['rel']));
   Result:=Root.NodeNew(GetContactNodeName(cp_Website));
-  Result.WriteAttributeString('href',FHref);
+  Result.WriteAttributeString(sNodeHrefAttr,FHref);
   Result.WriteAttributeString(sNodeRelAttr,FRel);
   if FPrimary then
     Result.WriteAttributeBool('primary',FPrimary);
@@ -1252,7 +1274,7 @@ begin
      raise Exception.Create
      (Format(rcErrCompNodes, [GetContactNodeName(cp_Website)]));
   try
-    FHref:=Node.ReadAttributeString('href');
+    FHref:=Node.ReadAttributeString(sNodeHrefAttr);
     FRel:=Node.ReadAttributeString(sNodeRelAttr);
     FRel:=StringReplace(FRel,sSchemaHref,'',[rfIgnoreCase]);
 
@@ -1863,7 +1885,7 @@ try
    begin
      if List.Items[i].ReadAttributeString(sNodeRelAttr)='next' then
        begin
-         Result:=List.Items[i].ReadAttributeString('href');
+         Result:=List.Items[i].ReadAttributeString(sNodeHrefAttr);
          break;
        end;
    end;
@@ -1896,7 +1918,7 @@ try
    begin
      if List.Items[i].ReadAttributeString(sNodeRelAttr)='next' then
        begin
-         Result:=List.Items[i].ReadAttributeString('href');
+         Result:=List.Items[i].ReadAttributeString(sNodeHrefAttr);
          break;
        end;
    end;

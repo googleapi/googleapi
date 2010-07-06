@@ -652,7 +652,7 @@ begin
 if (Root=nil)or IsEmpty then Exit;
  Result:=Root.NodeNew(GetGDNodeName(gd_EntryLink));
  if Length(Trim(Fhref))>0 then
-   Result.WriteAttributeString('href',Fhref);
+   Result.WriteAttributeString(sNodeHrefAttr,Fhref);
  if Length(Trim(Frel))>0 then
    Result.WriteAttributeString(sNodeRelAttr,Frel);
  Result.WriteAttributeBool('readOnly',FReadOnly);
@@ -687,7 +687,7 @@ if GetGDNodeType(Node.Name) <> gd_EntryLink then
                 [GetGDNodeName(gd_EntryLink)]));
   try
 //    if Node.Attributes['href']<>null then
-      Fhref:=Node.ReadAttributeString('href');
+      Fhref:=Node.ReadAttributeString(sNodeHrefAttr);
 //    if Node.Attributes['rel']<>null then
       Frel:=Node.ReadAttributeString(sNodeRelAttr);
 //    if Node.Attributes['readOnly']<>null then

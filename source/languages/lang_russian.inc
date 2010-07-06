@@ -15,3 +15,7 @@
   rcErrFileName = 'Файл %s отсутствует';
   rcErrFileNull = 'Не задан файл по умолчанию';
 //Variables
+  rcWork = 'рабочий';
+  rcHome = 'домашний';
+  rcFreeBusy = 'сободен-занят';
+
