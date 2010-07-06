@@ -4,25 +4,7 @@ interface
 
 uses NativeXML, strUtils, httpsend, GHelper,Classes,SysUtils,
 GDataCommon,Generics.Collections,Dialogs,jpeg, Graphics, typinfo,
-IOUtils,uLanguage,blcksock,Windows;
-
-// 1. правильно обрабатывать конакты разбиые по группам
-// 2. писать обработчики событий
-
-const
-  {$REGION 'Константы'}
-   CpProtocolVer = '3.0';
-   CpNodeAlias = 'gContact:';
-   CpAtomAlias = 'atom:';
-   CpRootNodeName= 'feed';
-   CpGroupLink='http://www.google.com/m8/feeds/groups/%s/full';
-   CpContactsLink='http://www.google.com/m8/feeds/contacts/default/full';
-   CpPhotoLink = 'http://schemas.google.com/contacts/2008/rel#photo';
-   CpDefoultEncoding = 'utf-8';
-   CpXMLHeader = '<?xml version="1.0" encoding="UTF-8" ?>';
-   CpDefaultCName = 'NoName Contact';
-   CpImgRel = 'image/*';
-  {$ENDREGION}
+IOUtils,uLanguage,blcksock,Windows,GConsts;
 
 type
   TParseElement = (T_Group, T_Contact);
@@ -548,9 +530,6 @@ end;
 procedure TcpBirthday.Clear;
 begin
   FDate:=0;
-//  FYear:=0;
-//  FMonth:=0;
-//  FDay:=0;
 end;
 
 constructor TcpBirthday.Create(const byNode: TXmlNode);
@@ -633,9 +612,9 @@ begin
   if (Root=nil)or isEmpty then Exit;
   Result:=Root.NodeNew(GetContactNodeName(cp_CalendarLink));
   if AnsiIndexStr(FDescr,RelValues)>=0 then
-    Result.AttributeAdd('rel',FDescr)
+    Result.AttributeAdd(sNodeRelAttr,FDescr)
   else
-    Result.AttributeAdd('label',FDescr);
+    Result.AttributeAdd(sNodeLabelAttr,FDescr);
   Result.AttributeAdd('href',FHref);
   if FPrimary then
     Result.WriteAttributeBool('primary',FPrimary);
@@ -667,10 +646,10 @@ begin
         (Format(rcErrCompNodes, [GetContactNodeName(cp_CalendarLink)]));
   try
     FPrimary:=false;
-    if Length(Trim(Node.AttributeByName['rel']))>0 then
-      FDescr:=Trim(Node.AttributeByName['rel'])
+    if Length(Trim(Node.AttributeByName[sNodeRelAttr]))>0 then
+      FDescr:=Trim(Node.AttributeByName[sNodeRelAttr])
     else
-      FDescr:=Trim(Node.AttributeByName['label']);
+      FDescr:=Trim(Node.AttributeByName[sNodeLabelAttr]);
     if Node.HasAttribute('primary') then
       FPrimary:=Node.ReadAttributeBool('primary');
     FHref:=Node.ReadAttributeString('href');
@@ -690,16 +669,16 @@ begin
     begin
       sRel:=GetEnumName(TypeInfo(TEventRel),ord(FEventType));
       Delete(sRel,1,2);
-      Result.WriteAttributeString('rel',sRel);
+      Result.WriteAttributeString(sNodeRelAttr,sRel);
     end
   else
     begin
       sRel:=GetEnumName(TypeInfo(TEventRel),ord(teOther));
       Delete(sRel,1,2);
-      Result.WriteAttributeString('rel',sRel);
+      Result.WriteAttributeString(sNodeRelAttr,sRel);
     end;
   if length(Flabel)>0 then
-    Result.WriteAttributeString('label',Flabel);
+    Result.WriteAttributeString(sNodeLabelAttr,Flabel);
   FWhen.AddToXML(Result,tdDate);
 end;
 
@@ -731,12 +710,12 @@ begin
      raise Exception.Create
            (Format(rcErrCompNodes, [GetContactNodeName(cp_Event)]));
   try
-    if Node.HasAttribute('label') then
-      Flabel:=Trim(Node.ReadAttributeString('label'));
-    if Node.HasAttribute('rel') then
+    if Node.HasAttribute(sNodeLabelAttr) then
+      Flabel:=Trim(Node.ReadAttributeString(sNodeLabelAttr));
+    if Node.HasAttribute(sNodeRelAttr) then
       begin
-        S:=Trim(Node.ReadAttributeString('rel'));
-        S:=StringReplace(S,SchemaHref,'',[rfIgnoreCase]);
+        S:=Trim(Node.ReadAttributeString(sNodeRelAttr));
+        S:=StringReplace(S,sSchemaHref,'',[rfIgnoreCase]);
         FEventType:=TEventRel(GetEnumValue(TypeInfo(TEventRel),s));
       end;
 
@@ -761,11 +740,11 @@ begin
         (Format(rcErrWriteNode, [GetContactNodeName(cp_ExternalId)])+' '+Format(rcWrongAttr,['rel']));
   Result:=Root.NodeNew(GetContactNodeName(cp_ExternalId));
   if Trim(Flabel)<>'' then
-    Result.WriteAttributeString('label',FLabel);
+    Result.WriteAttributeString(sNodeLabelAttr,FLabel);
   sRel:=GetEnumName(TypeInfo(TExternalIdType),Ord(FRel));
   Delete(sRel,1,2);
-  Result.WriteAttributeString('rel',sRel);
-  Result.WriteAttributeString('value',FValue);
+  Result.WriteAttributeString(sNodeRelAttr,sRel);
+  Result.WriteAttributeString(sNodeValueAttr,FValue);
 end;
 
 procedure TcpExternalId.Clear;
@@ -795,10 +774,11 @@ begin
      raise Exception.Create
           (Format(rcErrCompNodes, [GetContactNodeName(cp_ExternalId)]));
   try
-    if Node.HasAttribute('label') then
-      FLabel:=Node.ReadAttributeString('label');
-    Frel:=TExternalIdType(GetEnumValue(TypeInfo(TExternalIdType),'ti'+Node.ReadAttributeString('rel')));
-    FValue:=Node.ReadAttributeString('value');
+    if Node.HasAttribute(sNodeLabelAttr) then
+      FLabel:=Node.ReadAttributeString(sNodeLabelAttr);
+    Frel:=TExternalIdType(GetEnumValue(TypeInfo(TExternalIdType),'ti'
+          +Node.ReadAttributeString(sNodeRelAttr)));
+    FValue:=Node.ReadAttributeString(sNodeValueAttr);
   except
     Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
   end;
@@ -813,7 +793,7 @@ if (Root=nil)or IsEmpty then Exit;
     raise Exception.Create
         (Format(rcErrWriteNode, [GetContactNodeName(cp_Gender)])+' '+Format(rcWrongAttr,['value']));
   Result:=Root.NodeNew(GetContactNodeName(cp_Gender));
-  Result.WriteAttributeString('value',GetEnumName(TypeInfo(TGenderType),Ord(FValue)));
+  Result.WriteAttributeString(sNodeValueAttr,GetEnumName(TypeInfo(TGenderType),Ord(FValue)));
 end;
 
 procedure TcpGender.Clear;
@@ -901,7 +881,7 @@ begin
    begin
      sRel:=GetEnumName(TypeInfo(TJotRel),ord(FRel));
      Delete(sRel,1,2);
-     Result.WriteAttributeString('rel',sRel);
+     Result.WriteAttributeString(sNodeRelAttr,sRel);
    end;
  Result.ValueAsString:=FText;
 end;
@@ -946,7 +926,7 @@ begin
   if (Root=nil)or IsEmpty then Exit;
     Result:=Root.NodeNew(GetContactNodeName(cp_Language));
   Result.WriteAttributeString('code',Fcode);
-  Result.WriteAttributeString('label',Flabel);
+  Result.WriteAttributeString(sNodeLabelAttr,Flabel);
 end;
 
 procedure TcpLanguage.Clear;
@@ -976,7 +956,7 @@ begin
           (Format(rcErrCompNodes, [GetContactNodeName(cp_Language)]));
   try
     Fcode:=Node.ReadAttributeString('code');
-    Flabel:=Node.ReadAttributeString('label');
+    Flabel:=Node.ReadAttributeString(sNodeLabelAttr);
   except
     Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
   end;
@@ -991,7 +971,7 @@ begin
   Result:=Root.NodeNew(GetContactNodeName(cp_Priority));
   sRel:=GetEnumName(TypeInfo(TPriotityRel),ord(FRel));
   Delete(sRel,1,2);
-  Result.WriteAttributeString('rel',sRel);
+  Result.WriteAttributeString(sNodeRelAttr,sRel);
 end;
 
 procedure TcpPriority.Clear;
@@ -1033,9 +1013,9 @@ begin
 if (Root=nil)or IsEmpty then Exit;
 Result:=Root.NodeNew(GetContactNodeName(cp_Relation));
 if FRealition=tr_None then
-  Result.WriteAttributeString('label',FLabel)
+  Result.WriteAttributeString(sNodeLabelAttr,FLabel)
 else
-  Result.WriteAttributeString('rel',GetRelStr(FRealition));
+  Result.WriteAttributeString(sNodeRelAttr,GetRelStr(FRealition));
 Result.ValueAsString:=FValue;
 end;
 
@@ -1073,12 +1053,12 @@ begin
      raise Exception.Create
      (Format(rcErrCompNodes, [GetContactNodeName(cp_Relation)]));
   try
-    if Node.HasAttribute('rel') then
+    if Node.HasAttribute(sNodeRelAttr) then
         FRealition:= TRelationType(GetEnumValue(TypeInfo(TRelationType),
-                                   'tr_'+Node.ReadAttributeString('rel')))
+                                   'tr_'+Node.ReadAttributeString(sNodeRelAttr)))
     else
       begin
-        FLabel:=Node.ReadAttributeString('label');
+        FLabel:=Node.ReadAttributeString(sNodeLabelAttr);
         FRealition:=tr_None;
       end;
     FValue:=Node.ValueAsString;
@@ -1099,7 +1079,7 @@ begin
   Result:=Root.NodeNew(GetContactNodeName(cp_Sensitivity));
   sRel:=GetEnumName(TypeInfo(TSensitivityRel),ord(FRel));
   Delete(sRel,1,2);
-  Result.WriteAttributeString('rel',sRel);
+  Result.WriteAttributeString(sNodeRelAttr,sRel);
 end;
 
 procedure TcpSensitivity.Clear;
@@ -1191,7 +1171,7 @@ begin
   if (Root=nil)or IsEmpty then Exit;
   Result:=Root.NodeNew(GetContactNodeName(cp_UserDefinedField));
   Result.WriteAttributeString('key',FKey);
-  Result.WriteAttributeString('value',FValue);
+  Result.WriteAttributeString(sNodeValueAttr,FValue);
 end;
 
 procedure TcpUserDefinedField.Clear;
@@ -1221,7 +1201,7 @@ begin
      (Format(rcErrCompNodes, [GetContactNodeName(cp_UserDefinedField)]));
   try
     FKey:=Node.ReadAttributeString('key');
-    FValue:=Node.ReadAttributeString('value');
+    FValue:=Node.ReadAttributeString(sNodeValueAttr);
   except
     Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
   end;
@@ -1237,11 +1217,11 @@ begin
     (Format(rcErrWriteNode, [GetContactNodeName(cp_Website)])+' '+Format(rcWrongAttr,['rel']));
   Result:=Root.NodeNew(GetContactNodeName(cp_Website));
   Result.WriteAttributeString('href',FHref);
-  Result.WriteAttributeString('rel',FRel);
+  Result.WriteAttributeString(sNodeRelAttr,FRel);
   if FPrimary then
     Result.WriteAttributeBool('primary',FPrimary);
   if Trim(Flabel)<>'' then
-    Result.WriteAttributeString('label',Flabel);
+    Result.WriteAttributeString(sNodeLabelAttr,Flabel);
 end;
 
 procedure TcpWebsite.Clear;
@@ -1273,16 +1253,16 @@ begin
      (Format(rcErrCompNodes, [GetContactNodeName(cp_Website)]));
   try
     FHref:=Node.ReadAttributeString('href');
-    FRel:=Node.ReadAttributeString('rel');
-    FRel:=StringReplace(FRel,SchemaHref,'',[rfIgnoreCase]);
+    FRel:=Node.ReadAttributeString(sNodeRelAttr);
+    FRel:=StringReplace(FRel,sSchemaHref,'',[rfIgnoreCase]);
 
     if AnsiIndexText(Frel,RelValues)>-1 then
       FWebSiteType:=TWebsiteType(AnsiIndexText(Frel,RelValues))
     else
       FWebSiteType:=twOther;
 
-    if Node.HasAttribute('label') then
-      Flabel:=Node.ReadAttributeString('label');
+    if Node.HasAttribute(sNodeLabelAttr) then
+      Flabel:=Node.ReadAttributeString(sNodeLabelAttr);
     if Node.HasAttribute('primary') then
       FPrimary:=Node.ReadAttributeBool('primary');
   except
@@ -1389,15 +1369,15 @@ begin
 try
  if IsEmpty then Exit;
  Doc:=TNativeXml.Create;
- Doc.EncodingString:=CpDefoultEncoding;
+ Doc.EncodingString:=sDefoultEncoding;
  case TypeFile of
    tfAtom:begin
-            Doc.CreateName(CpAtomAlias+EntryNodeName);
+            Doc.CreateName(sAtomAlias+sEntryNodeName);
             Doc.Root.WriteAttributeString('xmlns:atom','http://www.w3.org/2005/Atom');
-            Node:=Doc.Root.NodeNew(CpAtomAlias+'category');
+            Node:=Doc.Root.NodeNew(sAtomAlias+'category');
           end;
    tfXML:begin
-           Doc.CreateName(EntryNodeName);
+           Doc.CreateName(sEntryNodeName);
            Doc.Root.WriteAttributeString('xmlns','http://www.w3.org/2005/Atom');
            Node:=Doc.Root.NodeNew('category');
          end;
@@ -1509,8 +1489,8 @@ try
   XML:=TNativeXml.Create;
   XML.LoadFromFile(FileName);
   if (not XML.IsEmpty)and
-     ((LowerCase(XML.Root.Name)=LowerCase(CpAtomAlias+EntryNodeName))
-     or(LowerCase(XML.Root.Name)=LowerCase(EntryNodeName))) then
+     ((LowerCase(XML.Root.Name)=LowerCase(sAtomAlias+sEntryNodeName))
+     or(LowerCase(XML.Root.Name)=LowerCase(sEntryNodeName))) then
        ParseXML(XML.Root);
 finally
   FreeAndNil(XML)
@@ -1541,7 +1521,7 @@ var i:integer;
 begin
 try
  if Node=nil then Exit;
- FEtag:=Node.ReadAttributeString('gd:etag');
+ FEtag:=Node.ReadAttributeString(gdNodeAlias+'etag');
  List:=TXmlNodeList.Create;
  Node.NodesByName('id',List);
  for I := 0 to List.Count - 1 do
@@ -1581,15 +1561,15 @@ try
    begin
    //CpAtomAlias
      if (LowerCase(Node.Nodes[i].Name)='updated')or
-        (LowerCase(Node.Nodes[i].Name)=LowerCase(CpAtomAlias+'updated')) then
+        (LowerCase(Node.Nodes[i].Name)=LowerCase(sAtomAlias+'updated')) then
          FUpdated:=ServerDateToDateTime(Node.Nodes[i].ValueAsString)
      else
        if (LowerCase(Node.Nodes[i].Name)='title')or
-          (LowerCase(Node.Nodes[i].Name)=LowerCase(CpAtomAlias+'title')) then
+          (LowerCase(Node.Nodes[i].Name)=LowerCase(sAtomAlias+'title')) then
          FTitle:=TTextTag.Create(Node.Nodes[i])
        else
          if (LowerCase(Node.Nodes[i].Name)='content')or
-            (LowerCase(Node.Nodes[i].Name)=LowerCase(CpAtomAlias+'content')) then
+            (LowerCase(Node.Nodes[i].Name)=LowerCase(sAtomAlias+'content')) then
            FContent:=TTextTag.Create(Node.Nodes[i])
          else
            if LowerCase(Node.Nodes[i].Name)=LowerCase(GetGDNodeName(gd_Name)) then
@@ -1649,7 +1629,7 @@ procedure TContactGroup.ParseXML(Node: TXmlNode);
 var i:integer;
 begin
   if Node=nil then Exit;
-  FEtag:=Node.ReadAttributeString('gd:etag');
+  FEtag:=Node.ReadAttributeString(gdNodeAlias+'etag');
   for i:=0 to Node.NodeCount-1 do
     begin
       if Node.Nodes[i].Name='id' then
@@ -1793,12 +1773,12 @@ Result:=false;
 if aContact=nil then Exit;
   for I := 0 to aContact.FLinks.Count - 1 do
     begin
-     if (LowerCase(aContact.FLinks[i].Ltype)=CpImgRel)and
+     if (LowerCase(aContact.FLinks[i].Ltype)=sImgRel)and
         (Length(aContact.FLinks[i].Etag)>0)  then
         begin
           with THTTPSender.Create('DELETE',FAuth,aContact.FLinks[i].Href,CpProtocolVer) do
             begin
-              MimeType := CpImgRel;
+              MimeType := sImgRel;
               ExtendedHeaders.Add('If-Match: *');
               if SendRequest then
                 begin
@@ -1881,7 +1861,7 @@ try
  aXMLDoc.Root.NodesByName('link',List);
  for i:=0 to List.Count-1 do
    begin
-     if List.Items[i].ReadAttributeString('rel')='next' then
+     if List.Items[i].ReadAttributeString(sNodeRelAttr)='next' then
        begin
          Result:=List.Items[i].ReadAttributeString('href');
          break;
@@ -1914,7 +1894,7 @@ try
  XML.Root.NodesByName('link',List);
  for i:=0 to List.Count-1 do
    begin
-     if List.Items[i].ReadAttributeString('rel')='next' then
+     if List.Items[i].ReadAttributeString(sNodeRelAttr)='next' then
        begin
          Result:=List.Items[i].ReadAttributeString('href');
          break;
@@ -1956,10 +1936,10 @@ try
   except
     Exit;
   end;
-  etag:=XML.Root.ReadAttributeString('gd:etag');
+  etag:=XML.Root.ReadAttributeString(gdNodeAlias+'etag');
   for I := 0 to aContact.FLinks.Count - 1 do
     begin
-      if aContact.FLinks[i].Ltype=CpImgRel then
+      if aContact.FLinks[i].Ltype=sImgRel then
         begin
           aContact.FLinks[i].Etag:=Etag;
           Result:=true;
@@ -2016,7 +1996,7 @@ try
   XMLDoc:=TNativeXml.Create;
   XMLDoc.LoadFromStream(Data);
   List:=TXmlNodeList.Create;
-  XMLDoc.Root.NodesByName(EntryNodeName,List);
+  XMLDoc.Root.NodesByName(sEntryNodeName,List);
   for i:=0 to List.Count - 1 do
     begin
       //Если событие определено - отправляем данные
@@ -2174,7 +2154,7 @@ try
          begin
            XMLDoc.LoadFromStream(Document);
            List:=TXmlNodeList.Create;
-           XMLDoc.Root.NodesByName(EntryNodeName,List);
+           XMLDoc.Root.NodesByName(sEntryNodeName,List);
            count:=GetTotalCount(XMLDoc);
            for i:=0 to List.Count - 1 do
              begin
@@ -2262,12 +2242,12 @@ begin
 Result:=false;
   for i:= 0 to aContact.FLinks.Count - 1 do
     begin
-      if aContact.FLinks[i].Ltype=CpImgRel then
+      if aContact.FLinks[i].Ltype=sImgRel then
         begin
            With THTTPSender.Create('PUT',FAuth,aContact.FLinks[i].Href,CpProtocolVer)do
               begin
                 ExtendedHeaders.Add('If-Match: *');
-                MimeType:=CpImgRel;
+                MimeType:=sImgRel;
                 Document.LoadFromFile(PhotoFile);
                 if SendRequest then
                   Result:=InsertPhotoEtag(aContact, Document)

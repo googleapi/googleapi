@@ -13,7 +13,8 @@ uses
   uLog in 'uLog.pas' {fLog},
   uQueryForm in 'uQueryForm.pas' {fQuery},
   uUpdate in 'uUpdate.pas' {fUpdateContact},
-  NewContact in 'NewContact.pas' {fNewContact};
+  NewContact in 'NewContact.pas' {fNewContact},
+  GConsts in '..\..\source\GConsts.pas';
 
 {$R *.res}
 

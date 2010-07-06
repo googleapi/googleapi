@@ -5,7 +5,7 @@ interface
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, GoogleLogin, StdCtrls, GHelper,GContacts,Generics.Collections,NativeXml,GDataCommon,
-  ExtCtrls, ComCtrls, ToolWin, Menus, ImgList,JPEG, ExtDlgs,TypInfo,rtti;
+  ExtCtrls, ComCtrls, ToolWin, Menus, ImgList,JPEG, ExtDlgs,TypInfo,rtti,uLanguage;
 
 type
   TForm3 = class(TForm)
@@ -77,6 +77,7 @@ type
     procedure ToolButton9Click(Sender: TObject);
     procedure ToolButton7Click(Sender: TObject);
     procedure ToolButton6Click(Sender: TObject);
+    procedure FormShow(Sender: TObject);
   private
     //TOnRetriveXML
     procedure RetriveXML (const FromURL:string);
@@ -242,6 +243,11 @@ begin
     T_Group: fLog.Memo1.Lines.Add('Получена группа '+ (Element as TContactGroup).Title.Value);
     T_Contact:fLog.Memo1.Lines.Add('Получен контакт '+ (Element as TContact).ContactName);
   end;
+end;
+
+procedure TForm3.FormShow(Sender: TObject);
+begin
+  Test;
 end;
 
 procedure TForm3.ListBox1Click(Sender: TObject);

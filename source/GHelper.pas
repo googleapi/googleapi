@@ -4,58 +4,7 @@ interface
 
 uses Graphics,strutils,Windows,DateUtils,SysUtils, Variants,
 Classes,StdCtrls,httpsend,Generics.Collections,xmlintf,xmldom,NativeXML,
-uLanguage;
-
-//{$I languages\lang_russian.inc}
-
-const
-  GoogleColors: array [1..21]of string = ('A32929','B1365F','7A367A','5229A3',
-                                          '29527A','2952A3','1B887A','28754E',
-                                          '0D7813','528800','88880E','AB8B00',
-                                          'BE6D00','B1440E','865A5A','705770',
-                                          '4E5D6C','5A6986','4A716C','6E6E41',
-                                          '8D6F47');
-
-  NodeValueAttr = 'value';
-  EntryNodeName = 'entry';
-  SchemaHref ='http://schemas.google.com/g/2005#';
-
-  gdRelValues: array [1..25,1..2] of string = (
-  ('http://schemas.google.com/g/2005#event',''),
-  ('http://schemas.google.com/g/2005#event.alternate',''),
-  ('http://schemas.google.com/g/2005#event.parking',''),
-  ('http://schemas.google.com/g/2005#message.bcc',''),
-  ('http://schemas.google.com/g/2005#message.cc',''),
-  ('http://schemas.google.com/g/2005#message.from',''),
-  ('http://schemas.google.com/g/2005#message.reply-to',''),
-  ('http://schemas.google.com/g/2005#message.to',''),
-  ('http://schemas.google.com/g/2005#regular',''),
-  ('http://schemas.google.com/g/2005#reviews',''),
-  ('http://schemas.google.com/g/2005#home',''),
-  ('http://schemas.google.com/g/2005#other',''),
-  ('http://schemas.google.com/g/2005#work',''),
-  ('http://schemas.google.com/g/2005#fax',''),
-  ('http://schemas.google.com/g/2005#home_fax',''),
-  ('http://schemas.google.com/g/2005#mobile',''),
-  ('http://schemas.google.com/g/2005#pager',''),
-  ('http://schemas.google.com/g/2005#work_fax',''),
-  ('http://schemas.google.com/g/2005#overall',''),
-  ('http://schemas.google.com/g/2005#price',''),
-  ('http://schemas.google.com/g/2005#quality',''),
-  ('http://schemas.google.com/g/2005#event.attendee',''),
-  ('http://schemas.google.com/g/2005#event.organizer',''),
-  ('http://schemas.google.com/g/2005#event.performer',''),
-  ('http://schemas.google.com/g/2005#event.speaker',''));
-
-//просранства имен для календарей
-clNameSpaces: array [0 .. 2, 0 .. 1] of string =
-    (('', 'http://www.w3.org/2005/Atom'), ('gd',
-      'http://schemas.google.com/g/2005'), ('gCal',
-      'http://schemas.google.com/gCal/2005'));
-//значения rel для узлов category календарея
-clCategories: array [0 .. 1, 0 .. 1] of string = (('scheme',
-      'http://schemas.google.com/g/2005#kind'), ('term',
-      'http://schemas.google.com/g/2005#event'));
+GConsts,uLanguage;
 
 type
  TTimeZone = packed record
@@ -300,21 +249,20 @@ begin
   inherited Clear;
 end;
 
-
 constructor TTimeZoneList.Create;
 var i:integer;
     Zone:PTimeZone;
 begin
   inherited Create;
-  for i:=0 to High(GoogleTimeZones) do
+  for i:=0 to High(sGoogleTimeZones) do
     begin
       New(Zone);
       with Zone^ do
        begin
-         gConst:=GoogleTimeZones[i,0];
-         Desc:=GoogleTimeZones[i,1];
-         GMT:=StrToFloat(GoogleTimeZones[i,2]);
-         rus:=GoogleTimeZones[i,2]='rus';
+         gConst:=sGoogleTimeZones[i,0];
+         Desc:=sGoogleTimeZones[i,1];
+         GMT:=StrToFloat(sGoogleTimeZones[i,2]);
+         rus:=sGoogleTimeZones[i,2]='rus';
        end;
        Add(Zone);
     end;

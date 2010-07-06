@@ -2,7 +2,7 @@ unit GDataCommon;
 
 interface
 
-uses NativeXML, Classes, StrUtils, SysUtils, GHelper, typinfo, uLanguage;
+uses NativeXML, Classes, StrUtils, SysUtils, GHelper, typinfo, uLanguage,GConsts;
 
 type
   TgdEnum = (gd_country, gd_additionalName,gd_name, gd_email, gd_extendedProperty,
@@ -595,9 +595,9 @@ begin
   if Root=nil then Exit;
   Result:=Root.NodeNew(GetGDNodeName(gd_where));
   if Length(Flabel)>0 then
-    Result.WriteAttributeString('label',Flabel);
+    Result.WriteAttributeString(sNodeLabelAttr,Flabel);
   if Length(Frel)>0 then
-    Result.WriteAttributeString('rel',Frel);
+    Result.WriteAttributeString(sNodeRelAttr,Frel);
   if Length(FvalueString)>0 then
     Result.WriteAttributeString('valueString',FvalueString);
   if FEntryLink<>nil then
@@ -632,13 +632,13 @@ if GetGDNodeType(Node.Name) <> gd_Where then
     raise Exception.Create(Format(rcErrCompNodes,
         [GetGDNodeName(gd_Where)]));
   try
-    Flabel:=Node.ReadAttributeString('label');
+    Flabel:=Node.ReadAttributeString(sNodeLabelAttr);
     if Length(FLabel)=0 then
-      Flabel:=Node.ReadAttributeString('rel');
+      Flabel:=Node.ReadAttributeString(sNodeRelAttr);
     FvalueString:=Node.ReadAttributeString('valueString');
     if Node.NodeCount>0 then //есть дочерний узел с EntryLink
       begin
-        FEntryLink.ParseXML(Node.FindNode('gd:entry'));
+        FEntryLink.ParseXML(Node.FindNode(gdNodeAlias+sEntryNodeName));
       end;
   except
     Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
@@ -654,7 +654,7 @@ if (Root=nil)or IsEmpty then Exit;
  if Length(Trim(Fhref))>0 then
    Result.WriteAttributeString('href',Fhref);
  if Length(Trim(Frel))>0 then
-   Result.WriteAttributeString('rel',Frel);
+   Result.WriteAttributeString(sNodeRelAttr,Frel);
  Result.WriteAttributeBool('readOnly',FReadOnly);
  if FAtomEntry<>nil then
    Result.NodeAdd(FAtomEntry);
@@ -689,11 +689,11 @@ if GetGDNodeType(Node.Name) <> gd_EntryLink then
 //    if Node.Attributes['href']<>null then
       Fhref:=Node.ReadAttributeString('href');
 //    if Node.Attributes['rel']<>null then
-      Frel:=Node.ReadAttributeString('rel');
+      Frel:=Node.ReadAttributeString(sNodeRelAttr);
 //    if Node.Attributes['readOnly']<>null then
       FReadOnly:=Node.ReadAttributeBool('readOnly');
     if Node.NodeCount>0 then //есть дочерний узел с EntryLink
-       FAtomEntry:=Node.FindNode('entry');
+       FAtomEntry:=Node.FindNode(sEntryNodeName);
   except
     Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
   end;
@@ -705,7 +705,7 @@ function TgdEventStatus.AddToXML(Root: TXMLNode): TXMLNode;
 begin
 if Root=nil then Exit;
   Result:=Root.NodeNew(GetGDNodeName(gd_EventStatus));
-  Result.WriteAttributeString('value',SchemaHref+FValue);
+  Result.WriteAttributeString(sNodeValueAttr,sSchemaHref+FValue);
 end;
 
 procedure TgdEventStatus.Clear;
@@ -734,8 +734,8 @@ begin
         [GetGDNodeName(gd_EventStatus)]));
   try
   //  ShowMessage(Node.Attributes['value']);
-    FValue:=Node.ReadAttributeString('value');
-    FValue:=StringReplace(FValue,SchemaHref,'',[rfIgnoreCase]);
+    FValue:=Node.ReadAttributeString(sNodeValueAttr);
+    FValue:=StringReplace(FValue,sSchemaHref,'',[rfIgnoreCase]);
     FStatus:=TEventStatus(AnsiIndexStr(FValue, RelValues));
   except
     raise Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
@@ -820,7 +820,7 @@ function TgdAttendeeStatus.AddToXML(Root: TXMLNode): TXMLNode;
 begin
   if Root=nil then Exit;
   Result:=Root.NodeNew(GetGDNodeName(gd_AttendeeStatus));
-  Result.WriteAttributeString('value',SchemaHref+FValue);
+  Result.WriteAttributeString(sNodeValueAttr,sSchemaHref+FValue);
 end;
 
 procedure TgdAttendeeStatus.Clear;
@@ -848,8 +848,8 @@ if (Node=nil)or isEmpty then Exit;
     raise Exception.Create(Format(rcErrCompNodes,
         [GetGDNodeName(gd_AttendeeStatus)]));
   try
-    FValue := Node.ReadAttributeString('value');
-    FValue:=StringReplace(FValue,SchemaHref,'',[rfIgnoreCase]);
+    FValue := Node.ReadAttributeString(sNodeValueAttr);
+    FValue:=StringReplace(FValue,sSchemaHref,'',[rfIgnoreCase]);
     FAttendeeStatus := TAttendeeStatus(AnsiIndexStr(FValue, RelValues));
   except
     raise Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
@@ -876,7 +876,7 @@ function TgdAttendeeType.AddToXML(Root: TXMLNode): TXMLNode;
 begin
  if (Root=nil)or IsEmpty then Exit;
   Result:=Root.NodeNew(GetGDNodeName(gd_AttendeeType));
-  Result.WriteAttributeString('value',SchemaHref+FValue);
+  Result.WriteAttributeString(sNodeValueAttr,sSchemaHref+FValue);
 end;
 
 procedure TgdAttendeeType.Clear;
@@ -905,8 +905,8 @@ begin
                     Format(rcErrCompNodes,
                           [GetGDNodeName(gd_AttendeeType)]));
   try
-    FValue:=Node.ReadAttributeString('value');
-    FValue:=StringReplace(FValue,SchemaHref,'',[rfIgnoreCase]);
+    FValue:=Node.ReadAttributeString(sNodeValueAttr);
+    FValue:=StringReplace(FValue,sSchemaHref,'',[rfIgnoreCase]);
     FAttType := TAttendeeType(AnsiIndexStr(FValue, RelValues));
   except
     raise Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
@@ -936,7 +936,7 @@ begin
   if Length(Trim(FEmail))>0 then
     Result.WriteAttributeString('email',FEmail);
   if Length(Trim(Frel))>0 then
-    Result.WriteAttributeString('rel',SchemaHref+RelValues[ord(FRelValue)]);
+    Result.WriteAttributeString(sNodeRelAttr,sSchemaHref+RelValues[ord(FRelValue)]);
   if Length(Trim(FvalueString))>0 then
     Result.WriteAttributeString('valueString',FvalueString);
     FAttendeeStatus.AddToXML(Result);
@@ -985,10 +985,10 @@ begin
   try
 //    if Node.Attributes['email']<>null then
       FEmail:=Node.ReadAttributeString('email');
-    if Length(Node.ReadAttributeString('rel'))>0 then
+    if Length(Node.ReadAttributeString(sNodeRelAttr))>0 then
       begin
-        S:=Node.ReadAttributeString('rel');
-        S:=StringReplace(S,SchemaHref,'',[rfIgnoreCase]);
+        S:=Node.ReadAttributeString(sNodeRelAttr);
+        S:=StringReplace(S,sSchemaHref,'',[rfIgnoreCase]);
         FRelValue:=TWhoRel(AnsiIndexStr(S, RelValues));
       end;
     FvalueString:=Node.ReadAttributeString('valueString');
@@ -1121,7 +1121,7 @@ function TgdTransparency.AddToXML(Root: TXMLNode): TXMLNode;
 begin
 if (Root=nil)or IsEmpty then Exit;
 Result:=Root.NodeNew(GetGDNodeName(gd_Transparency));
-Result.WriteAttributeString('value',SchemaHref+FValue);
+Result.WriteAttributeString(sNodeValueAttr,sSchemaHref+FValue);
 end;
 
 procedure TgdTransparency.Clear;
@@ -1149,8 +1149,8 @@ begin
     raise Exception.Create(Format(rcErrCompNodes,
         [GetGDNodeName(gd_Transparency)]));
   try
-    FValue := Node.ReadAttributeString('value');
-    FValue:=StringReplace(FValue,SchemaHref,'',[rfIgnoreCase]);
+    FValue := Node.ReadAttributeString(sNodeValueAttr);
+    FValue:=StringReplace(FValue,sSchemaHref,'',[rfIgnoreCase]);
     FTransparency := TTransparency(AnsiIndexStr(FValue, RelValues));
   except
     raise Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
@@ -1177,7 +1177,7 @@ function TgdVisibility.AddToXML(Root: TXMLNode): TXMLNode;
 begin
 if (Root=nil)or IsEmpty then Exit;
 Result:=Root.NodeNew(GetGDNodeName(gd_Visibility));
-Result.WriteAttributeString('value',SchemaHref+FValue);
+Result.WriteAttributeString(sNodeValueAttr,sSchemaHref+FValue);
 end;
 
 procedure TgdVisibility.Clear;
@@ -1205,8 +1205,8 @@ begin
     raise Exception.Create(Format(rcErrCompNodes,
         [GetGDNodeName(gd_Visibility)]));
   try
-    FValue := Node.ReadAttributeString('value');
-    FValue:=StringReplace(FValue,SchemaHref,'',[rfIgnoreCase]);
+    FValue := Node.ReadAttributeString(sNodeValueAttr);
+    FValue:=StringReplace(FValue,sSchemaHref,'',[rfIgnoreCase]);
     FVisible := TVisibility(AnsiIndexStr(FValue, RelValues));
   except
     raise Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
@@ -1236,9 +1236,9 @@ if (Root=nil)or IsEmpty then Exit;
 
 Result:=Root.NodeNew(GetGDNodeName(gd_Organization));
 if Trim(FRel)<>'' then
-  Result.WriteAttributeString('rel',FRel);
+  Result.WriteAttributeString(sNodeRelAttr,FRel);
 if Trim(FLabel)<>'' then
-  Result.WriteAttributeString('label',FLabel);
+  Result.WriteAttributeString(sNodeLabelAttr,FLabel);
 if FPrimary then
   Result.WriteAttributeBool('primary',Fprimary);
 if Trim(ForgName.Value)<>'' then
@@ -1277,11 +1277,11 @@ if (Node=nil)or IsEmpty then Exit;
     raise Exception.Create(Format(rcErrCompNodes,
         [GetGDNodeName(gd_Organization)]));
   try
-    Frel:=Node.ReadAttributeString('rel');
+    Frel:=Node.ReadAttributeString(sNodeRelAttr);
     if Node.HasAttribute('primary') then
       Fprimary:=Node.ReadAttributeBool('primary');
-    if Node.HasAttribute('label') then
-      FLabel:=Node.ReadAttributeString('label');
+    if Node.HasAttribute(sNodeLabelAttr) then
+      FLabel:=Node.ReadAttributeString(sNodeLabelAttr);
     for i:=0 to Node.NodeCount-1 do
       begin
         if LowerCase(Node.Nodes[i].Name)=LowerCase(GetGDNodeName(gd_OrgName)) then
@@ -1302,9 +1302,9 @@ begin
   if (Root=nil)or IsEmpty then Exit;
   Result:=Root.NodeNew(GetGDNodeName(gd_Email));
   if Trim(FRel)<>'' then
-    Result.WriteAttributeString('rel',FRel);
+    Result.WriteAttributeString(sNodeRelAttr,FRel);
   if Trim(FLabel)<>'' then
-    Result.WriteAttributeString('label',FLabel);
+    Result.WriteAttributeString(sNodeLabelAttr,FLabel);
   if Trim(FLabel)<>'' then
     Result.WriteAttributeString('displayName',FDisplayName);
   if FPrimary then
@@ -1340,11 +1340,11 @@ begin
     raise Exception.Create(Format(rcErrCompNodes,
         [GetGDNodeName(gd_Email)]));
   try
-    Frel:=Node.ReadAttributeString('rel');
+    Frel:=Node.ReadAttributeString(sNodeRelAttr);
     if Node.HasAttribute('primary') then
       Fprimary:=Node.ReadAttributeBool('primary');
-    if Node.HasAttribute('label') then
-      FLabel:=Node.ReadAttributeString('label');
+    if Node.HasAttribute(sNodeLabelAttr) then
+      FLabel:=Node.ReadAttributeString(sNodeLabelAttr);
     if Node.HasAttribute('displayName') then
       FDisplayName:=Node.ReadAttributeString('displayName');
     FAddress:=Node.ReadAttributeString('address');
@@ -1364,7 +1364,7 @@ begin
   if AnsiIndexStr(aRel,RelValues)<0 then
    raise Exception.Create
       (Format(rcErrWriteNode, [GetGDNodeName(gd_Email)])+' '+Format(rcWrongAttr,['rel']));
-  FRel:=SchemaHref+aRel;
+  FRel:=sSchemaHref+aRel;
 end;
 
 { TgdNameStruct }
@@ -1453,7 +1453,7 @@ procedure TgdName.SetAdditionalName(aAdditionalName: TTextTag);
 begin
 if aAdditionalName=nil then Exit;
 if length(FAdditionalName.Name)=0 then
-  FAdditionalName.Name:='gd:additionalName';
+  FAdditionalName.Name:=GetGDNodeName(gd_additionalName);
 FAdditionalName.Value:=aAdditionalName.Value;
 end;
 
@@ -1461,7 +1461,7 @@ procedure TgdName.SetFamilyName(aFamilyName: TTextTag);
 begin
 if aFamilyName=nil then Exit;
 if length(FFamilyName.Name)=0 then
-  FFamilyName.Name:='gd:familyName';
+  FFamilyName.Name:=GetGDNodeName(gd_familyName);
 FFamilyName.Value:=aFamilyName.Value;
 end;
 
@@ -1469,7 +1469,7 @@ procedure TgdName.SetFullName(aFullName: TTextTag);
 begin
 if aFullName=nil then Exit;
 if length(FFullName.Name)=0 then
-  FFullName.Name:='gd:fullName';
+  FFullName.Name:=GetGDNodeName(gd_fullName);
 FFullName.Value:=aFullName.Value;
 end;
 
@@ -1477,7 +1477,7 @@ procedure TgdName.SetGivenName(aGivenName: TTextTag);
 begin
 if aGivenName=nil then Exit;
 if length(FGivenName.Name)=0 then
-  FGivenName.Name:='gd:givenName';
+  FGivenName.Name:=GetGDNodeName(gd_givenName);
 FFullName.Value:=aGivenName.Value;
 end;
 
@@ -1485,7 +1485,7 @@ procedure TgdName.SetNamePrefix(aNamePrefix: TTextTag);
 begin
 if aNamePrefix=nil then Exit;
 if length(FNamePrefix.Name)=0 then
-  FNamePrefix.Name:='gd:namePrefix';
+  FNamePrefix.Name:=GetGDNodeName(gd_namePrefix);
 FNamePrefix.Value:=aNamePrefix.Value;
 end;
 
@@ -1493,7 +1493,7 @@ procedure TgdName.SetNameSuffix(aNameSuffix: TTextTag);
 begin
  if aNameSuffix=nil then Exit;
 if length(FNameSuffix.Name)=0 then
-  FNameSuffix.Name:='gd:nameSuffix';
+  FNameSuffix.Name:=GetGDNodeName(gd_nameSuffix);
 FNameSuffix.Value:=aNameSuffix.Value;
 end;
 
@@ -1503,10 +1503,10 @@ function TgdPhoneNumber.AddToXML(Root: TXMLNode): TXmlNode;
 begin
   if (Root=nil)or IsEmpty then Exit;
   Result:=Root.NodeNew(GetGDNodeName(gd_PhoneNumber));
-  Result.WriteAttributeString('rel',SchemaHref+RelValues[ord(FPhoneType)]);
+  Result.WriteAttributeString(sNodeRelAttr,sSchemaHref+RelValues[ord(FPhoneType)]);
   Result.ValueAsString:=FValue;
   if Trim(FLabel)<>'' then
-    Result.WriteAttributeString('label',FLabel);
+    Result.WriteAttributeString(sNodeLabelAttr,FLabel);
   if Trim(FUri)<>'' then
     Result.WriteAttributeString('uri',FUri);
   if FPrimary then
@@ -1541,16 +1541,16 @@ begin
     raise Exception.Create(Format(rcErrCompNodes,
         [GetGDNodeName(gd_PhoneNumber)]));
   try
-    s:=Node.ReadAttributeString('rel');
-    s:=StringReplace(s,SchemaHref,'',[rfIgnoreCase]);
+    s:=Node.ReadAttributeString(sNodeRelAttr);
+    s:=StringReplace(s,sSchemaHref,'',[rfIgnoreCase]);
     if AnsiIndexStr(s,RelValues)>-1 then
       FPhoneType:=TPhonesRel(AnsiIndexStr(s,RelValues))
     else
       FPhoneType:=tpOther;
     if Node.HasAttribute('primary') then
       Fprimary:=Node.ReadAttributeBool('primary');
-    if Node.HasAttribute('label') then
-      FLabel:=Node.ReadAttributeString('label');
+    if Node.HasAttribute(sNodeLabelAttr) then
+      FLabel:=Node.ReadAttributeString(sNodeLabelAttr);
     if Node.HasAttribute('uri') then
       FUri:=Node.ReadAttributeString('uri');
     FValue:=Node.ValueAsString;
@@ -1601,7 +1601,7 @@ begin
     raise Exception.Create(Format(rcErrCompNodes,
         [GetGDNodeName(gd_Country)]));
   try
-    FCode:=Node.ReadAttributeString('rel');
+    FCode:=Node.ReadAttributeString(sNodeRelAttr);
     FValue:=Node.ValueAsString;
   except
     raise Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
@@ -1615,11 +1615,11 @@ begin
   if (Root=nil) or IsEmpty then Exit;
   Result:=Root.NodeNew(GetGDNodeName(gd_StructuredPostalAddress));
   if Trim(FRel)<>'' then
-     Result.WriteAttributeString('rel',FRel);
+     Result.WriteAttributeString(sNodeRelAttr,FRel);
   if Trim(FMailClass)<>'' then
      Result.WriteAttributeString('mailClass',FMailClass);
   if Trim(Flabel)<>'' then
-     Result.WriteAttributeString('label',Flabel);
+     Result.WriteAttributeString(sNodeLabelAttr,Flabel);
   if Trim(FUsage)<>'' then
      Result.WriteAttributeString('Usage',FUsage);
   if Fprimary then
@@ -1712,9 +1712,9 @@ if Node=nil then Exit;
     raise Exception.Create(Format(rcErrCompNodes,
         [GetGDNodeName(gd_StructuredPostalAddress)]));
   try
-    FRel:=Node.ReadAttributeString('rel');
+    FRel:=Node.ReadAttributeString(sNodeRelAttr);
     FMailClass:=Node.ReadAttributeString('mailClass');
-    Flabel:=Node.ReadAttributeString('label');
+    Flabel:=Node.ReadAttributeString(sNodeLabelAttr);
     if Node.HasAttribute('primaty') then
       Fprimary:=Node.ReadAttributeBool('primary');
     FUsage:=Node.ReadAttributeString('Usage');
@@ -1746,10 +1746,10 @@ begin
   if (Root=nil)or IsEmpty then Exit;
   Result:=Root.NodeNew(GetGDNodeName(gd_Im));
 
-  Result.WriteAttributeString('rel',SchemaHref+RelValues[ord(FIMType)]);
+  Result.WriteAttributeString(sNodeRelAttr,sSchemaHref+RelValues[ord(FIMType)]);
   Result.WriteAttributeString('address',FAddress);
-  Result.WriteAttributeString('label',FLabel);
-  Result.WriteAttributeString('protocol',SchemaHref+ProtocolValues[ord(FIMProtocol)]);
+  Result.WriteAttributeString(sNodeLabelAttr,FLabel);
+  Result.WriteAttributeString('protocol',sSchemaHref+ProtocolValues[ord(FIMProtocol)]);
   if FPrimary then
     Result.WriteAttributeBool('primary',FPrimary);
 end;
@@ -1781,13 +1781,13 @@ if Node=nil then Exit;
     raise Exception.Create(Format(rcErrCompNodes,
           [GetGDNodeName(gd_Im)]));
   try
-    s:=Node.ReadAttributeString('rel');
-    s:=StringReplace(s,SchemaHref,'',[rfIgnoreCase]);
+    s:=Node.ReadAttributeString(sNodeRelAttr);
+    s:=StringReplace(s,sSchemaHref,'',[rfIgnoreCase]);
     FIMType:=TImtype(AnsiIndexStr(s,RelValues));
-    FLabel:=Node.ReadAttributeString('label');
+    FLabel:=Node.ReadAttributeString(sNodeLabelAttr);
     FAddress:=Node.ReadAttributeString('address');
     s:=Node.ReadAttributeString('protocol');
-    s:=StringReplace(s,SchemaHref,'',[rfIgnoreCase]);
+    s:=StringReplace(s,sSchemaHref,'',[rfIgnoreCase]);
     if AnsiIndexStr(s,ProtocolValues)>-1 then
       FIMProtocol:=TIMProtocol(AnsiIndexStr(s,ProtocolValues))
     else
