@@ -44,8 +44,9 @@ begin
 
   if Loginer.LastResult=lrOk then
     begin
-      Contact:=TGoogleContact.Create(self,Loginer.Auth,GmailContact);
-
+      Contact:=TGoogleContact.Create(self);
+      Contact.Auth:=Loginer.Auth;
+      Contact.Gmail:=GmailContact;
     end;
 
   Hide;

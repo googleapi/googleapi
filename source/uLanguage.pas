@@ -60,6 +60,24 @@ const
   c_RelationRelative =   GStringsMaxId - 46;
   c_RelationSister =     GStringsMaxId - 47;
   c_RelationSpouse =     GStringsMaxId - 48;
+//gContact:sensitivity rel values
+  c_SensitivConf =       GStringsMaxId - 49;
+  c_SensitivNormal =     GStringsMaxId - 50;
+  c_SensitivPersonal =   GStringsMaxId - 51;
+  c_SensitivPrivate =    GStringsMaxId - 52;
+//gContact: SystemGroup rel values
+  c_SysGroupContacts =   GStringsMaxId - 53;
+  c_SysGroupFriends=     GStringsMaxId - 54;
+  c_SysGroupFamily=      GStringsMaxId - 55;
+  c_SysGroupCoworkers =  GStringsMaxId - 56;
+//gContact: WebSite rel values
+  c_WebsiteHomePage =    GStringsMaxId - 57;
+  c_WebsiteBlog =        GStringsMaxId - 58;
+  c_WebsiteProfile =     GStringsMaxId - 59;
+  c_WebsiteHome =        GStringsMaxId - 60;
+  c_WebsiteWork =        GStringsMaxId - 61;
+  c_WebsiteOther =       GStringsMaxId - 62;
+  c_WebsiteFtp =         GStringsMaxId - 63;
 implementation
 
 {$R GStrings.res}

@@ -24,7 +24,7 @@ type
     function GetRecord(index: Integer): PTimeZone;
   public
     constructor Create;
-    procedure Clear;
+    procedure Clear;override;
     destructor Destroy; override;
     property TimeZone[i: Integer]: PTimeZone read GetRecord write SetRecord;
   end;
@@ -193,7 +193,7 @@ begin
 end;
 
 function ServerDateToDateTime(cServerDate:string):TDateTime;
-var Year, Mounth, Day, hours, Mins, Seconds,MSec: Word;
+var Year, Mounth, Day, hours, Mins, Seconds: Word;
 begin
   Year:=StrToInt(copy(cServerDate,1,4));
   Mounth:=StrToInt(copy(cServerDate,6,2));
@@ -299,11 +299,12 @@ function TTextTag.AddToXML(Root: TXMLNode): TXMLNode;
 var
   i: integer;
 begin
+Result:=nil;
   if (Root=nil)or IsEmpty then Exit;
-  Result:= Root.NodeNew(FName);
+  Result:= Root.NodeNew(UTF8String(FName));
   Result.ValueAsString:=AnsiToUtf8(FValue);
   for i := 0 to FAtributes.Count - 1 do
-    Result.AttributeAdd(FAtributes[i].Name,FAtributes[i].Value);
+    Result.AttributeAdd(UTF8String(FAtributes[i].Name),UTF8String(FAtributes[i].Value));
   //Root.ChildNodes.Add(Result);
 end;
 
@@ -344,12 +345,12 @@ var
   Attr: TAttribute;
 begin
   try
-    FValue := Node.ValueAsString;
-    FName := Node.Name;
+    FValue := string(Node.ValueAsString);
+    FName := string(Node.Name);
     for i := 0 to Node.AttributeCount - 1 do
     begin
-      Attr.Name := Node.AttributeName[i];
-      Attr.Value := Node.AttributeValue[i];
+      Attr.Name := string(Node.AttributeName[i]);
+      Attr.Value := string(Node.AttributeValue[i]);
       FAtributes.Add(Attr)
     end;
   except
@@ -395,7 +396,7 @@ end;
 
 function TEntryLink.AddToXML(Root: TXMLNode): TXMLNode;
 begin
-
+  Result:=nil;
 end;
 
 constructor TEntryLink.Create(const ByNode: TXMLNode);
@@ -409,10 +410,10 @@ procedure TEntryLink.ParseXML(Node: TXMLNode);
 begin
   if Node=nil then Exit;
   try
-    Frel:=Node.ReadAttributeString('rel');
-    Ftype:=Node.ReadAttributeString('type');
-    Fhref:=Node.ReadAttributeString('href');
-    FEtag:=Node.ReadAttributeString('gd:etag')
+    Frel:=string(Node.ReadAttributeString(sNodeRelAttr));
+    Ftype:=string(Node.ReadAttributeString('type'));
+    Fhref:=string(Node.ReadAttributeString(sNodeHrefAttr));
+    FEtag:=string(Node.ReadAttributeString(gdNodeAlias+'etag'))
   except
     Exception.Create(Format(sc_ErrPrepareNode, ['link']));
   end;

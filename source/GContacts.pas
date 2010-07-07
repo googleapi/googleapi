@@ -71,7 +71,6 @@ type
   public
     constructor Create(const byNode: TXmlNode=nil);
     procedure Clear;
-    destructor Destroy;
     function IsEmpty: boolean;
     procedure ParseXML(const Node: TXmlNode);
     function AddToXML(Root: TXMLNode):TXMLNode;
@@ -246,24 +245,25 @@ type
     constructor Create(const ByNode: TXMLNode=nil);
     procedure Clear;
     function IsEmpty:boolean;
+    function RelToString: string;
     procedure ParseXML(const Node: TXmlNode);
     function AddToXML(Root: TXmlNode):TXmlNode;
     property Rel: TSensitivityRel read FRel write FRel;
 end;
 
 type
+  TcpSysGroupId = (tg_None, tg_Contacts,tg_Friends,tg_Family,tg_Coworkers);
   TcpSystemGroup = class
   private
-    Fid: string;   { TODO -oЯ -cНедочёт : избавиться от строкового поля }
-    const IDValues: array [0..3]of string=('Contacts','Friends','Family','Coworkers');
-    procedure SetId(aId:string);
+    FIdRel: TcpSysGroupId;
   public
     constructor Create(const ByNode: TXMLNode=nil);
     procedure Clear;
-    function IsEmpty:boolean;
+    function  IsEmpty:boolean;
+    function RelToString:string;
     procedure ParseXML(const Node: TXmlNode);
     function  AddToXML(Root: TXmlNode):TXmlNode;
-    property  ID: string read Fid write SetId;
+    property  ID: TcpSysGroupId read FIdRel write FIdRel;
 end;
 
 type
@@ -282,27 +282,24 @@ type
 end;
 
 type
-  TWebSiteType = (twHomePage,twBlog,twProfile,twHome,twWork,twOther,twFtp);
+  TWebSiteType = (tw_None,tw_Home_Page,tw_Blog,tw_Profile,tw_Home,tw_Work,tw_Other,tw_Ftp);
   TcpWebsite = class
-  private  { TODO -oЯ -cНедочёт : избавиться от строкового поля }
+  private
     FHref: string;
     FPrimary:boolean;
     Flabel: string;
-    FRel: string;
-    FWebSiteType: TWebSiteType;
-    const RelValues: array[0..6]of string=('home-page','blog','profile',
-    'home','work','other','ftp');
-    procedure SetRel(aRel:TWebSiteType);
+    FRel: TWebSiteType;
   public
     constructor Create(const ByNode: TXMLNode=nil);
     procedure Clear;
     function IsEmpty:boolean;
+    function RelToString: string;
     procedure ParseXML(const Node: TXmlNode);
     function  AddToXML(Root: TXmlNode):TXmlNode;
     property  Href: string read FHref write FHref;
     property  Primary: boolean read FPrimary write FPrimary;
     property  Labl: string read Flabel write Flabel;
-    property  SiteType: TWebSiteType read FWebSiteType write SetRel;
+    property  Rel: TWebSiteType read FRel write FRel;
 end;
 
 type
@@ -437,8 +434,11 @@ end;
     procedure SetUpdatesMin(const Value: TDateTime);
     function  ParamsToStr:TStringList;
     function GetContact(GroupName:string;Index:integer):TContact;
+    procedure SetAuth(const aAuth:string);
+    procedure SetGmail(const aGMail:string);
   public
-    constructor Create(AOwner:TComponent; const aAuth,aEmail: string);
+    constructor Create(AOwner:TComponent);override;
+//    constructor Create(AOwner:TComponent; const aAuth,aEmail: string);overload;
     destructor Destroy;override;
     //получение всех групп пользователя
     function RetriveGroups:integer;
@@ -467,6 +467,8 @@ end;
     procedure LoadContactsFromFile(const FileName:string);
 
     { ----------------Свойства компонента-------------------------}
+    property Auth: string read FAuth write SetAuth;
+    property Gmail: string read FEmail write SetGmail;
     //группы контактов
     property Groups: TList<TContactGroup> read FGroups write FGroups;
     //все контакты пользователя
@@ -495,26 +497,26 @@ end;
  end;
 
 //получение типа узла
-function GetContactNodeType(const NodeName: string):TcpTagEnum;inline;
+function GetContactNodeType(const NodeName: UTF8string):TcpTagEnum;inline;
 //получение имени узла по его типу
-function GetContactNodeName(const NodeType:TcpTagEnum):string;inline;
+function GetContactNodeName(const NodeType:TcpTagEnum):UTF8string;inline;
 
 implementation
 
-function GetContactNodeName(const NodeType:TcpTagEnum):string;inline;
+function GetContactNodeName(const NodeType:TcpTagEnum):UTF8string;inline;
 begin
-    Result:=GetEnumName(TypeInfo(TcpTagEnum),ord(NodeType));
+    Result:=UTF8String(GetEnumName(TypeInfo(TcpTagEnum),ord(NodeType)));
     Delete(Result,1,3);
     Result:=CpNodeAlias+Result;
 end;
 
-function GetContactNodeType(const NodeName: string):TcpTagEnum;inline;
+function GetContactNodeType(const NodeName: UTF8string):TcpTagEnum;inline;
 var i: integer;
 begin
-  if pos(CpNodeAlias,NodeName)>0 then
+  if pos(CpNodeAlias,string(NodeName))>0 then
     begin
       i:=GetEnumValue(TypeInfo(TcpTagEnum),
-                      Trim(ReplaceStr(NodeName,CpNodeAlias,'cp_')));
+                      Trim(ReplaceStr(string(NodeName),CpNodeAlias,'cp_')));
       if i>-1 then
         Result := TcpTagEnum(i)
       else
@@ -527,12 +529,11 @@ end;
 { TcpBirthday }
 
 function TcpBirthday.AddToXML(Root: TXMLNode):TXmlNode;
-var When: string;
-    NodeName: string;
 begin
+Result:=nil;
 if (Root=nil)or IsEmpty then Exit;
 Result:=Root.NodeNew(GetContactNodeName(cp_Birthday));
-Result.AttributeAdd('when',ServerDate);
+Result.AttributeAdd('when',UTF8String(ServerDate));
 end;
 
 procedure TcpBirthday.Clear;
@@ -548,13 +549,7 @@ begin
     ParseXML(byNode);
 end;
 
-destructor TcpBirthday.Destroy;
-begin
-  inherited Destroy;
-end;
-
 function TcpBirthday.GetServerDate: string;
-var NodeName: string;
 begin
 Result:='';
 if not IsEmpty then
@@ -582,7 +577,7 @@ begin
     {читаем локальные настройки форматов}
     GetLocaleFormatSettings(LOCALE_SYSTEM_DEFAULT,FormatSet);
     {чиаем дату}
-    DateStr:= Node.ReadAttributeString('when');
+    DateStr:= string(Node.ReadAttributeString('when'));
     if (Length(Trim(DateStr))>0)then //что-то есть - можно парсить дату
       begin
         //сокращенный формат - только месяц и число рождения
@@ -618,17 +613,18 @@ end;
 function TcpCalendarLink.AddToXML(Root: TXmlNode): TXmlNode;
 var tmp:string;
 begin
+Result:=nil;
   if (Root=nil)or isEmpty then Exit;
   Result:=Root.NodeNew(GetContactNodeName(cp_CalendarLink));
   if FRel<>tc_none then
     begin
       tmp:=ReplaceStr(GetEnumName(TypeInfo(TCalendarRel),ord(FRel)),'_','-');
       Delete(tmp,1,3);
-      Result.AttributeAdd(sNodeRelAttr,tmp)
+      Result.AttributeAdd(sNodeRelAttr,UTF8String(tmp))
     end
   else
-    Result.AttributeAdd(sNodeLabelAttr,FLabel);
-  Result.AttributeAdd(sNodeHrefAttr,FHref);
+    Result.AttributeAdd(sNodeLabelAttr,UTF8String(FLabel));
+  Result.AttributeAdd(sNodeHrefAttr,UTF8String(FHref));
   if FPrimary then
     Result.WriteAttributeBool('primary',FPrimary);
 end;
@@ -661,16 +657,16 @@ begin
   try
     FPrimary:=false;
     FRel:=tc_none;
-    if Length(Trim(Node.AttributeByName[sNodeRelAttr]))>0 then
+    if Length(Trim(string(Node.AttributeByName[sNodeRelAttr])))>0 then
        begin //считываем данные о rel
          FRel:=TCalendarRel(GetEnumValue(TypeInfo(TCalendarRel),
-         'tc_'+ReplaceStr((Trim(Node.AttributeByName[sNodeRelAttr])),'-','_')))
+         'tc_'+ReplaceStr((Trim(string(Node.AttributeByName[sNodeRelAttr]))),'-','_')))
        end
     else //rel отсутствует, следовательно читаем label
-      FLabel:=Trim(Node.AttributeByName[sNodeLabelAttr]);
+      FLabel:=Trim(string(Node.AttributeByName[sNodeLabelAttr]));
     if Node.HasAttribute('primary') then
       FPrimary:=Node.ReadAttributeBool('primary');
-    FHref:=Node.ReadAttributeString(sNodeHrefAttr);
+    FHref:=string(Node.ReadAttributeString(sNodeHrefAttr));
   except
     Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
@@ -680,9 +676,9 @@ function TcpCalendarLink.RelToString: string;
 begin
   case FRel of
     tc_none: Result:=FLabel;//описание содержится в label - свободный текст
-    tc_work: Result:=sc_Work;
-    tc_home: Result:=sc_Home;
-    tc_free_busy: Result:=sc_FreeBusy;
+    tc_work: Result:=LoadStr(c_Work);
+    tc_home: Result:=LoadStr(c_Home);
+    tc_free_busy: Result:=LoadStr(c_FreeBusy);
   end;
 end;
 
@@ -691,22 +687,23 @@ end;
 function TcpEvent.AddToXML(Root: TXmlNode): TXmlNode;
 var sRel: string;
 begin
+Result:=nil;
   if (Root=nil)or IsEmpty then Exit;
   Result:=Root.NodeNew(GetContactNodeName(cp_Event));
   if Ord(FEventType)>-1 then
     begin
       sRel:=GetEnumName(TypeInfo(TEventRel),ord(FEventType));
       Delete(sRel,1,2);
-      Result.WriteAttributeString(sNodeRelAttr,sRel);
+      Result.WriteAttributeString(sNodeRelAttr,UTF8String(sRel));
     end
   else
     begin
       sRel:=GetEnumName(TypeInfo(TEventRel),ord(teOther));
       Delete(sRel,1,2);
-      Result.WriteAttributeString(sNodeRelAttr,sRel);
+      Result.WriteAttributeString(sNodeRelAttr,UTF8String(sRel));
     end;
   if length(Flabel)>0 then
-    Result.WriteAttributeString(sNodeLabelAttr,Flabel);
+    Result.WriteAttributeString(sNodeLabelAttr,UTF8String(Flabel));
   FWhen.AddToXML(Result,tdDate);
 end;
 
@@ -739,10 +736,10 @@ begin
            (Format(sc_ErrCompNodes, [GetContactNodeName(cp_Event)]));
   try
     if Node.HasAttribute(sNodeLabelAttr) then
-      Flabel:=Trim(Node.ReadAttributeString(sNodeLabelAttr));
+      Flabel:=Trim(string(Node.ReadAttributeString(sNodeLabelAttr)));
     if Node.HasAttribute(sNodeRelAttr) then
       begin
-        S:=Trim(Node.ReadAttributeString(sNodeRelAttr));
+        S:=Trim(string(Node.ReadAttributeString(sNodeRelAttr)));
         S:=StringReplace(S,sSchemaHref,'',[rfIgnoreCase]);
         FEventType:=TEventRel(GetEnumValue(TypeInfo(TEventRel),s));
       end;
@@ -761,8 +758,8 @@ function TcpEvent.RelToString: string;
 begin
   case FEventType of
     teNone: Result:=Flabel;
-    teAnniversary:Result:=sc_EvntAnniv;
-    teOther:Result:=sc_EvntOther;
+    teAnniversary:Result:=LoadStr(c_EvntAnniv);
+    teOther:Result:=LoadStr(c_EvntOther);
   end;
 end;
 
@@ -771,17 +768,18 @@ end;
 function TcpExternalId.AddToXML(Root: TXmlNode): TXmlNode;
 var sRel:string;
 begin
+Result:=nil;
   if (Root=nil)or IsEmpty then Exit;
   if ord(Frel)<0 then
     raise Exception.Create
         (Format(sc_ErrWriteNode, [GetContactNodeName(cp_ExternalId)])+' '+Format(sc_WrongAttr,['rel']));
   Result:=Root.NodeNew(GetContactNodeName(cp_ExternalId));
   if Trim(Flabel)<>'' then
-    Result.WriteAttributeString(sNodeLabelAttr,FLabel);
+    Result.WriteAttributeString(sNodeLabelAttr,UTF8String(FLabel));
   sRel:=GetEnumName(TypeInfo(TExternalIdType),Ord(FRel));
   Delete(sRel,1,2);
-  Result.WriteAttributeString(sNodeRelAttr,sRel);
-  Result.WriteAttributeString(sNodeValueAttr,FValue);
+  Result.WriteAttributeString(sNodeRelAttr,UTF8String(sRel));
+  Result.WriteAttributeString(sNodeValueAttr,UTF8String(FValue));
 end;
 
 procedure TcpExternalId.Clear;
@@ -812,10 +810,10 @@ begin
           (Format(sc_ErrCompNodes, [GetContactNodeName(cp_ExternalId)]));
   try
     if Node.HasAttribute(sNodeLabelAttr) then
-      FLabel:=Node.ReadAttributeString(sNodeLabelAttr);
+      FLabel:=string(Node.ReadAttributeString(sNodeLabelAttr));
     Frel:=TExternalIdType(GetEnumValue(TypeInfo(TExternalIdType),'ti'
-          +Node.ReadAttributeString(sNodeRelAttr)));
-    FValue:=Node.ReadAttributeString(sNodeValueAttr);
+          +string(Node.ReadAttributeString(sNodeRelAttr))));
+    FValue:=string(Node.ReadAttributeString(sNodeValueAttr));
   except
     Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
@@ -826,10 +824,10 @@ begin
 //TExternalIdType = (tiNone,tiAccount,tiCustomer,tiNetwork,tiOrganization);
   case Frel of
     tiNone: Result:=FLabel;//rel не определен - берем описание из label
-    tiAccount: Result:=sc_AccId;
-    tiCustomer: Result:=sc_AccCostumer;
-    tiNetwork: Result:=sc_AccNetwork;
-    tiOrganization: Result:=sc_AccOrg;
+    tiAccount: Result:=LoadStr(c_AccId);
+    tiCustomer: Result:=LoadStr(c_AccCostumer);
+    tiNetwork: Result:=LoadStr(c_AccNetwork);
+    tiOrganization: Result:=LoadStr(c_AccOrg);
   end;
 end;
 
@@ -837,12 +835,13 @@ end;
 
 function TcpGender.AddToXML(Root: TXmlNode): TXmlNode;
 begin
+Result:=nil;
 if (Root=nil)or IsEmpty then Exit;
   if Ord(FValue)<0 then
     raise Exception.Create
         (Format(sc_ErrWriteNode, [GetContactNodeName(cp_Gender)])+' '+Format(sc_WrongAttr,[sNodeValueAttr]));
   Result:=Root.NodeNew(GetContactNodeName(cp_Gender));
-  Result.WriteAttributeString(sNodeValueAttr,GetEnumName(TypeInfo(TGenderType),Ord(FValue)));
+  Result.WriteAttributeString(sNodeValueAttr,UTF8String(GetEnumName(TypeInfo(TGenderType),Ord(FValue))));
 end;
 
 procedure TcpGender.Clear;
@@ -870,7 +869,7 @@ begin
      raise Exception.Create
      (Format(sc_ErrCompNodes, [GetContactNodeName(cp_Gender)]));
   try
-    FValue:=TGenderType(GetEnumValue(TypeInfo(TGenderType),Node.ReadAttributeString('value')));
+    FValue:=TGenderType(GetEnumValue(TypeInfo(TGenderType),string(Node.ReadAttributeString('value'))));
   except
     Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
@@ -880,8 +879,8 @@ function TcpGender.ValueToString: string;
 begin
  case FValue of
    none: Result:='';
-   male: Result:=sc_Male;
-   female: Result:=sc_Female;
+   male: Result:=LoadStr(c_Male);
+   female: Result:=LoadStr(c_Female);
  end;
 end;
 
@@ -889,9 +888,10 @@ end;
 
 function TcpGroupMembershipInfo.AddToXML(Root: TXmlNode): TXmlNode;
 begin
+Result:=nil;
  if (Root=nil)or(IsEmpty) then Exit;
  Result:=Root.NodeNew(GetContactNodeName(cp_GroupMembershipInfo));
- Result.WriteAttributeString(sNodeHrefAttr,FHref);
+ Result.WriteAttributeString(sNodeHrefAttr,UTF8String(FHref));
  Result.WriteAttributeBool('deleted',FDeleted);
 end;
 
@@ -920,7 +920,7 @@ begin
      raise Exception.Create
           (Format(sc_ErrCompNodes, [GetContactNodeName(cp_GroupMembershipInfo)]));
   try
-    FHref:=Node.ReadAttributeString(sNodeHrefAttr);
+    FHref:=string(Node.ReadAttributeString(sNodeHrefAttr));
     FDeleted:=Node.ReadAttributeBool('deleted')
   except
     Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
@@ -932,16 +932,16 @@ end;
 function TcpJot.AddToXML(Root: TXmlNode): TXmlNode;
 var sRel: string;
 begin
- sRel:='';
+ Result:=nil;
  if (Root=nil)or IsEmpty then Exit;
  Result:=Root.NodeNew(GetContactNodeName(cp_Jot));
  if FRel<>TjNone then
    begin
      sRel:=GetEnumName(TypeInfo(TJotRel),ord(FRel));
      Delete(sRel,1,2);
-     Result.WriteAttributeString(sNodeRelAttr,sRel);
+     Result.WriteAttributeString(sNodeRelAttr,UTF8String(sRel));
    end;
- Result.ValueAsString:=FText;
+ Result.ValueAsString:=UTF8String(FText);
 end;
 
 procedure TcpJot.Clear;
@@ -970,8 +970,8 @@ begin
      raise Exception.Create
           (Format(sc_ErrCompNodes, [GetContactNodeName(cp_Jot)]));
   try
-    FRel:=TJotRel(GetEnumValue(TypeInfo(TJotRel),'Tj'+Node.ReadAttributeString('rel')));
-    FText:=Node.ValueAsString;
+    FRel:=TJotRel(GetEnumValue(TypeInfo(TJotRel),'Tj'+string(Node.ReadAttributeString('rel'))));
+    FText:=string(Node.ValueAsString);
   except
     Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
@@ -981,11 +981,11 @@ function TcpJot.RelToString: string;
 begin
   case FRel of
     TjNone: Result:='';//не определенное значение
-    Tjhome: Result:=sc_JotHome;
-    Tjwork: Result:=sc_JotWork;
-    Tjother: Result:=sc_JotOther;
-    Tjkeywords: Result:=sc_JotKeywords;
-    Tjuser: Result:=sc_JotUser;
+    Tjhome: Result:=LoadStr(c_JotHome);
+    Tjwork: Result:=LoadStr(c_JotWork);
+    Tjother: Result:=LoadStr(c_JotOther);
+    Tjkeywords: Result:=LoadStr(c_JotKeywords);
+    Tjuser: Result:=LoadStr(c_JotUser);
   end;
 end;
 
@@ -993,10 +993,11 @@ end;
 
 function TcpLanguage.AddToXML(Root: TXmlNode): TXmlNode;
 begin
+  Result:=nil;
   if (Root=nil)or IsEmpty then Exit;
     Result:=Root.NodeNew(GetContactNodeName(cp_Language));
-  Result.WriteAttributeString('code',Fcode);
-  Result.WriteAttributeString(sNodeLabelAttr,Flabel);
+  Result.WriteAttributeString('code',UTF8String(Fcode));
+  Result.WriteAttributeString(sNodeLabelAttr,UTF8String(Flabel));
 end;
 
 procedure TcpLanguage.Clear;
@@ -1025,8 +1026,8 @@ begin
      raise Exception.Create
           (Format(sc_ErrCompNodes, [GetContactNodeName(cp_Language)]));
   try
-    Fcode:=Node.ReadAttributeString('code');
-    Flabel:=Node.ReadAttributeString(sNodeLabelAttr);
+    Fcode:=string(Node.ReadAttributeString('code'));
+    Flabel:=string(Node.ReadAttributeString(sNodeLabelAttr));
   except
     Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
@@ -1037,11 +1038,12 @@ end;
 function TcpPriority.AddToXML(Root: TXmlNode): TXmlNode;
 var sRel: string;
 begin
+  Result:=nil;
   if (Root=nil)or IsEmpty then Exit;
   Result:=Root.NodeNew(GetContactNodeName(cp_Priority));
   sRel:=GetEnumName(TypeInfo(TPriotityRel),ord(FRel));
   Delete(sRel,1,2);
-  Result.WriteAttributeString(sNodeRelAttr,sRel);
+  Result.WriteAttributeString(sNodeRelAttr,UTF8String(sRel));
 end;
 
 procedure TcpPriority.Clear;
@@ -1069,7 +1071,7 @@ begin
      raise Exception.Create
      (Format(sc_ErrCompNodes, [GetContactNodeName(cp_Priority)]));
   try
-    FRel:=TPriotityRel(GetEnumValue(TypeInfo(TPriotityRel),'Tp'+Node.ReadAttributeString('rel')));
+    FRel:=TPriotityRel(GetEnumValue(TypeInfo(TPriotityRel),'Tp'+string(Node.ReadAttributeString('rel'))));
   except
     Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
@@ -1079,24 +1081,24 @@ function TcpPriority.RelToString: string;
 begin
   case FRel of
     TpNone: Result:='';//значение не определено
-    Tplow:  Result:= sc_PriorityLow;
-    Tpnormal: Result:=sc_PriorityNormal;
-    Tphigh: Result:=sc_PriorityHigh;
+    Tplow:  Result:= LoadStr(c_PriorityLow);
+    Tpnormal: Result:=LoadStr(c_PriorityNormal);
+    Tphigh: Result:=LoadStr(c_PriorityHigh);
   end;
 end;
 
 { TcpRelation }
 
 function TcpRelation.AddToXML(Root: TXmlNode): TXmlNode;
-
 begin
+Result:=nil;
 if (Root=nil)or IsEmpty then Exit;
 Result:=Root.NodeNew(GetContactNodeName(cp_Relation));
 if FRealition=tr_None then
-  Result.WriteAttributeString(sNodeLabelAttr,FLabel)
+  Result.WriteAttributeString(sNodeLabelAttr,UTF8String(FLabel))
 else
-  Result.WriteAttributeString(sNodeRelAttr,GetRelStr(FRealition));
-Result.ValueAsString:=FValue;
+  Result.WriteAttributeString(sNodeRelAttr,UTF8String(GetRelStr(FRealition)));
+Result.ValueAsString:=UTF8String(FValue);
 end;
 
 procedure TcpRelation.Clear;
@@ -1136,16 +1138,16 @@ begin
   try
     if Node.HasAttribute(sNodeRelAttr) then
       begin
-        tmp:='tr_'+ReplaceStr(Node.ReadAttributeString(sNodeRelAttr),'-','_');
+        tmp:='tr_'+ReplaceStr(string(Node.ReadAttributeString(sNodeRelAttr)),'-','_');
         FRealition:= TRelationType(GetEnumValue(TypeInfo(TRelationType),
                                    tmp))
       end
     else
       begin
-        FLabel:=Node.ReadAttributeString(sNodeLabelAttr);
+        FLabel:=string(Node.ReadAttributeString(sNodeLabelAttr));
         FRealition:=tr_None;
       end;
-    FValue:=Node.ValueAsString;
+    FValue:=string(Node.ValueAsString);
   except
     Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
@@ -1155,20 +1157,20 @@ function TcpRelation.RelToString: string;
 begin
   case FRealition of
     tr_None: Result:='';//не определено
-    tr_assistant: Result:=sc_RelationAssistant;
-    tr_brother: Result:=sc_RelationBrother;
-    tr_child: Result:=sc_RelationChild;
-    tr_domestic_partner: Result:=sc_RelationDomestPart;
-    tr_father: Result:=sc_RelationFather;
-    tr_friend: Result:=sc_RelationFriend;
-    tr_manager: Result:=sc_RelationManager;
-    tr_mother: Result:=sc_RelationMother;
-    tr_parent: Result:=sc_RelationPartner;
-    tr_partner: Result:=sc_RelationPartner;
-    tr_referred_by: Result:=sc_RelationReffered;
-    tr_relative: Result:=sc_RelationRelative;
-    tr_sister: Result:=sc_RelationSister;
-    tr_spouse: Result:=sc_RelationSpouse;
+    tr_assistant: Result:=LoadStr(c_RelationAssistant);
+    tr_brother: Result:=LoadStr(c_RelationBrother);
+    tr_child: Result:=LoadStr(c_RelationChild);
+    tr_domestic_partner: Result:=LoadStr(c_RelationDomestPart);
+    tr_father: Result:=LoadStr(c_RelationFather);
+    tr_friend: Result:=LoadStr(c_RelationFriend);
+    tr_manager: Result:=LoadStr(c_RelationManager);
+    tr_mother: Result:=LoadStr(c_RelationMother);
+    tr_parent: Result:=LoadStr(c_RelationPartner);
+    tr_partner: Result:=LoadStr(c_RelationPartner);
+    tr_referred_by: Result:=LoadStr(c_RelationReffered);
+    tr_relative: Result:=LoadStr(c_RelationRelative);
+    tr_sister: Result:=LoadStr(c_RelationSister);
+    tr_spouse: Result:=LoadStr(c_RelationSpouse);
   end;
 end;
 
@@ -1177,6 +1179,7 @@ end;
 function TcpSensitivity.AddToXML(Root: TXmlNode): TXmlNode;
 var sRel: string;
 begin
+Result:=nil;
  if (Root=nil)or IsEmpty then Exit;
   if Ord(Frel)<0 then
     raise Exception.Create
@@ -1184,7 +1187,7 @@ begin
   Result:=Root.NodeNew(GetContactNodeName(cp_Sensitivity));
   sRel:=GetEnumName(TypeInfo(TSensitivityRel),ord(FRel));
   Delete(sRel,1,2);
-  Result.WriteAttributeString(sNodeRelAttr,sRel);
+  Result.WriteAttributeString(sNodeRelAttr,UTF8String(sRel));
 end;
 
 procedure TcpSensitivity.Clear;
@@ -1212,27 +1215,42 @@ if Node=nil then Exit;
      raise Exception.Create
              (Format(sc_ErrCompNodes, [GetContactNodeName(cp_Sensitivity)]));
   try
-    FRel:=TSensitivityRel(GetEnumValue(TypeInfo(TSensitivityRel),'Ts'+Node.ReadAttributeString('rel')));
+    FRel:=TSensitivityRel(GetEnumValue(TypeInfo(TSensitivityRel),'Ts'+string(Node.ReadAttributeString('rel'))));
   except
     Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
 end;
 
+function TcpSensitivity.RelToString: string;
+begin
+ case FRel of
+   TsNone: Result:='';
+   Tsconfidential:Result:=LoadStr(c_SensitivConf);
+   Tsnormal: Result:=LoadStr(c_SensitivNormal);
+   Tspersonal: Result:=LoadStr(c_SensitivPersonal);
+   Tsprivate: Result:=LoadStr(c_SensitivPrivate);
+ end;
+end;
+
 { TsystemGroup }
 
 function TcpsystemGroup.AddToXML(Root: TXmlNode): TXmlNode;
+var tmp:string;
 begin
+Result:=nil;
  if Root=nil then Exit;
-  if AnsiIndexStr(Fid,IDValues)<0 then
+  if FIdRel=tg_None then
     raise Exception.Create
     (Format(sc_ErrWriteNode, [GetContactNodeName(cp_systemGroup)])+' '+Format(sc_WrongAttr,['id']));
 Result:=Root.NodeNew(GetContactNodeName(cp_systemGroup));
-  Result.WriteAttributeString('id',Fid);
+tmp:=GetEnumName(TypeInfo(TcpSysGroupId),Ord(FidRel));
+Delete(tmp,1,3);
+Result.WriteAttributeString('id',UTF8String(tmp));
 end;
 
 procedure TcpSystemGroup.Clear;
 begin
-  Fid:='';
+  FIdRel:=tg_None;
 end;
 
 constructor TcpsystemGroup.Create(const ByNode: TXMLNode);
@@ -1245,7 +1263,7 @@ end;
 
 function TcpSystemGroup.IsEmpty: boolean;
 begin
-  Result:=Length(Trim(Fid))=0
+  Result:=FIdRel=tg_None;
 end;
 
 procedure TcpsystemGroup.ParseXML(const Node: TXmlNode);
@@ -1255,28 +1273,32 @@ begin
      raise Exception.Create
      (Format(sc_ErrCompNodes, [GetContactNodeName(cp_systemGroup)]));
   try
-      Fid:=Node.ReadAttributeString('id')
+      FIdRel:=TcpSysGroupId(GetEnumValue(TypeInfo(TcpSysGroupId),'tg_'+string(Node.ReadAttributeString('id'))));
   except
     Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
 end;
 
-procedure TcpsystemGroup.SetId(aId: string);
+function TcpSystemGroup.RelToString: string;
 begin
-if AnsiIndexStr(Fid,IDValues)<0 then
-  raise Exception.Create
-  (Format(sc_ErrWriteNode, [GetContactNodeName(cp_systemGroup)])+' '+Format(sc_WrongAttr,['id']));
-Fid:=aId;
+  case FIdRel of
+    tg_None: Result:='';//значение не определено
+    tg_Contacts: Result:=LoadStr(c_SysGroupContacts);
+    tg_Friends:Result:=LoadStr(c_SysGroupFriends);
+    tg_Family:Result:=LoadStr(c_SysGroupFamily);
+    tg_Coworkers:Result:=LoadStr(c_SysGroupCoworkers);
+  end;
 end;
 
 { TcpUserDefinedField }
 
 function TcpUserDefinedField.AddToXML(Root: TXmlNode): TXmlNode;
 begin
+Result:=nil;
   if (Root=nil)or IsEmpty then Exit;
   Result:=Root.NodeNew(GetContactNodeName(cp_UserDefinedField));
-  Result.WriteAttributeString('key',FKey);
-  Result.WriteAttributeString(sNodeValueAttr,FValue);
+  Result.WriteAttributeString('key',UTF8String(FKey));
+  Result.WriteAttributeString(UTF8String(sNodeValueAttr),UTF8String(FValue));
 end;
 
 procedure TcpUserDefinedField.Clear;
@@ -1305,8 +1327,8 @@ begin
      raise Exception.Create
      (Format(sc_ErrCompNodes, [GetContactNodeName(cp_UserDefinedField)]));
   try
-    FKey:=Node.ReadAttributeString('key');
-    FValue:=Node.ReadAttributeString(sNodeValueAttr);
+    FKey:=string(Node.ReadAttributeString('key'));
+    FValue:=string(Node.ReadAttributeString(sNodeValueAttr));
   except
     Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
@@ -1315,26 +1337,32 @@ end;
 { TcpWebsite }
 
 function TcpWebsite.AddToXML(Root: TXmlNode): TXmlNode;
+var tmp:string;
 begin
+Result:=nil;
   if (Root=nil)or IsEmpty then Exit;
-  if AnsiIndexStr(FRel,RelValues)<0 then
+  if FRel=tw_None then
     raise Exception.Create
     (Format(sc_ErrWriteNode, [GetContactNodeName(cp_Website)])+' '+Format(sc_WrongAttr,['rel']));
   Result:=Root.NodeNew(GetContactNodeName(cp_Website));
-  Result.WriteAttributeString(sNodeHrefAttr,FHref);
-  Result.WriteAttributeString(sNodeRelAttr,FRel);
+  Result.WriteAttributeString(UTF8String(sNodeHrefAttr),UTF8String(FHref));
+
+  tmp:=GetEnumName(TypeInfo(TWebSiteType),ord(FRel));
+  Delete(tmp,1,3);
+  tmp:=ReplaceStr(tmp,'_','-');
+  Result.WriteAttributeString(UTF8String(sNodeRelAttr),UTF8String(tmp));
+
   if FPrimary then
     Result.WriteAttributeBool('primary',FPrimary);
   if Trim(Flabel)<>'' then
-    Result.WriteAttributeString(sNodeLabelAttr,Flabel);
+    Result.WriteAttributeString(UTF8String(sNodeLabelAttr),UTF8String(Flabel));
 end;
 
 procedure TcpWebsite.Clear;
 begin
   FHref:='';
   Flabel:='';
-  FRel:='';
-  FWebSiteType:=twOther;
+  FRel:=tw_None;
 end;
 
 constructor TcpWebsite.Create(const ByNode: TXMLNode);
@@ -1347,27 +1375,24 @@ end;
 
 function TcpWebsite.IsEmpty: boolean;
 begin
-  Result:=(Length(Trim(FHref))=0)and(Length(Trim(FRel))=0)and(Length(Trim(Flabel))=0)and(FWebSiteType=twOther)
+  Result:=(Length(Trim(FHref))=0)and(Length(Trim(Flabel))=0)and(FRel=tw_None)
 end;
 
 procedure TcpWebsite.ParseXML(const Node: TXmlNode);
+var tmp: string;
 begin
   if (Node=nil) then Exit;
   if GetContactNodeType(Node.Name) <> cp_Website then
      raise Exception.Create
      (Format(sc_ErrCompNodes, [GetContactNodeName(cp_Website)]));
   try
-    FHref:=Node.ReadAttributeString(sNodeHrefAttr);
-    FRel:=Node.ReadAttributeString(sNodeRelAttr);
-    FRel:=StringReplace(FRel,sSchemaHref,'',[rfIgnoreCase]);
-
-    if AnsiIndexText(Frel,RelValues)>-1 then
-      FWebSiteType:=TWebsiteType(AnsiIndexText(Frel,RelValues))
-    else
-      FWebSiteType:=twOther;
-
+    FRel:=tw_None;
+    FHref:=string(Node.ReadAttributeString(sNodeHrefAttr));
+    tmp:=ReplaceStr(string(Node.ReadAttributeString(sNodeRelAttr)),sSchemaHref,'');
+    tmp:='tw_'+ReplaceStr(tmp,'-','_');
+    FRel:=TWebSiteType(GetEnumValue(TypeInfo(TWebSiteType),tmp));
     if Node.HasAttribute(sNodeLabelAttr) then
-      Flabel:=Node.ReadAttributeString(sNodeLabelAttr);
+      Flabel:=string(Node.ReadAttributeString(sNodeLabelAttr));
     if Node.HasAttribute('primary') then
       FPrimary:=Node.ReadAttributeBool('primary');
   except
@@ -1375,10 +1400,18 @@ begin
   end;
 end;
 
-procedure TcpWebsite.SetRel(aRel: TWebSiteType);
+function TcpWebsite.RelToString: string;
 begin
-FRel:=RelValues[ord(aRel)];
-FWebSiteType:=aRel;
+  case Frel of
+    tw_None:       Result:='';//значение не определено
+    tw_Home_Page:  Result:=LoadStr(c_WebsiteHomePage);
+    tw_Blog:       Result:=LoadStr(c_WebsiteBlog);
+    tw_Profile:    Result:=LoadStr(c_WebsiteProfile);
+    tw_Home:       Result:=LoadStr(c_WebsiteHome);
+    tw_Work:       Result:=LoadStr(c_WebsiteWork);
+    tw_Other:      Result:=LoadStr(c_WebsiteOther);
+    tw_Ftp:        Result:=LoadStr(c_WebsiteFtp);
+  end;
 end;
 
 { TContact }
@@ -1468,10 +1501,10 @@ end;
 function TContact.GenerateText(TypeFile:TFileType): string;
 var Doc: TNativeXml;
     I: Integer;
-    url:string;
     Node:TXMLNode;
 begin
 try
+ Node:=nil;
  if IsEmpty then Exit;
  Doc:=TNativeXml.Create;
  Doc.EncodingString:=sDefoultEncoding;
@@ -1521,7 +1554,7 @@ try
  FNickName.AddToXML(Doc.Root);
  FOrganization.AddToXML(Doc.Root);
  FBirthDay.AddToXML(Doc.Root);
- Result:=Doc.Root.WriteToString;
+ Result:=string(Doc.Root.WriteToString);
 finally
   FreeAndNil(Doc)
 end;
@@ -1594,8 +1627,8 @@ try
   XML:=TNativeXml.Create;
   XML.LoadFromFile(FileName);
   if (not XML.IsEmpty)and
-     ((LowerCase(XML.Root.Name)=LowerCase(sAtomAlias+sEntryNodeName))
-     or(LowerCase(XML.Root.Name)=LowerCase(sEntryNodeName))) then
+     ((LowerCase(string(XML.Root.Name))=LowerCase(sAtomAlias+sEntryNodeName))
+     or(LowerCase(string(XML.Root.Name))=LowerCase(sEntryNodeName))) then
        ParseXML(XML.Root);
 finally
   FreeAndNil(XML)
@@ -1626,11 +1659,11 @@ var i:integer;
 begin
 try
  if Node=nil then Exit;
- FEtag:=Node.ReadAttributeString(gdNodeAlias+'etag');
+ FEtag:=string(Node.ReadAttributeString(gdNodeAlias+'etag'));
  List:=TXmlNodeList.Create;
  Node.NodesByName('id',List);
  for I := 0 to List.Count - 1 do
-   FId:=List.Items[i].ValueAsString;
+   FId:=string(List.Items[i].ValueAsString);
  //вначале заполняем все списки
  Node.NodesByName(GetGDNodeName(gd_Email),List);
  for i:=0 to List.Count-1 do
@@ -1665,28 +1698,28 @@ try
  for i:=0 to Node.NodeCount - 1 do
    begin
    //CpAtomAlias
-     if (LowerCase(Node.Nodes[i].Name)='updated')or
-        (LowerCase(Node.Nodes[i].Name)=LowerCase(sAtomAlias+'updated')) then
-         FUpdated:=ServerDateToDateTime(Node.Nodes[i].ValueAsString)
+     if (LowerCase(string(Node.Nodes[i].Name))='updated')or
+        (LowerCase(string(Node.Nodes[i].Name))=LowerCase(sAtomAlias+'updated')) then
+         FUpdated:=ServerDateToDateTime(string(Node.Nodes[i].ValueAsString))
      else
-       if (LowerCase(Node.Nodes[i].Name)='title')or
-          (LowerCase(Node.Nodes[i].Name)=LowerCase(sAtomAlias+'title')) then
+       if (LowerCase(string(Node.Nodes[i].Name))='title')or
+          (LowerCase(string(Node.Nodes[i].Name))=LowerCase(sAtomAlias+'title')) then
          FTitle:=TTextTag.Create(Node.Nodes[i])
        else
-         if (LowerCase(Node.Nodes[i].Name)='content')or
-            (LowerCase(Node.Nodes[i].Name)=LowerCase(sAtomAlias+'content')) then
+         if (LowerCase(string(Node.Nodes[i].Name))='content')or
+            (LowerCase(string(Node.Nodes[i].Name))=LowerCase(sAtomAlias+'content')) then
            FContent:=TTextTag.Create(Node.Nodes[i])
          else
-           if LowerCase(Node.Nodes[i].Name)=LowerCase(GetGDNodeName(gd_Name)) then
+           if LowerCase(string(Node.Nodes[i].Name))=LowerCase(string(GetGDNodeName(gd_Name))) then
              FName:=TgdName.Create(Node.Nodes[i])
            else
-             if LowerCase(Node.Nodes[i].Name)=LowerCase(GetGDNodeName(gd_Organization)) then
+             if LowerCase(string(Node.Nodes[i].Name))=LowerCase(string(GetGDNodeName(gd_Organization))) then
                FOrganization:=TgdOrganization.Create(Node.Nodes[i])
              else
-                if LowerCase(Node.Nodes[i].Name)=LowerCase(GetContactNodeName(cp_Birthday)) then
+                if WideLowerCase(string(Node.Nodes[i].Name))=LowerCase(string(GetContactNodeName(cp_Birthday))) then
                  FBirthDay:=TcpBirthday.Create(Node.Nodes[i])
                else
-                   if LowerCase(Node.Nodes[i].Name)=LowerCase(GetContactNodeName(cp_Nickname)) then
+                   if LowerCase(string(Node.Nodes[i].Name))=LowerCase(string(GetContactNodeName(cp_Nickname))) then
                    FNickName:=TTextTag.Create(Node.Nodes[i]);
    end;
 finally
@@ -1727,21 +1760,21 @@ end;
 
 function TContactGroup.CreateContact(const aContact: TContact): boolean;
 begin
-
+  Result:=false
 end;
 
 procedure TContactGroup.ParseXML(Node: TXmlNode);
 var i:integer;
 begin
   if Node=nil then Exit;
-  FEtag:=Node.ReadAttributeString(gdNodeAlias+'etag');
+  FEtag:=string(Node.ReadAttributeString(gdNodeAlias+'etag'));
   for i:=0 to Node.NodeCount-1 do
     begin
       if Node.Nodes[i].Name='id' then
-        Fid:=Node.Nodes[i].ValueAsString
+        Fid:=string(Node.Nodes[i].ValueAsString)
       else
         if Node.Nodes[i].Name='updated' then
-          FUpdate:=ServerDateToDateTime(Node.Nodes[i].ValueAsString)
+          FUpdate:=ServerDateToDateTime(string(Node.Nodes[i].ValueAsString))
         else
           if Node.Nodes[i].Name='title' then
             FTitle:=TTextTag.Create(Node.Nodes[i])
@@ -1766,7 +1799,7 @@ Result:=false;
 if (aContact=nil) Or aContact.IsEmpty  then Exit;
 try
   XML:=TNativeXml.Create;
-  XML.ReadFromString(aContact.ToXMLText[tfAtom]);
+  XML.ReadFromString(UTF8String(aContact.ToXMLText[tfAtom]));
   with THTTPSender.Create('POST',FAuth,CpContactsLink,CpProtocolVer)do
     begin
       MimeType := 'application/atom+xml';
@@ -1792,23 +1825,23 @@ finally
 end;
 end;
 
-constructor TGoogleContact.Create(AOwner:TComponent;const aAuth,aEmail: string);
-begin
-//  if Trim(aAuth)='' then
-//    raise Exception.Create(rcErrNullAuth);
-  inherited Create(AOwner);
-  FEmail:=aEmail;
-  FAuth:=aAuth;
-
-  FMaximumResults:=-1;
-  FStartIndex:=1;
-  FUpdatesMin:=0;
-  FShowDeleted:=false;
-  FSortOrder:=Ts_None;
-
-  FGroups:=TList<TContactGroup>.Create;
-  FContacts:=TList<TContact>.Create;
-end;
+//constructor TGoogleContact.Create(AOwner:TComponent;const aAuth,aEmail: string);
+//begin
+////  if Trim(aAuth)='' then
+////    raise Exception.Create(rcErrNullAuth);
+//  inherited Create(AOwner);
+//  FEmail:=aEmail;
+//  FAuth:=aAuth;
+//
+//  FMaximumResults:=-1;
+//  FStartIndex:=1;
+//  FUpdatesMin:=0;
+//  FShowDeleted:=false;
+//  FSortOrder:=Ts_None;
+//
+//  FGroups:=TList<TContactGroup>.Create;
+//  FContacts:=TList<TContact>.Create;
+//end;
 
 function TGoogleContact.DeleteContact(index: integer): boolean;
 begin
@@ -1821,10 +1854,24 @@ except
 end;
 end;
 
+constructor TGoogleContact.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FMaximumResults:=-1;
+  FStartIndex:=1;
+  FUpdatesMin:=0;
+  FShowDeleted:=false;
+  FSortOrder:=Ts_None;
+
+  FGroups:=TList<TContactGroup>.Create;
+  FContacts:=TList<TContact>.Create;
+end;
+
 function TGoogleContact.DeleteContact(aContact: TContact): boolean;
 var i:integer;
 begin
 try
+Result:=false;
 if aContact=nil then Exit;
 
 if Length(aContact.Etag)>0 then
@@ -1867,6 +1914,7 @@ end;
 
 function TGoogleContact.DeletePhoto(index: integer):boolean;
 begin
+Result:=false;
   if (index>=FContacts.Count)or(index<0) then Exit;
   Result:=DeletePhoto(FContacts[index])
 end;
@@ -1968,7 +2016,7 @@ try
    begin
      if List.Items[i].ReadAttributeString(sNodeRelAttr)='next' then
        begin
-         Result:=List.Items[i].ReadAttributeString(sNodeHrefAttr);
+         Result:=String(List.Items[i].ReadAttributeString(sNodeHrefAttr));
          break;
        end;
    end;
@@ -2001,7 +2049,7 @@ try
    begin
      if List.Items[i].ReadAttributeString(sNodeRelAttr)='next' then
        begin
-         Result:=List.Items[i].ReadAttributeString(sNodeHrefAttr);
+         Result:=string(List.Items[i].ReadAttributeString(sNodeHrefAttr));
          break;
        end;
    end;
@@ -2030,7 +2078,6 @@ function TGoogleContact.InsertPhotoEtag(aContact: TContact;
 var XML: TNativeXML;
     i:integer;
     etag: string;
-    L: TStringList;
 begin
 Result:=false;
 try
@@ -2041,7 +2088,7 @@ try
   except
     Exit;
   end;
-  etag:=XML.Root.ReadAttributeString(gdNodeAlias+'etag');
+  etag:=string(XML.Root.ReadAttributeString(gdNodeAlias+'etag'));
   for I := 0 to aContact.FLinks.Count - 1 do
     begin
       if aContact.FLinks[i].Ltype=sImgRel then
@@ -2058,7 +2105,6 @@ end;
 
 procedure TGoogleContact.LoadContactsFromFile(const FileName: string);
 var XML: TStringStream;
-    i:integer;
 begin
   try
     XML:=TStringStream.Create('',TEncoding.UTF8);
@@ -2175,6 +2221,7 @@ function TGoogleContact.RetriveContactPhoto(aContact: TContact;
 var Img: TJPEGImage;
 begin
 try
+  Result:=nil;
   if aContact=nil then Exit;
   if Length(Trim(DefaultImage))=0 then
     raise Exception.Create(sc_ErrFileNull);
@@ -2306,6 +2353,16 @@ begin
   end;
 end;
 
+procedure TGoogleContact.SetAuth(const aAuth: string);
+begin
+  FAuth:=aAuth;
+end;
+
+procedure TGoogleContact.SetGmail(const aGMail: string);
+begin
+  FEmail:=aGMail;
+end;
+
 procedure TGoogleContact.SetMaximumResults(const Value: integer);
 begin
   FMaximumResults := Value;
@@ -2368,6 +2425,7 @@ end;
 function TGoogleContact.UpdatePhoto(index: integer;
   const PhotoFile: TFileName):boolean;
 begin
+Result:=false;
 if (index>=FContacts.Count)or(index<0) then Exit;
   Result:=UpdatePhoto(FContacts[index],PhotoFile);
 end;
@@ -2380,7 +2438,7 @@ begin
   if (Length(aContact.Etag)=0)  then Exit;
 try
  Doc:=TNativeXml.Create;
- Doc.ReadFromString(aContact.ToXMLText[tfXML]);
+ Doc.ReadFromString(UTF8String(aContact.ToXMLText[tfXML]));
  with THTTPSender.Create('PUT',FAuth,GetEditLink(aContact),CpProtocolVer)do
     begin
       ExtendedHeaders.Add('If-Match: *');
@@ -2406,6 +2464,7 @@ end;
 function TGoogleContact.RetriveContactPhoto(index: integer;
   DefaultImage: TFileName): TJPEGImage;
 begin
+Result:=nil;
   if (index>=FContacts.Count)or(index<0) then Exit;
   Result:=TJPEGImage.Create;
   Result.Assign(RetriveContactPhoto(FContacts[index],DefaultImage));
@@ -2440,9 +2499,8 @@ begin
 end;
 
 function THTTPSender.GetLength(const aURL: string): integer;
-var i:integer;
-    size,content:string;
-    ch:char;
+var size,content:Ansistring;
+    ch:AnsiChar;
     h:TStringList;
 begin
   with THTTPSend.Create do
@@ -2453,13 +2511,13 @@ begin
         begin
           h:=TStringList.Create;
           h.Assign(Headers);
-          content:=HeadByName('content-length',H);
+          content:=AnsiString(HeadByName('content-length',H));
           H.Delete(H.IndexOf(HeadByName('Connection',H)));
-          H.Delete(H.IndexOf(content));
+          H.Delete(H.IndexOf(string(content)));
           for ch in content do
             if ch in ['0'..'9'] then
                size:=size+ch;
-          Result:=StrToIntDef(size,0)+Length(BytesOf(H.Text));
+          Result:=StrToIntDef(string(size),0)+Length(BytesOf(H.Text));
         end
       else
        Result:=-1;
@@ -2483,6 +2541,7 @@ end;
 function THTTPSender.SendRequest: boolean;
 var str: string;
 begin
+Result:=false;
   if (Length(Trim(FMethod))=0)or
      (Length(Trim(FURL))=0)or
      (Length(Trim(FAuthKey))=0)or

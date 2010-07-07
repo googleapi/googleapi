@@ -55,4 +55,22 @@ STRINGTABLE
   c_RelationRelative, "Отношение"
   c_RelationSister, "Сестра"
   c_RelationSpouse, "Супруга"
+
+  c_SensitivConf, "Конфиденциальный"
+  c_SensitivNormal, "Обычный"
+  c_SensitivPersonal, "Персональный"
+  c_SensitivPrivate, "Частный"
+
+  c_SysGroupContacts, "Контакты"
+  c_SysGroupFriends, "Друзья"
+  c_SysGroupFamily, "Семья"
+  c_SysGroupCoworkers, "Сотрудники"
+
+  c_WebsiteHomePage, "Домашняя страница"
+  c_WebsiteBlog, "Блог"  
+  c_WebsiteProfile, "Профиль"
+  c_WebsiteHome, "Личный сайт"
+  c_WebsiteWork, "Рабочий сайт"
+  c_WebsiteOther, "Другой"
+  c_WebsiteFtp, "FTP-сайт" 
 }

@@ -347,6 +347,7 @@ const
    ('Pacific/Kiritimati','(GMT+14:00) Киритимати','+14,00',''));
 
 var
+{Диалоги}
   sc_ErrPrepareNode  :string;
   sc_ErrCompNodes    :string;
   sc_ErrWriteNode    :string;
@@ -361,52 +362,11 @@ var
   sc_ErrNullAuth     :string;
   sc_ErrFileName     :string;
   sc_ErrFileNull     :string;
-{Variables}
-//gContact:calendarLink rel values
-  sc_Work            :string;
-  sc_Home            :string;
-  sc_FreeBusy        :string;
-//gContact:externalId  rel values
-  sc_AccId           :string;
-  sc_AccCostumer     :string;
-  sc_AccNetwork      :string;
-  sc_AccOrg          :string;
-//gContact:event rel values
-  sc_EvntAnniv       :string;
-  sc_EvntOther       :string;
-//gContact:gender values
-  sc_Male            :string;
-  sc_Female          :string;
-//gContact:jot rel values
-  sc_JotHome         :string;
-  sc_JotWork         :string;
-  sc_JotOther        :string;
-  sc_JotKeywords     :string;
-  sc_JotUser         :string;
-//gContact:Priority rel values
-  sc_PriorityLow     :string;
-  sc_PriorityNormal  :string;
-  sc_PriorityHigh    :string;
-//gContact:Relation rel values
-  sc_RelationAssistant  :string;
-  sc_RelationBrother    :string;
-  sc_RelationChild      :string;
-  sc_RelationDomestPart :string;
-  sc_RelationFather     :string;
-  sc_RelationFriend     :string;
-  sc_RelationManager    :string;
-  sc_RelationMother     :string;
-  sc_RelationPartner    :string;
-  sc_RelationParent     :string;
-  sc_RelationReffered   :string;
-  sc_RelationRelative   :string;
-  sc_RelationSister     :string;
-  sc_RelationSpouse     :string;
 
 implementation
 
 initialization
-//загружаем строки из RES-файла
+//загружаем строки из RES-файла, относящиеся к диалогам с пользователем
   sc_ErrPrepareNode  :=LoadStr(c_ErrPrepareNode);
   sc_ErrCompNodes    :=LoadStr(c_ErrCompNodes);
   sc_ErrWriteNode    :=LoadStr(c_ErrWriteNode);
@@ -421,46 +381,4 @@ initialization
   sc_ErrNullAuth     :=LoadStr(c_ErrNullAuth);
   sc_ErrFileName     :=LoadStr(c_ErrFileName);
   sc_ErrFileNull     :=LoadStr(c_ErrFileNull);
-{Variables}
-//gContact:calendarLink rel values
-  sc_Work            :=LoadStr(c_Work);
-  sc_Home            :=LoadStr(c_Home);
-  sc_FreeBusy        :=LoadStr(c_FreeBusy);
-//gContact:externalId  rel values
-  sc_AccId           :=LoadStr(c_AccId);
-  sc_AccCostumer     :=LoadStr(c_AccCostumer);
-  sc_AccNetwork      :=LoadStr(c_AccNetwork);
-  sc_AccOrg          :=LoadStr(c_AccOrg);
-//gContact:event rel values
-  sc_EvntAnniv       :=LoadStr(c_EvntAnniv);
-  sc_EvntOther       :=LoadStr(c_EvntOther);
-//gContact:gender values
-  sc_Male            :=LoadStr(c_Male);
-  sc_Female          :=LoadStr(c_Female);
-//gContact:jot rel values
-  sc_JotHome         :=LoadStr(c_JotHome);
-  sc_JotWork         :=LoadStr(c_JotWork);
-  sc_JotOther        :=LoadStr(c_JotOther);
-  sc_JotKeywords     :=LoadStr(c_JotKeywords);
-  sc_JotUser         :=LoadStr(c_JotUser);
-//gContact:Priority rel values
-  sc_PriorityLow     :=LoadStr(c_PriorityLow);
-  sc_PriorityNormal  :=LoadStr(c_PriorityNormal);
-  sc_PriorityHigh    :=LoadStr(c_PriorityHigh);
-//gContact:Relation rel values
-  sc_RelationAssistant  :=LoadStr(c_RelationAssistant);
-  sc_RelationBrother    :=LoadStr(c_RelationBrother);
-  sc_RelationChild      :=LoadStr(c_RelationChild);
-  sc_RelationDomestPart :=LoadStr(c_RelationDomestPart);
-  sc_RelationFather     :=LoadStr(c_RelationFather);
-  sc_RelationFriend     :=LoadStr(c_RelationFriend);
-  sc_RelationManager    :=LoadStr(c_RelationManager);
-  sc_RelationMother     :=LoadStr(c_RelationMother);
-  sc_RelationPartner    :=LoadStr(c_RelationPartner);
-  sc_RelationParent     :=LoadStr(c_RelationParent);
-  sc_RelationReffered   :=LoadStr(c_RelationReffered);
-  sc_RelationRelative   :=LoadStr(c_RelationRelative);
-  sc_RelationSister     :=LoadStr(c_RelationSister);
-  sc_RelationSpouse     :=LoadStr(c_RelationSpouse);
-
 end.
