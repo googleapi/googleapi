@@ -177,6 +177,7 @@ type
     constructor Create(const ByNode: TXMLNode=nil);
     procedure Clear;
     procedure ParseXML(const Node: TXmlNode);
+    function RelToString:string;
     function IsEmpty: boolean;
     function AddToXML(Root: TXmlNode):TXmlNode;
     property Rel: TJotRel read FRel write FRel;
@@ -207,6 +208,7 @@ type
     constructor Create(const ByNode: TXMLNode=nil);
     procedure Clear;
     function IsEmpty:boolean;
+    function RelToString: string;
     procedure ParseXML(const Node: TXmlNode);
     function AddToXML(Root: TXmlNode):TXmlNode;
     property Rel: TPriotityRel read FRel write FRel;
@@ -227,6 +229,7 @@ type
   public
     constructor Create(const ByNode: TXMLNode=nil);
     procedure Clear;
+    function RelToString: string;
     function IsEmpty:boolean;
     procedure ParseXML(const Node: TXmlNode);
     function AddToXML(Root: TXmlNode):TXmlNode;
@@ -974,6 +977,18 @@ begin
   end;
 end;
 
+function TcpJot.RelToString: string;
+begin
+  case FRel of
+    TjNone: Result:='';//не определенное значение
+    Tjhome: Result:=sc_JotHome;
+    Tjwork: Result:=sc_JotWork;
+    Tjother: Result:=sc_JotOther;
+    Tjkeywords: Result:=sc_JotKeywords;
+    Tjuser: Result:=sc_JotUser;
+  end;
+end;
+
 { TcpLanguage }
 
 function TcpLanguage.AddToXML(Root: TXmlNode): TXmlNode;
@@ -1060,6 +1075,16 @@ begin
   end;
 end;
 
+function TcpPriority.RelToString: string;
+begin
+  case FRel of
+    TpNone: Result:='';//значение не определено
+    Tplow:  Result:= sc_PriorityLow;
+    Tpnormal: Result:=sc_PriorityNormal;
+    Tphigh: Result:=sc_PriorityHigh;
+  end;
+end;
+
 { TcpRelation }
 
 function TcpRelation.AddToXML(Root: TXmlNode): TXmlNode;
@@ -1102,6 +1127,7 @@ begin
 end;
 
 procedure TcpRelation.ParseXML(const Node: TXmlNode);
+var tmp:string;
 begin
  if Node=nil then Exit;
   if GetContactNodeType(Node.Name) <> cp_Relation then
@@ -1109,8 +1135,11 @@ begin
      (Format(sc_ErrCompNodes, [GetContactNodeName(cp_Relation)]));
   try
     if Node.HasAttribute(sNodeRelAttr) then
+      begin
+        tmp:='tr_'+ReplaceStr(Node.ReadAttributeString(sNodeRelAttr),'-','_');
         FRealition:= TRelationType(GetEnumValue(TypeInfo(TRelationType),
-                                   'tr_'+Node.ReadAttributeString(sNodeRelAttr)))
+                                   tmp))
+      end
     else
       begin
         FLabel:=Node.ReadAttributeString(sNodeLabelAttr);
@@ -1119,6 +1148,27 @@ begin
     FValue:=Node.ValueAsString;
   except
     Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
+  end;
+end;
+
+function TcpRelation.RelToString: string;
+begin
+  case FRealition of
+    tr_None: Result:='';//не определено
+    tr_assistant: Result:=sc_RelationAssistant;
+    tr_brother: Result:=sc_RelationBrother;
+    tr_child: Result:=sc_RelationChild;
+    tr_domestic_partner: Result:=sc_RelationDomestPart;
+    tr_father: Result:=sc_RelationFather;
+    tr_friend: Result:=sc_RelationFriend;
+    tr_manager: Result:=sc_RelationManager;
+    tr_mother: Result:=sc_RelationMother;
+    tr_parent: Result:=sc_RelationPartner;
+    tr_partner: Result:=sc_RelationPartner;
+    tr_referred_by: Result:=sc_RelationReffered;
+    tr_relative: Result:=sc_RelationRelative;
+    tr_sister: Result:=sc_RelationSister;
+    tr_spouse: Result:=sc_RelationSpouse;
   end;
 end;
 

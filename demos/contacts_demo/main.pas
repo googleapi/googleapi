@@ -199,23 +199,24 @@ end;
 
 procedure TForm3.ComboBox5Change(Sender: TObject);
 begin
-  case Selected.Relations[ComboBox5.ItemIndex].Realition of
-   tr_None:label13.Caption:='Неизвестно';
-   tr_Assistant:label13.Caption:='Помощник';
-   tr_Brother:label13.Caption:='Брат';
-   tr_Child:label13.Caption:='Ребенок';
-   tr_domestic_partner:label13.Caption:='';
-   tr_Father:label13.Caption:='Партнер';
-   tr_Friend:label13.Caption:='Друг';
-   tr_Manager:label13.Caption:='Начальник';
-   tr_Mother:label13.Caption:='Мать';
-   tr_parent:label13.Caption:='Родитель';
-   tr_Partner:label13.Caption:='Партнер';
-   tr_referred_by:label13.Caption:='Приглашенный';
-   tr_Relative:label13.Caption:='Участник';
-   tr_Sister:label13.Caption:='Сестра';
-   tr_Spouse:label13.Caption:='Супруга';
-  end;
+label13.Caption:=Selected.Relations[ComboBox5.ItemIndex].RelToString;
+//  case Selected.Relations[ComboBox5.ItemIndex].Realition of
+//   tr_None:label13.Caption:='Неизвестно';
+//   tr_Assistant:label13.Caption:='Помощник';
+//   tr_Brother:label13.Caption:='Брат';
+//   tr_Child:label13.Caption:='Ребенок';
+//   tr_domestic_partner:label13.Caption:='';
+//   tr_Father:label13.Caption:='Партнер';
+//   tr_Friend:label13.Caption:='Друг';
+//   tr_Manager:label13.Caption:='Начальник';
+//   tr_Mother:label13.Caption:='Мать';
+//   tr_parent:label13.Caption:='Родитель';
+//   tr_Partner:label13.Caption:='Партнер';
+//   tr_referred_by:label13.Caption:='Приглашенный';
+//   tr_Relative:label13.Caption:='Участник';
+//   tr_Sister:label13.Caption:='Сестра';
+//   tr_Spouse:label13.Caption:='Супруга';
+//  end;
 end;
 
 procedure TForm3.ComboBox6Change(Sender: TObject);

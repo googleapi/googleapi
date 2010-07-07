@@ -377,13 +377,37 @@ var
 //gContact:gender values
   sc_Male            :string;
   sc_Female          :string;
+//gContact:jot rel values
+  sc_JotHome         :string;
+  sc_JotWork         :string;
+  sc_JotOther        :string;
+  sc_JotKeywords     :string;
+  sc_JotUser         :string;
+//gContact:Priority rel values
+  sc_PriorityLow     :string;
+  sc_PriorityNormal  :string;
+  sc_PriorityHigh    :string;
+//gContact:Relation rel values
+  sc_RelationAssistant  :string;
+  sc_RelationBrother    :string;
+  sc_RelationChild      :string;
+  sc_RelationDomestPart :string;
+  sc_RelationFather     :string;
+  sc_RelationFriend     :string;
+  sc_RelationManager    :string;
+  sc_RelationMother     :string;
+  sc_RelationPartner    :string;
+  sc_RelationParent     :string;
+  sc_RelationReffered   :string;
+  sc_RelationRelative   :string;
+  sc_RelationSister     :string;
+  sc_RelationSpouse     :string;
 
 implementation
 
 initialization
 //загружаем строки из RES-файла
   sc_ErrPrepareNode  :=LoadStr(c_ErrPrepareNode);
-  OutputDebugString(PChar('sc_ErrPrepareNode loaded. Value is "'+sc_ErrPrepareNode+'"'));
   sc_ErrCompNodes    :=LoadStr(c_ErrCompNodes);
   sc_ErrWriteNode    :=LoadStr(c_ErrWriteNode);
   sc_ErrReadNode     :=LoadStr(c_ErrReadNode);
@@ -413,6 +437,30 @@ initialization
 //gContact:gender values
   sc_Male            :=LoadStr(c_Male);
   sc_Female          :=LoadStr(c_Female);
-
+//gContact:jot rel values
+  sc_JotHome         :=LoadStr(c_JotHome);
+  sc_JotWork         :=LoadStr(c_JotWork);
+  sc_JotOther        :=LoadStr(c_JotOther);
+  sc_JotKeywords     :=LoadStr(c_JotKeywords);
+  sc_JotUser         :=LoadStr(c_JotUser);
+//gContact:Priority rel values
+  sc_PriorityLow     :=LoadStr(c_PriorityLow);
+  sc_PriorityNormal  :=LoadStr(c_PriorityNormal);
+  sc_PriorityHigh    :=LoadStr(c_PriorityHigh);
+//gContact:Relation rel values
+  sc_RelationAssistant  :=LoadStr(c_RelationAssistant);
+  sc_RelationBrother    :=LoadStr(c_RelationBrother);
+  sc_RelationChild      :=LoadStr(c_RelationChild);
+  sc_RelationDomestPart :=LoadStr(c_RelationDomestPart);
+  sc_RelationFather     :=LoadStr(c_RelationFather);
+  sc_RelationFriend     :=LoadStr(c_RelationFriend);
+  sc_RelationManager    :=LoadStr(c_RelationManager);
+  sc_RelationMother     :=LoadStr(c_RelationMother);
+  sc_RelationPartner    :=LoadStr(c_RelationPartner);
+  sc_RelationParent     :=LoadStr(c_RelationParent);
+  sc_RelationReffered   :=LoadStr(c_RelationReffered);
+  sc_RelationRelative   :=LoadStr(c_RelationRelative);
+  sc_RelationSister     :=LoadStr(c_RelationSister);
+  sc_RelationSpouse     :=LoadStr(c_RelationSpouse);
 
 end.

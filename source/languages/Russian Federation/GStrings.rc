@@ -30,4 +30,29 @@ STRINGTABLE
 
   c_Male, "Мужской"
   c_Female, "Женский"
+
+  c_JotHome, "Дома"
+  c_JotWork, "На работе"
+  c_JotOther, "Другое"
+  c_JotKeywords, "Ключевые слова"
+  c_JotUser, "Пользователь" 
+
+  c_PriorityLow, "Низкий"
+  c_PriorityNormal, "Нормальный"
+  c_PriorityHigh, "Высокий"
+
+  c_RelationAssistant, "Помощник"
+  c_RelationBrother, "Брат"
+  c_RelationChild, "Ребенок"
+  c_RelationDomestPart, "Сосед"
+  c_RelationFather, "Отец"
+  c_RelationFriend, "Друг"
+  c_RelationManager, "Начальник"
+  c_RelationMother, "Мать"
+  c_RelationPartner, "Партнер"
+  c_RelationParent, "Родитель"
+  c_RelationReffered, "Знакомый"
+  c_RelationRelative, "Отношение"
+  c_RelationSister, "Сестра"
+  c_RelationSpouse, "Супруга"
 }
