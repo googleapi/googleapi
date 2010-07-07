@@ -4,7 +4,7 @@ interface
 
 uses Graphics,strutils,Windows,DateUtils,SysUtils, Variants,
 Classes,StdCtrls,httpsend,Generics.Collections,xmlintf,xmldom,NativeXML,
-GConsts,uLanguage;
+GConsts;
 
 type
  TTimeZone = packed record
@@ -353,7 +353,7 @@ begin
       FAtributes.Add(Attr)
     end;
   except
-    Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
+    Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
 end;
 
@@ -386,7 +386,7 @@ begin
             FUID:=Node.ChildNodes[i].Text;
     end;
   except
-    Exception.Create(Format(rcErrPrepareNode, [Node.NodeName]));
+    Exception.Create(Format(sc_ErrPrepareNode, [Node.NodeName]));
   end;
 end;
 
@@ -414,7 +414,7 @@ begin
     Fhref:=Node.ReadAttributeString('href');
     FEtag:=Node.ReadAttributeString('gd:etag')
   except
-    Exception.Create(Format(rcErrPrepareNode, ['link']));
+    Exception.Create(Format(sc_ErrPrepareNode, ['link']));
   end;
 end;
 

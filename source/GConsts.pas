@@ -2,6 +2,8 @@
 
 interface
 
+uses uLanguage, SysUtils, Windows;
+
 const
   CpProtocolVer = '3.0'; //версия протокола для Google Contacts
   CpNodeAlias = 'gContact:';//префикс XML-узлов, относящихся к Contacts
@@ -344,6 +346,73 @@ const
    ('Pacific/Tongatapu','(GMT+13:00) Тонгатапу','+13,00',''),
    ('Pacific/Kiritimati','(GMT+14:00) Киритимати','+14,00',''));
 
+var
+  sc_ErrPrepareNode  :string;
+  sc_ErrCompNodes    :string;
+  sc_ErrWriteNode    :string;
+  sc_ErrReadNode     :string;
+  sc_ErrMissValue    :string;
+  sc_ErrMissAgrument :string;
+  sc_UnUsedTag       :string;
+  sc_DuplicateLink   :string;
+  sc_WrongAttr       :string;
+  sc_RightAttrValues :string;
+  sc_ErrCGroupCreate :string;
+  sc_ErrNullAuth     :string;
+  sc_ErrFileName     :string;
+  sc_ErrFileNull     :string;
+{Variables}
+//gContact:calendarLink rel values
+  sc_Work            :string;
+  sc_Home            :string;
+  sc_FreeBusy        :string;
+//gContact:externalId  rel values
+  sc_AccId           :string;
+  sc_AccCostumer     :string;
+  sc_AccNetwork      :string;
+  sc_AccOrg          :string;
+//gContact:event rel values
+  sc_EvntAnniv       :string;
+  sc_EvntOther       :string;
+//gContact:gender values
+  sc_Male            :string;
+  sc_Female          :string;
+
 implementation
+
+initialization
+//загружаем строки из RES-файла
+  sc_ErrPrepareNode  :=LoadStr(c_ErrPrepareNode);
+  OutputDebugString(PChar('sc_ErrPrepareNode loaded. Value is "'+sc_ErrPrepareNode+'"'));
+  sc_ErrCompNodes    :=LoadStr(c_ErrCompNodes);
+  sc_ErrWriteNode    :=LoadStr(c_ErrWriteNode);
+  sc_ErrReadNode     :=LoadStr(c_ErrReadNode);
+  sc_ErrMissValue    :=LoadStr(c_ErrMissValue);
+  sc_ErrMissAgrument :=LoadStr(c_ErrMissAgrument);
+  sc_UnUsedTag       :=LoadStr(c_UnUsedTag);
+  sc_DuplicateLink   :=LoadStr(c_DuplicateLink);
+  sc_WrongAttr       :=LoadStr(c_WrongAttr);
+  sc_RightAttrValues :=LoadStr(c_RightAttrValues);
+  sc_ErrCGroupCreate :=LoadStr(c_ErrCGroupCreate);
+  sc_ErrNullAuth     :=LoadStr(c_ErrNullAuth);
+  sc_ErrFileName     :=LoadStr(c_ErrFileName);
+  sc_ErrFileNull     :=LoadStr(c_ErrFileNull);
+{Variables}
+//gContact:calendarLink rel values
+  sc_Work            :=LoadStr(c_Work);
+  sc_Home            :=LoadStr(c_Home);
+  sc_FreeBusy        :=LoadStr(c_FreeBusy);
+//gContact:externalId  rel values
+  sc_AccId           :=LoadStr(c_AccId);
+  sc_AccCostumer     :=LoadStr(c_AccCostumer);
+  sc_AccNetwork      :=LoadStr(c_AccNetwork);
+  sc_AccOrg          :=LoadStr(c_AccOrg);
+//gContact:event rel values
+  sc_EvntAnniv       :=LoadStr(c_EvntAnniv);
+  sc_EvntOther       :=LoadStr(c_EvntOther);
+//gContact:gender values
+  sc_Male            :=LoadStr(c_Male);
+  sc_Female          :=LoadStr(c_Female);
+
 
 end.

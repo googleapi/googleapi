@@ -91,7 +91,7 @@ type
   public
     constructor Create(const byNode: TXMLNode=nil);
     procedure ParseXML(const Node: TXmlNode);
-    function  RelToString(aRel:TCalendarRel):string;
+    function  RelToString:string;
     procedure Clear;
     function  AddToXML(Root:TXmlNode):TXmlNode;
     function isEmpty:boolean;
@@ -111,6 +111,7 @@ type
     constructor Create(const byNode: TXmlNode=nil);
     procedure Clear;
     procedure ParseXML(const Node: TXMLNode);
+    function  RelToString:string;
     function IsEmpty: boolean;
     function AddToXML(Root: TXmlNode):TXmlNode;
     property EventType: TEventRel read FEventType write FEventType;
@@ -128,6 +129,7 @@ type
     constructor Create(const ByNode: TXMLNode=nil);
     procedure Clear;
     procedure ParseXML(const Node: TXmlNode);
+    function  RelToString:string;
     function IsEmpty:boolean;
     function AddToXML(Root: TXmlNode):TXmlNode;
     property Rel: TExternalIdType read Frel write FRel;
@@ -144,6 +146,7 @@ type
     constructor Create(const ByNode: TXMLNode=nil);
     procedure Clear;
     function IsEmpty:boolean;
+    function ValueToString: string;
     procedure ParseXML(const Node: TXmlNode);
     function AddToXML(Root: TXmlNode):TXmlNode;
     property Value: TGenderType read FValue write FValue;
@@ -571,7 +574,7 @@ var DateStr: string;
 begin
   if GetContactNodeType(Node.Name) <> cp_Birthday then
       raise Exception.Create
-        (Format(rcErrCompNodes, [GetContactNodeName(cp_Birthday)]));
+        (Format(sc_ErrCompNodes, [GetContactNodeName(cp_Birthday)]));
   try
     {читаем локальные настройки форматов}
     GetLocaleFormatSettings(LOCALE_SYSTEM_DEFAULT,FormatSet);
@@ -598,7 +601,7 @@ begin
           end;
       end;
   except
-    Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
+    Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
 end;
 
@@ -651,7 +654,7 @@ procedure TcpCalendarLink.ParseXML(const Node: TXmlNode);
 begin
   if GetContactNodeType(Node.Name) <> cp_CalendarLink then
      raise Exception.Create
-        (Format(rcErrCompNodes, [GetContactNodeName(cp_CalendarLink)]));
+        (Format(sc_ErrCompNodes, [GetContactNodeName(cp_CalendarLink)]));
   try
     FPrimary:=false;
     FRel:=tc_none;
@@ -666,17 +669,17 @@ begin
       FPrimary:=Node.ReadAttributeBool('primary');
     FHref:=Node.ReadAttributeString(sNodeHrefAttr);
   except
-    Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
+    Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
 end;
 
-function TcpCalendarLink.RelToString(aRel: TCalendarRel): string;
+function TcpCalendarLink.RelToString: string;
 begin
-  case aRel of
+  case FRel of
     tc_none: Result:=FLabel;//описание содержится в label - свободный текст
-    tc_work: Result:=rcWork;
-    tc_home: Result:=rcHome;
-    tc_free_busy: Result:=rcFreeBusy;
+    tc_work: Result:=sc_Work;
+    tc_home: Result:=sc_Home;
+    tc_free_busy: Result:=sc_FreeBusy;
   end;
 end;
 
@@ -730,7 +733,7 @@ var WhenNode: TXmlNode;
 begin
   if GetContactNodeType(Node.Name) <> cp_Event then
      raise Exception.Create
-           (Format(rcErrCompNodes, [GetContactNodeName(cp_Event)]));
+           (Format(sc_ErrCompNodes, [GetContactNodeName(cp_Event)]));
   try
     if Node.HasAttribute(sNodeLabelAttr) then
       Flabel:=Trim(Node.ReadAttributeString(sNodeLabelAttr));
@@ -745,9 +748,18 @@ begin
     if WhenNode<>nil then
        FWhen:=TgdWhen.Create(WhenNode)
     else
-      Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
+      Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   except
-    Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
+    Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
+  end;
+end;
+
+function TcpEvent.RelToString: string;
+begin
+  case FEventType of
+    teNone: Result:=Flabel;
+    teAnniversary:Result:=sc_EvntAnniv;
+    teOther:Result:=sc_EvntOther;
   end;
 end;
 
@@ -759,7 +771,7 @@ begin
   if (Root=nil)or IsEmpty then Exit;
   if ord(Frel)<0 then
     raise Exception.Create
-        (Format(rcErrWriteNode, [GetContactNodeName(cp_ExternalId)])+' '+Format(rcWrongAttr,['rel']));
+        (Format(sc_ErrWriteNode, [GetContactNodeName(cp_ExternalId)])+' '+Format(sc_WrongAttr,['rel']));
   Result:=Root.NodeNew(GetContactNodeName(cp_ExternalId));
   if Trim(Flabel)<>'' then
     Result.WriteAttributeString(sNodeLabelAttr,FLabel);
@@ -794,7 +806,7 @@ begin
   if Node=nil then Exit;
   if GetContactNodeType(Node.Name) <> cp_ExternalId then
      raise Exception.Create
-          (Format(rcErrCompNodes, [GetContactNodeName(cp_ExternalId)]));
+          (Format(sc_ErrCompNodes, [GetContactNodeName(cp_ExternalId)]));
   try
     if Node.HasAttribute(sNodeLabelAttr) then
       FLabel:=Node.ReadAttributeString(sNodeLabelAttr);
@@ -802,7 +814,19 @@ begin
           +Node.ReadAttributeString(sNodeRelAttr)));
     FValue:=Node.ReadAttributeString(sNodeValueAttr);
   except
-    Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
+    Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
+  end;
+end;
+
+function TcpExternalId.RelToString: string;
+begin
+//TExternalIdType = (tiNone,tiAccount,tiCustomer,tiNetwork,tiOrganization);
+  case Frel of
+    tiNone: Result:=FLabel;//rel не определен - берем описание из label
+    tiAccount: Result:=sc_AccId;
+    tiCustomer: Result:=sc_AccCostumer;
+    tiNetwork: Result:=sc_AccNetwork;
+    tiOrganization: Result:=sc_AccOrg;
   end;
 end;
 
@@ -813,7 +837,7 @@ begin
 if (Root=nil)or IsEmpty then Exit;
   if Ord(FValue)<0 then
     raise Exception.Create
-        (Format(rcErrWriteNode, [GetContactNodeName(cp_Gender)])+' '+Format(rcWrongAttr,[sNodeValueAttr]));
+        (Format(sc_ErrWriteNode, [GetContactNodeName(cp_Gender)])+' '+Format(sc_WrongAttr,[sNodeValueAttr]));
   Result:=Root.NodeNew(GetContactNodeName(cp_Gender));
   Result.WriteAttributeString(sNodeValueAttr,GetEnumName(TypeInfo(TGenderType),Ord(FValue)));
 end;
@@ -841,12 +865,21 @@ begin
   if Node=nil then Exit;
   if GetContactNodeType(Node.Name) <> cp_Gender then
      raise Exception.Create
-     (Format(rcErrCompNodes, [GetContactNodeName(cp_Gender)]));
+     (Format(sc_ErrCompNodes, [GetContactNodeName(cp_Gender)]));
   try
     FValue:=TGenderType(GetEnumValue(TypeInfo(TGenderType),Node.ReadAttributeString('value')));
   except
-    Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
+    Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
+end;
+
+function TcpGender.ValueToString: string;
+begin
+ case FValue of
+   none: Result:='';
+   male: Result:=sc_Male;
+   female: Result:=sc_Female;
+ end;
 end;
 
 { TcpGroupMembershipInfo }
@@ -882,12 +915,12 @@ begin
  if Node=nil then Exit;
   if GetContactNodeType(Node.Name) <> cp_GroupMembershipInfo then
      raise Exception.Create
-          (Format(rcErrCompNodes, [GetContactNodeName(cp_GroupMembershipInfo)]));
+          (Format(sc_ErrCompNodes, [GetContactNodeName(cp_GroupMembershipInfo)]));
   try
     FHref:=Node.ReadAttributeString(sNodeHrefAttr);
     FDeleted:=Node.ReadAttributeBool('deleted')
   except
-    Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
+    Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
 end;
 
@@ -932,12 +965,12 @@ begin
   if Node=nil then Exit;
   if GetContactNodeType(Node.Name) <> cp_Jot then
      raise Exception.Create
-          (Format(rcErrCompNodes, [GetContactNodeName(cp_Jot)]));
+          (Format(sc_ErrCompNodes, [GetContactNodeName(cp_Jot)]));
   try
     FRel:=TJotRel(GetEnumValue(TypeInfo(TJotRel),'Tj'+Node.ReadAttributeString('rel')));
     FText:=Node.ValueAsString;
   except
-    Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
+    Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
 end;
 
@@ -975,12 +1008,12 @@ begin
  if Node=nil then Exit;
   if GetContactNodeType(Node.Name) <> cp_Language then
      raise Exception.Create
-          (Format(rcErrCompNodes, [GetContactNodeName(cp_Language)]));
+          (Format(sc_ErrCompNodes, [GetContactNodeName(cp_Language)]));
   try
     Fcode:=Node.ReadAttributeString('code');
     Flabel:=Node.ReadAttributeString(sNodeLabelAttr);
   except
-    Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
+    Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
 end;
 
@@ -1019,11 +1052,11 @@ begin
   if Node=nil then Exit;
   if GetContactNodeType(Node.Name) <> cp_Priority then
      raise Exception.Create
-     (Format(rcErrCompNodes, [GetContactNodeName(cp_Priority)]));
+     (Format(sc_ErrCompNodes, [GetContactNodeName(cp_Priority)]));
   try
     FRel:=TPriotityRel(GetEnumValue(TypeInfo(TPriotityRel),'Tp'+Node.ReadAttributeString('rel')));
   except
-    Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
+    Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
 end;
 
@@ -1073,7 +1106,7 @@ begin
  if Node=nil then Exit;
   if GetContactNodeType(Node.Name) <> cp_Relation then
      raise Exception.Create
-     (Format(rcErrCompNodes, [GetContactNodeName(cp_Relation)]));
+     (Format(sc_ErrCompNodes, [GetContactNodeName(cp_Relation)]));
   try
     if Node.HasAttribute(sNodeRelAttr) then
         FRealition:= TRelationType(GetEnumValue(TypeInfo(TRelationType),
@@ -1085,7 +1118,7 @@ begin
       end;
     FValue:=Node.ValueAsString;
   except
-    Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
+    Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
 end;
 
@@ -1097,7 +1130,7 @@ begin
  if (Root=nil)or IsEmpty then Exit;
   if Ord(Frel)<0 then
     raise Exception.Create
-    (Format(rcErrWriteNode, [GetContactNodeName(cp_Sensitivity)])+' '+Format(rcWrongAttr,['rel']));
+    (Format(sc_ErrWriteNode, [GetContactNodeName(cp_Sensitivity)])+' '+Format(sc_WrongAttr,['rel']));
   Result:=Root.NodeNew(GetContactNodeName(cp_Sensitivity));
   sRel:=GetEnumName(TypeInfo(TSensitivityRel),ord(FRel));
   Delete(sRel,1,2);
@@ -1127,11 +1160,11 @@ begin
 if Node=nil then Exit;
   if GetContactNodeType(Node.Name) <> cp_Sensitivity then
      raise Exception.Create
-             (Format(rcErrCompNodes, [GetContactNodeName(cp_Sensitivity)]));
+             (Format(sc_ErrCompNodes, [GetContactNodeName(cp_Sensitivity)]));
   try
     FRel:=TSensitivityRel(GetEnumValue(TypeInfo(TSensitivityRel),'Ts'+Node.ReadAttributeString('rel')));
   except
-    Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
+    Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
 end;
 
@@ -1142,7 +1175,7 @@ begin
  if Root=nil then Exit;
   if AnsiIndexStr(Fid,IDValues)<0 then
     raise Exception.Create
-    (Format(rcErrWriteNode, [GetContactNodeName(cp_systemGroup)])+' '+Format(rcWrongAttr,['id']));
+    (Format(sc_ErrWriteNode, [GetContactNodeName(cp_systemGroup)])+' '+Format(sc_WrongAttr,['id']));
 Result:=Root.NodeNew(GetContactNodeName(cp_systemGroup));
   Result.WriteAttributeString('id',Fid);
 end;
@@ -1170,11 +1203,11 @@ begin
   if (Node=nil)or IsEmpty then Exit;
   if GetContactNodeType(Node.Name) <> cp_SystemGroup then
      raise Exception.Create
-     (Format(rcErrCompNodes, [GetContactNodeName(cp_systemGroup)]));
+     (Format(sc_ErrCompNodes, [GetContactNodeName(cp_systemGroup)]));
   try
       Fid:=Node.ReadAttributeString('id')
   except
-    Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
+    Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
 end;
 
@@ -1182,7 +1215,7 @@ procedure TcpsystemGroup.SetId(aId: string);
 begin
 if AnsiIndexStr(Fid,IDValues)<0 then
   raise Exception.Create
-  (Format(rcErrWriteNode, [GetContactNodeName(cp_systemGroup)])+' '+Format(rcWrongAttr,['id']));
+  (Format(sc_ErrWriteNode, [GetContactNodeName(cp_systemGroup)])+' '+Format(sc_WrongAttr,['id']));
 Fid:=aId;
 end;
 
@@ -1220,12 +1253,12 @@ begin
   if Node=nil then Exit;
   if GetContactNodeType(Node.Name) <> cp_UserDefinedField then
      raise Exception.Create
-     (Format(rcErrCompNodes, [GetContactNodeName(cp_UserDefinedField)]));
+     (Format(sc_ErrCompNodes, [GetContactNodeName(cp_UserDefinedField)]));
   try
     FKey:=Node.ReadAttributeString('key');
     FValue:=Node.ReadAttributeString(sNodeValueAttr);
   except
-    Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
+    Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
 end;
 
@@ -1236,7 +1269,7 @@ begin
   if (Root=nil)or IsEmpty then Exit;
   if AnsiIndexStr(FRel,RelValues)<0 then
     raise Exception.Create
-    (Format(rcErrWriteNode, [GetContactNodeName(cp_Website)])+' '+Format(rcWrongAttr,['rel']));
+    (Format(sc_ErrWriteNode, [GetContactNodeName(cp_Website)])+' '+Format(sc_WrongAttr,['rel']));
   Result:=Root.NodeNew(GetContactNodeName(cp_Website));
   Result.WriteAttributeString(sNodeHrefAttr,FHref);
   Result.WriteAttributeString(sNodeRelAttr,FRel);
@@ -1272,7 +1305,7 @@ begin
   if (Node=nil) then Exit;
   if GetContactNodeType(Node.Name) <> cp_Website then
      raise Exception.Create
-     (Format(rcErrCompNodes, [GetContactNodeName(cp_Website)]));
+     (Format(sc_ErrCompNodes, [GetContactNodeName(cp_Website)]));
   try
     FHref:=Node.ReadAttributeString(sNodeHrefAttr);
     FRel:=Node.ReadAttributeString(sNodeRelAttr);
@@ -1288,7 +1321,7 @@ begin
     if Node.HasAttribute('primary') then
       FPrimary:=Node.ReadAttributeBool('primary');
   except
-    Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
+    Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
 end;
 
@@ -2094,9 +2127,9 @@ begin
 try
   if aContact=nil then Exit;
   if Length(Trim(DefaultImage))=0 then
-    raise Exception.Create(rcErrFileNull);
+    raise Exception.Create(sc_ErrFileNull);
   if not FileExists(DefaultImage) then
-    raise Exception.Create(Format(rcErrFileName,[DefaultImage]));
+    raise Exception.Create(Format(sc_ErrFileName,[DefaultImage]));
   Img:=TJPEGImage.Create;
   Result:=TJPEGImage.Create;
   img:=RetriveContactPhoto(aContact);

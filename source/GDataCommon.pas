@@ -629,7 +629,7 @@ end;
 procedure TgdWhere.ParseXML(Node: TXMLNode);
 begin
 if GetGDNodeType(Node.Name) <> gd_Where then
-    raise Exception.Create(Format(rcErrCompNodes,
+    raise Exception.Create(Format(sc_ErrCompNodes,
         [GetGDNodeName(gd_Where)]));
   try
     Flabel:=Node.ReadAttributeString(sNodeLabelAttr);
@@ -641,7 +641,7 @@ if GetGDNodeType(Node.Name) <> gd_Where then
         FEntryLink.ParseXML(Node.FindNode(gdNodeAlias+sEntryNodeName));
       end;
   except
-    Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
+    Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
 end;
 
@@ -683,7 +683,7 @@ procedure TgdEntryLink.ParseXML(Node: TXMLNode);
 begin
 if GetGDNodeType(Node.Name) <> gd_EntryLink then
     raise Exception.Create
-         (Format(rcErrCompNodes,
+         (Format(sc_ErrCompNodes,
                 [GetGDNodeName(gd_EntryLink)]));
   try
 //    if Node.Attributes['href']<>null then
@@ -695,7 +695,7 @@ if GetGDNodeType(Node.Name) <> gd_EntryLink then
     if Node.NodeCount>0 then //есть дочерний узел с EntryLink
        FAtomEntry:=Node.FindNode(sEntryNodeName);
   except
-    Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
+    Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
 end;
 
@@ -730,7 +730,7 @@ procedure TgdEventStatus.ParseXML(Node: TXMLNode);
 begin
   if Node=nil then Exit;
   if GetGDNodeType(Node.Name) <> gd_EventStatus then
-    raise Exception.Create(Format(rcErrCompNodes,
+    raise Exception.Create(Format(sc_ErrCompNodes,
         [GetGDNodeName(gd_EventStatus)]));
   try
   //  ShowMessage(Node.Attributes['value']);
@@ -738,7 +738,7 @@ begin
     FValue:=StringReplace(FValue,sSchemaHref,'',[rfIgnoreCase]);
     FStatus:=TEventStatus(AnsiIndexStr(FValue, RelValues));
   except
-    raise Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
+    raise Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
 end;
 
@@ -798,7 +798,7 @@ begin
 if Node=nil then Exit;
   if GetGDNodeType(Node.Name) <> gd_When then
     raise Exception.Create(
-               Format(rcErrCompNodes,
+               Format(sc_ErrCompNodes,
                       [GetGDNodeName(gd_When)]));
   try
     FendTime:=0;
@@ -810,7 +810,7 @@ if Node=nil then Exit;
     if Node.HasAttribute('valueString') then
       FvalueString:=Node.ReadAttributeString('valueString');
   except
-    raise Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
+    raise Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
 end;
 
@@ -845,14 +845,14 @@ procedure TgdAttendeeStatus.ParseXML(Node: TXMLNode);
 begin
 if (Node=nil)or isEmpty then Exit;
   if GetGDNodeType(Node.Name) <> gd_AttendeeStatus then
-    raise Exception.Create(Format(rcErrCompNodes,
+    raise Exception.Create(Format(sc_ErrCompNodes,
         [GetGDNodeName(gd_AttendeeStatus)]));
   try
     FValue := Node.ReadAttributeString(sNodeValueAttr);
     FValue:=StringReplace(FValue,sSchemaHref,'',[rfIgnoreCase]);
     FAttendeeStatus := TAttendeeStatus(AnsiIndexStr(FValue, RelValues));
   except
-    raise Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
+    raise Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
 end;
 
@@ -902,14 +902,14 @@ begin
   if Node=nil then Exit;
   if GetGDNodeType(Node.Name) <> gd_AttendeeType then
     raise Exception.Create(
-                    Format(rcErrCompNodes,
+                    Format(sc_ErrCompNodes,
                           [GetGDNodeName(gd_AttendeeType)]));
   try
     FValue:=Node.ReadAttributeString(sNodeValueAttr);
     FValue:=StringReplace(FValue,sSchemaHref,'',[rfIgnoreCase]);
     FAttType := TAttendeeType(AnsiIndexStr(FValue, RelValues));
   except
-    raise Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
+    raise Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
 end;
 
@@ -980,7 +980,7 @@ var i:integer;
 begin
   if Node=nil then Exit;
   if GetGDNodeType(Node.Name) <> gd_Who then
-    raise Exception.Create(Format(rcErrCompNodes,
+    raise Exception.Create(Format(sc_ErrCompNodes,
         [GetGDNodeName(gd_Who)]));
   try
 //    if Node.Attributes['email']<>null then
@@ -1005,7 +1005,7 @@ begin
           end;
       end;
   except
-    raise Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
+    raise Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
 end;
 
@@ -1054,12 +1054,12 @@ procedure TgdRecurrence.ParseXML(Node: TXMLNode);
 begin
 if Node=nil then Exit;
   if GetGDNodeType(Node.Name) <> gd_Recurrence then
-    raise Exception.Create(Format(rcErrCompNodes,
+    raise Exception.Create(Format(sc_ErrCompNodes,
         [GetGDNodeName(gd_Recurrence)]));
   try
     FText.Text:=Node.ValueAsString;
   except
-    raise Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
+    raise Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
 end;
 
@@ -1091,7 +1091,7 @@ procedure TgdReminder.ParseXML(Node: TXMLNode);
 begin
 if Node=nil then Exit;
   if GetGDNodeType(Node.Name) <> gd_Reminder then
-    raise Exception.Create(Format(rcErrCompNodes,
+    raise Exception.Create(Format(sc_ErrCompNodes,
         [GetGDNodeName(gd_Reminder)]));
   try
     if Length(Node.ReadAttributeString('absoluteTime'))>0 then
@@ -1111,7 +1111,7 @@ if Node=nil then Exit;
     end;
 
   except
-    raise Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
+    raise Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
 end;
 
@@ -1146,14 +1146,14 @@ procedure TgdTransparency.ParseXML(Node: TXMLNode);
 begin
  if Node=nil then Exit;
   if GetGDNodeType(Node.Name) <> gd_Transparency then
-    raise Exception.Create(Format(rcErrCompNodes,
+    raise Exception.Create(Format(sc_ErrCompNodes,
         [GetGDNodeName(gd_Transparency)]));
   try
     FValue := Node.ReadAttributeString(sNodeValueAttr);
     FValue:=StringReplace(FValue,sSchemaHref,'',[rfIgnoreCase]);
     FTransparency := TTransparency(AnsiIndexStr(FValue, RelValues));
   except
-    raise Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
+    raise Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
 end;
 
@@ -1202,14 +1202,14 @@ procedure TgdVisibility.ParseXML(Node: TXMLNode);
 begin
  if Node=nil then Exit;
   if GetGDNodeType(Node.Name) <> gd_Visibility then
-    raise Exception.Create(Format(rcErrCompNodes,
+    raise Exception.Create(Format(sc_ErrCompNodes,
         [GetGDNodeName(gd_Visibility)]));
   try
     FValue := Node.ReadAttributeString(sNodeValueAttr);
     FValue:=StringReplace(FValue,sSchemaHref,'',[rfIgnoreCase]);
     FVisible := TVisibility(AnsiIndexStr(FValue, RelValues));
   except
-    raise Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
+    raise Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
 end;
 
@@ -1274,7 +1274,7 @@ var i:integer;
 begin
 if (Node=nil)or IsEmpty then Exit;
   if GetGDNodeType(Node.Name) <> gd_Organization then
-    raise Exception.Create(Format(rcErrCompNodes,
+    raise Exception.Create(Format(sc_ErrCompNodes,
         [GetGDNodeName(gd_Organization)]));
   try
     Frel:=Node.ReadAttributeString(sNodeRelAttr);
@@ -1291,7 +1291,7 @@ if (Node=nil)or IsEmpty then Exit;
             ForgTitle:=TgdOrgTitle.Create(Node.Nodes[i]);
       end;
   except
-    raise Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
+    raise Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
 end;
 
@@ -1337,7 +1337,7 @@ procedure TgdEmail.ParseXML(const Node: TXmlNode);
 begin
   if Node=nil then Exit;
   if GetGDNodeType(Node.Name) <> gd_Email then
-    raise Exception.Create(Format(rcErrCompNodes,
+    raise Exception.Create(Format(sc_ErrCompNodes,
         [GetGDNodeName(gd_Email)]));
   try
     Frel:=Node.ReadAttributeString(sNodeRelAttr);
@@ -1349,7 +1349,7 @@ begin
       FDisplayName:=Node.ReadAttributeString('displayName');
     FAddress:=Node.ReadAttributeString('address');
   except
-    raise Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
+    raise Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
 end;
 
@@ -1363,7 +1363,7 @@ procedure TgdEmail.SetRel(const aRel: string);
 begin
   if AnsiIndexStr(aRel,RelValues)<0 then
    raise Exception.Create
-      (Format(rcErrWriteNode, [GetGDNodeName(gd_Email)])+' '+Format(rcWrongAttr,['rel']));
+      (Format(sc_ErrWriteNode, [GetGDNodeName(gd_Email)])+' '+Format(sc_WrongAttr,['rel']));
   FRel:=sSchemaHref+aRel;
 end;
 
@@ -1430,7 +1430,7 @@ var i:integer;
 begin
   if Node=nil then Exit;
   if GetGDNodeType(Node.Name) <> gd_Name then
-    raise Exception.Create(Format(rcErrCompNodes,
+    raise Exception.Create(Format(sc_ErrCompNodes,
         [GetGDNodeName(gd_Name)]));
   try
     for i:=0 to Node.NodeCount-1 do
@@ -1445,7 +1445,7 @@ begin
         end;
       end;
   except
-    raise Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
+    raise Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
 end;
 
@@ -1538,7 +1538,7 @@ var s:string;
 begin
   if Node=nil then Exit;
   if GetGDNodeType(Node.Name) <> gd_PhoneNumber then
-    raise Exception.Create(Format(rcErrCompNodes,
+    raise Exception.Create(Format(sc_ErrCompNodes,
         [GetGDNodeName(gd_PhoneNumber)]));
   try
     s:=Node.ReadAttributeString(sNodeRelAttr);
@@ -1555,7 +1555,7 @@ begin
       FUri:=Node.ReadAttributeString('uri');
     FValue:=Node.ValueAsString;
   except
-    raise Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
+    raise Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
 end;
 
@@ -1598,13 +1598,13 @@ procedure TgdCountry.ParseXML(Node: TXMLNode);
 begin
   if Node=nil then Exit;
   if GetGDNodeType(Node.Name) <> gd_Country then
-    raise Exception.Create(Format(rcErrCompNodes,
+    raise Exception.Create(Format(sc_ErrCompNodes,
         [GetGDNodeName(gd_Country)]));
   try
     FCode:=Node.ReadAttributeString(sNodeRelAttr);
     FValue:=Node.ValueAsString;
   except
-    raise Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
+    raise Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
 end;
 
@@ -1709,7 +1709,7 @@ var i:integer;
 begin
 if Node=nil then Exit;
   if GetGDNodeType(Node.Name) <> gd_StructuredPostalAddress then
-    raise Exception.Create(Format(rcErrCompNodes,
+    raise Exception.Create(Format(sc_ErrCompNodes,
         [GetGDNodeName(gd_StructuredPostalAddress)]));
   try
     FRel:=Node.ReadAttributeString(sNodeRelAttr);
@@ -1719,7 +1719,7 @@ if Node=nil then Exit;
       Fprimary:=Node.ReadAttributeBool('primary');
     FUsage:=Node.ReadAttributeString('Usage');
   except
-    raise Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
+    raise Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
   for I := 0 to Node.NodeCount - 1 do
     begin
@@ -1778,7 +1778,7 @@ var s:string;
 begin
 if Node=nil then Exit;
   if GetGDNodeType(Node.Name) <> gd_Im then
-    raise Exception.Create(Format(rcErrCompNodes,
+    raise Exception.Create(Format(sc_ErrCompNodes,
           [GetGDNodeName(gd_Im)]));
   try
     s:=Node.ReadAttributeString(sNodeRelAttr);
@@ -1795,7 +1795,7 @@ if Node=nil then Exit;
     if Node.HasAttribute('primary') then
       FPrimary:=Node.ReadAttributeBool('primary');
   except
-     raise Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
+     raise Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
 end;
 

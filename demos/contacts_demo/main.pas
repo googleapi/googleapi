@@ -247,7 +247,7 @@ end;
 
 procedure TForm3.FormShow(Sender: TObject);
 begin
-  Test;
+  //Test;
 end;
 
 procedure TForm3.ListBox1Click(Sender: TObject);
