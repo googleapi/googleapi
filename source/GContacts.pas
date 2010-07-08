@@ -1898,14 +1898,14 @@ if Length(aContact.Etag)>0 then
        end;
    end;
  end;
-  aContact.Destroy;//удалили из памяти
 
   for I := 0 to FContacts.Count - 1 do
-    if FContacts[i]=nil then
+    if FContacts[i]=aContact then
       begin
         FContacts.DeleteRange(i,1);//удаляем свободный элемент из списка
         break;
       end;
+  aContact.Destroy;//удалили из памяти
   Result:=true;
 except
   Result:=false;

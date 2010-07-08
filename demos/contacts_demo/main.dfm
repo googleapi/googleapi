@@ -147,6 +147,7 @@ object Form3: TForm3
       AutoSize = True
       Caption = #1059#1076#1072#1083#1080#1090#1100' '#1082#1086#1085#1090#1072#1082#1090
       ImageIndex = 5
+      OnClick = ToolButton5Click
     end
   end
   object Panel1: TPanel

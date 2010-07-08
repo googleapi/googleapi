@@ -76,6 +76,7 @@ type
     procedure ToolButton9Click(Sender: TObject);
     procedure ToolButton7Click(Sender: TObject);
     procedure ToolButton6Click(Sender: TObject);
+    procedure ToolButton5Click(Sender: TObject);
   private
     //TOnRetriveXML
     procedure RetriveXML (const FromURL:string);
@@ -149,7 +150,7 @@ end;
 
 procedure TForm3.ComboBox2Change(Sender: TObject);
 begin
-Label7.Caption:=Selected.Emails[ComboBox2.ItemIndex].RelToString;
+  Label7.Caption:=Selected.Emails[ComboBox2.ItemIndex].RelToString;
 end;
 
 procedure TForm3.ComboBox3Change(Sender: TObject);
@@ -210,7 +211,9 @@ try
     begin
       ComboBox2.ItemIndex:=0;
       ComboBox2Change(self);
-    end;
+    end
+  else
+    Label7.Caption:='---';
 
   ComboBox3.Items.Clear;
   for I := 0 to Selected.Phones.Count - 1 do
@@ -219,7 +222,9 @@ try
     begin
       ComboBox3.ItemIndex:=0;
       ComboBox3Change(self);
-    end;
+    end
+  else
+     Label9.Caption:='---';
 
   ComboBox4.Items.Clear;
     for I := 0 to Selected.WebSites.Count - 1 do
@@ -228,16 +233,21 @@ try
     begin
       ComboBox4.ItemIndex:=0;
       ComboBox4Change(self);
-    end;
+    end
+  else
+    label17.Caption:='---';
 
   ComboBox5.Items.Clear;
   for I := 0 to Selected.Relations.Count - 1 do
     ComboBox5.Items.Add(Selected.Relations[i].Value);
+
   if ComboBox5.Items.Count>0 then
     begin
       ComboBox5.ItemIndex:=0;
       ComboBox5Change(self);
-    end;
+    end
+  else
+    label13.Caption:='---';
 
   ComboBox6.Items.Clear;
   for I := 0 to Selected.IMs.Count - 1 do
@@ -246,12 +256,20 @@ try
     begin
       ComboBox6.ItemIndex:=0;
       ComboBox6Change(self);
-    end;
+    end
+  else
+    Label18.Caption:='---';
 
   ComboBox7.Items.Clear;
   for I := 0 to Selected.UserFields.Count - 1 do
     ComboBox7.Items.Add(Selected.UserFields[i].Key);
-  if ComboBox7.Items.Count>0 then ComboBox7.ItemIndex:=0;
+  if ComboBox7.Items.Count>0 then
+    begin
+     ComboBox7.ItemIndex:=0;
+     ComboBox7Change(self);
+    end
+  else
+    label19.Caption:='---';
 
   ListBox2.Items.Clear;
   for I := 0 to Selected.PostalAddreses.Count - 1 do
@@ -333,6 +351,17 @@ end;
 procedure TForm3.ToolButton4Click(Sender: TObject);
 begin
   Contact.DeletePhoto(ListBox1.ItemIndex);
+end;
+
+procedure TForm3.ToolButton5Click(Sender: TObject);
+begin
+ if Contact.DeleteContact(ListBox1.ItemIndex) then
+   begin
+      ShowMessage('Контакт удален. Контактов осталось '+IntToStr(Contact.Contacts.Count));
+      ListBox1.Items.Delete(ListBox1.ItemIndex);
+   end
+ else
+   ShowMessage('Удаление контакта не удалось');
 end;
 
 procedure TForm3.ToolButton6Click(Sender: TObject);
