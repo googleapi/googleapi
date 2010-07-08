@@ -308,17 +308,9 @@ begin
       StatusBar1.Panels[5].Text:=(FormatFloat('0.0000', (T2 - T1) / iCounterPerSec) + ' сек.');
 
 
-//      QueryPerformanceFrequency(iCounterPerSec);
-//      QueryPerformanceCounter(T1);
-//      Contact.SaveContactsToFile('ContactList.xml');
-//       QueryPerformanceCounter(T2);
-//      ShowMessage((FormatFloat('0.0000', (T2 - T1) / iCounterPerSec) + ' сек.'));
-
       ListBox1.Items.Clear;
-      for i:=0 to Contact.Contacts.Count - 1 do
-        begin
-          ListBox1.Items.Add(Contact.Contacts[i].ContactName)
-        end;
+      ListBox1.Items.Assign(Contact.ContactsNames);
+
       ComboBox1.Items.Clear;
       ComboBox1.Items.Add('Все');
       for i:=0 to Contact.Groups.Count - 1 do

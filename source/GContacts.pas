@@ -416,6 +416,7 @@ end;
     FUpdatesMin: TDateTime;
     FSortOrder: TSortOrder;
     FShowDeleted: boolean;
+    FContactsNames: TStrings;
     function GetNextLink(Stream:TStream):string;overload;
     function GetNextLink(aXMLDoc:TNativeXml):string;overload;
     function GetContactsByGroup(GroupName:string):TList<TContact>;
@@ -436,6 +437,7 @@ end;
     function GetContact(GroupName:string;Index:integer):TContact;
     procedure SetAuth(const aAuth:string);
     procedure SetGmail(const aGMail:string);
+    function GetContactNames: TStrings;
   public
     constructor Create(AOwner:TComponent);override;
 //    constructor Create(AOwner:TComponent; const aAuth,aEmail: string);overload;
@@ -486,6 +488,8 @@ end;
     property ShowDeleted: boolean read FShowDeleted write SetShowDeleted;
     //сортировка контактов
     property SortOrder:TSortOrder read FSortOrder write SetSortOrder;
+    //список имен контактов
+    property ContactsNames: TStrings read GetContactNames;
     { ----------------События компонента-------------------------}
     //начало загрузки XML-документа с сервера
     property OnRetriveXML: TOnRetriveXML read FOnRetriveXML write FOnRetriveXML;
@@ -1567,7 +1571,10 @@ if FTitle.IsEmpty then
   if PrimaryEmail<>'' then
     Result:=PrimaryEmail
   else
-    Result:=CpDefaultCName
+    if not FNickName.IsEmpty then
+      Result:=FNickName.Value
+    else
+      Result:=CpDefaultCName
 else
   Result:=FTitle.Value
 end;
@@ -1825,24 +1832,6 @@ finally
 end;
 end;
 
-//constructor TGoogleContact.Create(AOwner:TComponent;const aAuth,aEmail: string);
-//begin
-////  if Trim(aAuth)='' then
-////    raise Exception.Create(rcErrNullAuth);
-//  inherited Create(AOwner);
-//  FEmail:=aEmail;
-//  FAuth:=aAuth;
-//
-//  FMaximumResults:=-1;
-//  FStartIndex:=1;
-//  FUpdatesMin:=0;
-//  FShowDeleted:=false;
-//  FSortOrder:=Ts_None;
-//
-//  FGroups:=TList<TContactGroup>.Create;
-//  FContacts:=TList<TContact>.Create;
-//end;
-
 function TGoogleContact.DeleteContact(index: integer): boolean;
 begin
 try
@@ -1865,10 +1854,11 @@ begin
 
   FGroups:=TList<TContactGroup>.Create;
   FContacts:=TList<TContact>.Create;
+  FContactsNames:= TStringList.Create;
 end;
 
 function TGoogleContact.DeleteContact(aContact: TContact): boolean;
-var i:integer;
+var i,j:integer;
 begin
 try
 Result:=false;
@@ -1886,7 +1876,17 @@ if Length(aContact.Etag)>0 then
               ExtendedHeaders.Add('If-Match: '+aContact.Etag);
               if SendRequest then
                 begin
-                  {TODO -oVlad -cНедочёт : Необходимо обработать возможные исключения}
+                  if ResultCode=200 then
+                    begin
+                      for j := 0 to FContacts.Count - 1 do
+                        if FContacts[i]=aContact then
+                          begin
+                            FContacts.DeleteRange(i,1);//удаляем свободный элемент из списка
+                            break;
+                          end;
+                      aContact.Destroy;//удалили из памяти
+                      Result:=true;
+                    end;
                 end
               else
                 begin
@@ -1898,15 +1898,6 @@ if Length(aContact.Etag)>0 then
        end;
    end;
  end;
-
-  for I := 0 to FContacts.Count - 1 do
-    if FContacts[i]=aContact then
-      begin
-        FContacts.DeleteRange(i,1);//удаляем свободный элемент из списка
-        break;
-      end;
-  aContact.Destroy;//удалили из памяти
-  Result:=true;
 except
   Result:=false;
 end;
@@ -1972,6 +1963,14 @@ try
 finally
   FreeAndNil(List);
 end;
+end;
+
+function TGoogleContact.GetContactNames: TStrings;
+var i:integer;
+begin
+Result:=TStringList.Create;
+  for i:=0 to FContacts.Count - 1 do
+     Result.Add(FContacts[i].GetContactName);
 end;
 
 function TGoogleContact.GetContactsByGroup(GroupName: string): TList<TContact>;
@@ -2467,7 +2466,7 @@ begin
 Result:=nil;
   if (index>=FContacts.Count)or(index<0) then Exit;
   Result:=TJPEGImage.Create;
-  Result.Assign(RetriveContactPhoto(FContacts[index],DefaultImage));
+  Result.Assign(RetriveContactPhoto(index,DefaultImage));
 end;
 
 { THTTPSender }
