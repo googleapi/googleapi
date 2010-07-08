@@ -78,6 +78,57 @@ const
   c_WebsiteWork =        GStringsMaxId - 61;
   c_WebsiteOther =       GStringsMaxId - 62;
   c_WebsiteFtp =         GStringsMaxId - 63;
+//gd:eventStatus values
+  c_EventCancel    =     GStringsMaxId - 64;
+  c_EventConfirm   =     GStringsMaxId - 65;
+  c_EventTentative =     GStringsMaxId - 66;
+//gd:visibility values
+  c_EventConfident =     GStringsMaxId - 67;
+  c_EventDefault =       GStringsMaxId - 68;
+  c_EventPrivate =       GStringsMaxId - 69;
+  c_EventPublic =        GStringsMaxId - 70;
+//gd:transparency values
+  c_EventOpaque =        GStringsMaxId - 71;
+  c_EventTransp =        GStringsMaxId - 72;
+//gd:attendeeType Values
+  c_EventOptional =      GStringsMaxId - 73;
+  c_EventRequired =      GStringsMaxId - 74;
+//gd:attendeeStatus Values
+  c_EventAccepted =      GStringsMaxId - 75;
+  c_EventDeclined =      GStringsMaxId - 76;
+  c_EventInvited =       GStringsMaxId - 77;
+  c_EventTentativ =      GStringsMaxId - 78;
+//gd:email rel values
+  c_EmailHome =          GStringsMaxId - 79;
+  c_EmailOther =         GStringsMaxId - 80;
+  c_EmailWork =          GStringsMaxId - 81;
+//gd:im rel values
+  c_ImHome =             GStringsMaxId - 82;
+  c_ImNetMeeting =       GStringsMaxId - 83;
+  c_ImOther =            GStringsMaxId - 84;
+  c_ImWork =             GStringsMaxId - 85;
+//gd:phoneNumber rel values
+  c_PhoneAssistant =     GStringsMaxId - 86;
+  c_PhoneCallback =      GStringsMaxId - 87;
+  c_PhoneCar =           GStringsMaxId - 88;
+  c_PhoneCompanymain =   GStringsMaxId - 89;
+  c_PhoneFax =           GStringsMaxId - 90;
+  c_PhoneHome =          GStringsMaxId - 91;
+  c_PhoneHomefax =       GStringsMaxId - 92;
+  c_PhoneIsdn =          GStringsMaxId - 93;
+  c_PhoneMain =          GStringsMaxId - 94;
+  c_PhoneMobile =        GStringsMaxId - 95;
+  c_PhoneOther =         GStringsMaxId - 96;
+  c_PhoneOtherfax =      GStringsMaxId - 97;
+  c_PhonePager =         GStringsMaxId - 98;
+  c_PhoneRadio =         GStringsMaxId - 99;
+  c_PhoneTelex =         GStringsMaxId - 100;
+  c_PhoneTtytdd =        GStringsMaxId - 101;
+  c_PhoneWork =          GStringsMaxId - 102;
+  c_PhoneWorkfax =       GStringsMaxId - 103;
+  c_PhoneWorkmobile =    GStringsMaxId - 104;
+  c_PhoneWorkpager =     GStringsMaxId - 105;
+
 implementation
 
 {$R GStrings.res}

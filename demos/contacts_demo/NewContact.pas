@@ -47,7 +47,7 @@ begin
   NewContact.PrimaryEmail:=Edit4.Text;
   NewContact.TagBirthDay.Date:=DateTimePicker1.Date;
   Phone:=TgdPhoneNumber.Create();
-  Phone.PhoneType:=tpHome;
+  Phone.Rel:=tp_Home;
   Phone.Text:=Edit5.Text;
   NewContact.Phones.Add(Phone);
   Contact.AddContact(NewContact);

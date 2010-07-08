@@ -12,7 +12,6 @@ object Form3: TForm3
   Font.Style = []
   Menu = MainMenu1
   OldCreateOrder = False
-  OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
   object Splitter1: TSplitter
@@ -194,7 +193,6 @@ object Form3: TForm3
         ItemHeight = 13
         TabOrder = 0
         OnClick = ListBox1Click
-        OnDblClick = ListBox1DblClick
       end
     end
   end
@@ -421,7 +419,7 @@ object Form3: TForm3
     Left = 96
     Top = 236
     Bitmap = {
-      494C010109001C00100120002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
+      494C010109001C001C0120002000FFFFFFFFFF10FFFFFFFFFFFFFFFF424D3600
       00000000000036000000280000008000000060000000010020000000000000C0
       000000000000000000000000000000000000000000002B2E33FF34363BFF3436
       3BFF2D2F34FF838487FF828487FF828387FF828386FF818386FF818386FF8082

@@ -1,8 +1,8 @@
 #include "uLanguage.pas"
-LANGUAGE LANG_ENGLISH,2
+LANGUAGE LANG_ENGLISH, 2
 STRINGTABLE
 {
-  c_ErrPrepareNode,  "Node %s parse error"
+  c_ErrPrepareNode,  "Error in prepare node %s"
   c_ErrCompNodes, "Узел не является узлом %s"
   c_ErrWriteNode, "Ошибка записи данных для узла %s"
   c_ErrReadNode, "Ошибка чтения данных из узла %s"
@@ -30,4 +30,47 @@ STRINGTABLE
 
   c_Male, "Мужской"
   c_Female, "Женский"
+
+  c_JotHome, "Дома"
+  c_JotWork, "На работе"
+  c_JotOther, "Другое"
+  c_JotKeywords, "Ключевые слова"
+  c_JotUser, "Пользователь" 
+
+  c_PriorityLow, "Низкий"
+  c_PriorityNormal, "Нормальный"
+  c_PriorityHigh, "Высокий"
+
+  c_RelationAssistant, "Помощник"
+  c_RelationBrother, "Брат"
+  c_RelationChild, "Ребенок"
+  c_RelationDomestPart, "Сосед"
+  c_RelationFather, "Отец"
+  c_RelationFriend, "Друг"
+  c_RelationManager, "Начальник"
+  c_RelationMother, "Мать"
+  c_RelationPartner, "Партнер"
+  c_RelationParent, "Родитель"
+  c_RelationReffered, "Знакомый"
+  c_RelationRelative, "Отношение"
+  c_RelationSister, "Сестра"
+  c_RelationSpouse, "Супруга"
+
+  c_SensitivConf, "Конфиденциальный"
+  c_SensitivNormal, "Обычный"
+  c_SensitivPersonal, "Персональный"
+  c_SensitivPrivate, "Частный"
+
+  c_SysGroupContacts, "Контакты"
+  c_SysGroupFriends, "Друзья"
+  c_SysGroupFamily, "Семья"
+  c_SysGroupCoworkers, "Сотрудники"
+
+  c_WebsiteHomePage, "Домашняя страница"
+  c_WebsiteBlog, "Блог"  
+  c_WebsiteProfile, "Профиль"
+  c_WebsiteHome, "Личный сайт"
+  c_WebsiteWork, "Рабочий сайт"
+  c_WebsiteOther, "Другой"
+  c_WebsiteFtp, "FTP-сайт" 
 }

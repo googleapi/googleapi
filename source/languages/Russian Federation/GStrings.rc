@@ -73,4 +73,55 @@ STRINGTABLE
   c_WebsiteWork, "Рабочий сайт"
   c_WebsiteOther, "Другой"
   c_WebsiteFtp, "FTP-сайт" 
+
+  c_EventCancel, "Отменено"
+  c_EventConfirm, "Запланировано"
+  c_EventTentative, "Предварительно запланировано"
+
+  c_EventConfident, "Конфеденциально"
+  c_EventDefault, "По умолчанию"
+  c_EventPrivate, "Скрыто"
+  c_EventPublic, "Публично" 
+
+  c_EventOpaque, "Не отмечать в календаре"
+  c_EventTransp, "Отмечать в календаре"
+
+  c_EventOptional, "Опционально"
+  c_EventRequired, "Требуется"
+
+  c_EventAccepted, "Подтвержден"
+  c_EventDeclined, "Понижен"
+  c_EventInvited, "Приглашен"
+  c_EventTentativ, "Принят предварительно"
+
+  c_EmailHome, "Домашний"
+  c_EmailOther, "Другой"
+  c_EmailWork, "Рабочий"
+
+  c_ImHome, "Домашний"
+  c_ImNetMeeting, "NetMeeting"
+  c_ImOther, "Другой"
+  c_ImWork, "Рабочий"
+
+  c_PhoneAssistant,"Вспомогательный"
+  c_PhoneCallback,"Автоответчик"
+  c_PhoneCar,"Автомобильный" 
+  c_PhoneCompanymain,"Рабочий сновной"
+  c_PhoneFax,"Факс"
+  c_PhoneHome,"Домашний"
+  c_PhoneHomefax,"Домашний факс"
+  c_PhoneIsdn,"ISDN"
+  c_PhoneMain,"Основной"
+  c_PhoneMobile,"Мобильный"
+  c_PhoneOther,"Другой"
+  c_PhoneOtherfax,"Факс (другой)"
+  c_PhonePager,"Пэйджер"
+  c_PhoneRadio,"Радиотелефон"
+  c_PhoneTelex,"Телекс"
+  c_PhoneTtytdd,"IP-телефон"
+  c_PhoneWork,"Рабочий"
+  c_PhoneWorkfax,"Рабочий факс"
+  c_PhoneWorkmobile,"Рабочий мобильный"
+  c_PhoneWorkpager,"Рабочий пэйджер"
+
 }

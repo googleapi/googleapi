@@ -72,12 +72,10 @@ type
     procedure ComboBox7Change(Sender: TObject);
     procedure ToolButton3Click(Sender: TObject);
     procedure ToolButton4Click(Sender: TObject);
-    procedure ListBox1DblClick(Sender: TObject);
     procedure ToolButton8Click(Sender: TObject);
     procedure ToolButton9Click(Sender: TObject);
     procedure ToolButton7Click(Sender: TObject);
     procedure ToolButton6Click(Sender: TObject);
-    procedure FormShow(Sender: TObject);
   private
     //TOnRetriveXML
     procedure RetriveXML (const FromURL:string);
@@ -151,37 +149,12 @@ end;
 
 procedure TForm3.ComboBox2Change(Sender: TObject);
 begin
-  case Selected.Emails[ComboBox2.ItemIndex].EmailType of
-    ttHome:label7.Caption:='Домашний';
-    ttOther:label7.Caption:='Другой';
-    ttWork:label7.Caption:='Рабочий';
-  end;
+Label7.Caption:=Selected.Emails[ComboBox2.ItemIndex].RelToString;
 end;
 
 procedure TForm3.ComboBox3Change(Sender: TObject);
 begin
-case Selected.Phones[ComboBox3.ItemIndex].PhoneType of
- tpAssistant:label9.Caption:='Вспомогательный';
- tpCallback:label9.Caption:='Автоответчик';
- tpCar:label9.Caption:='Автомобильный';
- TpCompany_main:label9.Caption:='Рабочий сновной';
- tpFax:label9.Caption:='Факс';
- tpHome:label9.Caption:='Домашний';
- tpHome_fax:label9.Caption:='Домашний факс';
- tpIsdn:label9.Caption:='ISDN';
- tpMain:label9.Caption:='Основной';
- tpMobile:label9.Caption:='Мобильный';
- tpOther:label9.Caption:='Другой';
- tpOther_fax:label9.Caption:='Факс (другой)';
- tpPager:label9.Caption:='Пэйджер';
- tpRadio:label9.Caption:='Радиотелефон';
- tpTelex:label9.Caption:='Телекс';
- tpTty_tdd:label9.Caption:='IP-телефон';
- TpWork:label9.Caption:='Рабочий';
- tpWork_fax:label9.Caption:='Рабочий факс';
- tpWork_mobile:label9.Caption:='Рабочий мобильный';
- tpWork_pager:label9.Caption:='Рабочий пэйджер';
-end;
+  Label9.Caption:=Selected.Phones[ComboBox3.ItemIndex].RelToString
 end;
 
 procedure TForm3.ComboBox4Change(Sender: TObject);
@@ -196,16 +169,7 @@ end;
 
 procedure TForm3.ComboBox6Change(Sender: TObject);
 begin
-  case Selected.IMs[ComboBox6.ItemIndex].Protocol of
-    tiAIM:label18.Caption:='AIM';
-    tiMSN:label18.Caption:='MSN';
-    tiYAHOO:label18.Caption:='YAHOO';
-    tiSKYPE:label18.Caption:='SKYPE';
-    tiQQ:label18.Caption:='QQ';
-    tiGOOGLE_TALK:label18.Caption:='GOOGLE TALK';
-    tiICQ:label18.Caption:='ICQ';
-    tiJABBER:label18.Caption:='JABBER';
-  end;
+  Label18.Caption:=Selected.IMs[ComboBox6.ItemIndex].ImProtocolToString;
 end;
 
 procedure TForm3.ComboBox7Change(Sender: TObject);
@@ -219,11 +183,6 @@ begin
     T_Group: fLog.Memo1.Lines.Add('Получена группа '+ (Element as TContactGroup).Title.Value);
     T_Contact:fLog.Memo1.Lines.Add('Получен контакт '+ (Element as TContact).ContactName);
   end;
-end;
-
-procedure TForm3.FormShow(Sender: TObject);
-begin
-  //Test;
 end;
 
 procedure TForm3.ListBox1Click(Sender: TObject);
@@ -301,17 +260,6 @@ try
 except
 
 end;
-end;
-
-procedure TForm3.ListBox1DblClick(Sender: TObject);
-begin
-//  Selected.TagName.FullName.Value:='Иванов Иван Иванович';
-//  Selected.TagName.GivenName.Value:='Иванов';
-//  Selected.TagName.AdditionalName.Value:='Иван';
-//  Selected.TagName.FamilyName.Value:='Иванович';
-//  Selected.PrimaryEmail:='vlad383@mail.ru';
-//  Contact.UpdateContact(Selected);
-//  ListBox1.Items[ListBox1.ItemIndex]:=Selected.ContactName;
 end;
 
 procedure TForm3.ReadData(const TotalBytes, ReadBytes: int64);

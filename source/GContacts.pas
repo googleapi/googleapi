@@ -1741,7 +1741,7 @@ begin
       NewEmail:=TgdEmail.Create();
       NewEmail.Address:=aEmail;
       NewEmail.Primary:=true;
-      NewEmail.EmailType:=ttOther;
+      NewEmail.Rel:=em_other;
       FEmails.Add(NewEmail);
     end;
  for i:=0 to FEmails.Count - 1 do
