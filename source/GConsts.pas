@@ -14,6 +14,7 @@ const
 
   gdNodeAlias = 'gd:';//префикс узлов, относящихся к GData API
 
+  sEventRelSuffix = 'event.';
   sImgRel = 'image/*'; //атрибут rel узла, содержащего изображения
   sAtomAlias = 'atom:'; //префикс узлов для формирования документа в формате Атом
   sXMLHeader = '<?xml version="1.0" encoding="UTF-8" ?>';//заголовок XML документа по умолчанию

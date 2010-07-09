@@ -17,91 +17,75 @@ type
   gd_comments, gd_deleted,gd_feedLink, gd_who, gd_recurrenceException);
 
 type
-  TGDataTags = set of TgdEnum;
+  TEventRel = (ev_None, ev_attendee, ev_organizer, ev_performer,
+               ev_speaker, ev_canceled, ev_confirmed, ev_tentative,
+               ev_confidential, ev_default, ev_private, ev_public,
+               ev_opaque, ev_transparent, ev_optional, ev_required,
+               ev_accepted, ev_declined, ev_invited);
 
-type
-  TEventStatus = (es_None, es_event_canceled, es_event_confirmed,
-                  es_event_tentative);
-  TgdEventStatus = class
+  type
+    TgdEvent = class
     private
-      FRel : TEventStatus;
+      FRel : TEventRel;
+      const EvSuffix = 'ev_';
+      {на входе имеется строка вида
+      'http://schemas.google.com/g/2005#event.SSSSSS'
+       функция определяет тип события TEventRel}
+      function StrToRel(const aRel: string):TEventRel;
+      {на входе имеем тип события TEventRel
+       на выходе строку вида
+      'http://schemas.google.com/g/2005#event.SSSSSS'}
+      function RelToStr(aRel:TEventRel):string;
     public
-      Constructor Create(const ByNode:TXMLNode=nil);
+      Constructor Create;
       procedure Clear;
       function IsEmpty: boolean;
-      procedure ParseXML(Node: TXMLNode);
+      //перевод значения Rel в тескт на языке разработчика
       function RelToString: string;
-      function AddToXML(Root:TXMLNode):TXMLNode;
-      property Rel: TEventStatus read FRel write FRel;
+      property Rel: TEventRel read FRel write FRel;
   end;
 
 type
-  TVisibility = (vs_None, vs_event_confidential, vs_event_default,
-                 vs_event_private, vs_event_public);
-  TgdVisibility = class
-    private
-      FRel: TVisibility;
+  TgdEventStatus = class(TgdEvent)
     public
       Constructor Create(const ByNode:TXMLNode=nil);
-      procedure Clear;
-      function IsEmpty:boolean;
-      function RelToString: string;
       procedure ParseXML(Node: TXMLNode);
       function AddToXML(Root:TXMLNode):TXMLNode;
-      property Rel: TVisibility read FRel write FRel;
   end;
 
-type
-  TTransparency = (tt_None, tt_event_opaque, tt_event_transparent);
-  TgdTransparency = class(TPersistent)
-    private
-      FRel : TTransparency;
+  TgdVisibility = class(TgdEvent)
     public
       Constructor Create(const ByNode:TXMLNode=nil);
-      procedure Clear;
-      function IsEmpty:boolean;
       procedure ParseXML(Node: TXMLNode);
       function AddToXML(Root:TXMLNode):TXMLNode;
-      function RelToString: string;
-      property Rel: TTransparency read FRel write FRel;
   end;
 
 type
-  TAttendeeType = (at_None, at_event_optional, at_event_required);
-  TgdAttendeeType = class
-    private
-      FRel: TAttendeeType;
+  TgdTransparency = class(TgdEvent)
     public
       Constructor Create(const ByNode:TXMLNode=nil);
-      procedure Clear;
-      function IsEmpty:boolean;
-      function RelToString:string;
       procedure ParseXML(Node: TXMLNode);
       function AddToXML(Root:TXMLNode):TXMLNode;
-      property Rel: TAttendeeType read FRel write FRel;
   end;
 
 type
-  TAttendeeStatus = (as_None, as_event_accepted, as_event_declined,
-                     as_event_invited, as_event_tentative);
-  TgdAttendeeStatus = class
-    private
-      FRel: TAttendeeStatus;
+  TgdAttendeeType = class(TgdEvent)
+    public
+      Constructor Create(const ByNode:TXMLNode=nil);
+      procedure ParseXML(Node: TXMLNode);
+      function AddToXML(Root:TXMLNode):TXMLNode;
+  end;
+
+type
+  TgdAttendeeStatus = class(TgdEvent)
   public
       Constructor Create(const ByNode:TXMLNode=nil);
-      procedure Clear;
-      function isEmpty: boolean;
       procedure ParseXML(Node: TXMLNode);
-      function  RelToString: string;
       function AddToXML(Root:TXMLNode):TXMLNode;
-      property Rel: TAttendeeStatus read FRel write FRel;
   end;
 
 type
-  TEntryTerms = (et_None, et_Any, et_Contact, et_Event, et_Message, et_Type);
-
-type
-  TgdCountry = class(TPersistent)
+  TgdCountry = class
     private
      FCode: string;
      FValue: string;
@@ -170,7 +154,7 @@ type
       constructor Create(ByNode: TXMLNode=nil);
       procedure Clear;
       function IsEmpty:boolean;
-      procedure   ParseXML(const Node: TXmlNode);
+      procedure ParseXML(const Node: TXmlNode);
       function AddToXML(Root:TXMLNode):TXmlNode;
       function RelToString:string;
       property Address : string read FAddress write FAddress;
@@ -447,7 +431,9 @@ type
   end;
 
 type
-  TWhoRel = (twAttendee,twOrganizer,twPerformer,twSpeaker,twBcc,twCc,twFrom,twReply,twTo);
+  TWhoRel = (tw_None, tw_event_attendee,tw_event_organizer,tw_event_performer,
+             tw_event_speaker, tw_message_bcc, tw_message_cc, tw_message_from,
+             tw_message_reply_to, tw_message_to);
   TgdWho = class
   private
     FEmail: string;
@@ -478,17 +464,6 @@ end;
 function GetGDNodeType(cName: UTF8string): TgdEnum;
 function GetGDNodeName(NodeType:TgdEnum):UTF8String;inline;
 
-function gdAttendeeStatus(aXMLNode: TXMLNode): TgdAttendeeStatus;
-function gdAttendeeType(aXMLNode: TXMLNode): TgdAttendeeType;
-function gdTransparency(aXMLNode: TXMLNode): TgdTransparency;
-function gdVisibility(aXMLNode: TXMLNode): TgdVisibility;
-function gdEventStatus(aXMLNode: TXMLNode): TgdEventStatus;
-function gdWhere(aXMLNode: TXMLNode):TgdWhere;
-function gdWhen(aXMLNode: TXMLNode):TgdWhen;
-function gdWho(aXMLNode: TXMLNode):TgdWho;
-function gdRecurrence(aXMLNode: TXMLNode):TgdRecurrence;
-function gdReminder(aXMLNode: TXMLNode):TgdReminder;
-
 implementation
 
 function GetGDNodeName(NodeType:TgdEnum):UTF8string;inline;
@@ -497,59 +472,9 @@ begin
                         '_',':',[rfReplaceAll]));
 end;
 
-function gdReminder(aXMLNode: TXMLNode):TgdReminder;
-begin
-  Result:=TgdReminder.Create(aXMLNode);
-end;
-
-function gdRecurrence(aXMLNode: TXMLNode):TgdRecurrence;
-begin
-  Result:=TgdRecurrence.Create(aXMLNode);
-end;
-
-function gdWho(aXMLNode: TXMLNode):TgdWho;
-begin
-  Result:=TgdWho.Create(aXMLNode);
-end;
-
-function gdWhen(aXMLNode: TXMLNode):TgdWhen;
-begin
-  Result:=TgdWhen.Create(aXMLNode);
-end;
-
-function gdWhere(aXMLNode: TXMLNode):TgdWhere;
-begin
-  Result:=TgdWhere.Create(aXMLNode);
-end;
-
-function gdEventStatus(aXMLNode: TXMLNode): TgdEventStatus;
-begin
-  Result:=TgdEventStatus.Create(aXMLNode);
-end;
-
-function gdVisibility(aXMLNode: TXMLNode): TgdVisibility;
-begin
-  Result:=TgdVisibility.Create(aXMLNode);
-end;
-
-function gdTransparency(aXMLNode: TXMLNode): TgdTransparency;
-begin
-  Result:=TgdTransparency.Create(aXMLNode);
-end;
-
 function GetGDNodeType(cName: UTF8string): TgdEnum;
 begin
   Result :=TgdEnum(GetEnumValue(TypeInfo(TgdEnum),ReplaceStr(string(cName),':','_')));
-end;
-
-function gdAttendeeType(aXMLNode: TXMLNode): TgdAttendeeType;
-begin
-  Result:=TgdAttendeeType.Create(aXMLNode);
-end;
-
-function gdAttendeeStatus(aXMLNode: TXMLNode): TgdAttendeeStatus;
-begin
-  Result:=TgdAttendeeStatus.Create(aXMLNode);
 end;
 
 { TgdWhere }
@@ -653,11 +578,8 @@ if GetGDNodeType(Node.Name) <> gd_EntryLink then
          (Format(sc_ErrCompNodes,
                 [GetGDNodeName(gd_EntryLink)]));
   try
-//    if Node.Attributes['href']<>null then
       Fhref:=string(Node.ReadAttributeString(sNodeHrefAttr));
-//    if Node.Attributes['rel']<>null then
       Frel:=string(Node.ReadAttributeString(sNodeRelAttr));
-//    if Node.Attributes['readOnly']<>null then
       FReadOnly:=Node.ReadAttributeBool('readOnly');
     if Node.NodeCount>0 then //есть дочерний узел с EntryLink
        FAtomEntry:=Node.FindNode(sEntryNodeName);
@@ -669,21 +591,11 @@ end;
 { TgdEventStatus }
 
 function TgdEventStatus.AddToXML(Root: TXMLNode): TXMLNode;
-var tmp: string;
 begin
 Result:=nil;
 if (Root=nil)or IsEmpty then Exit;
-
   Result:=Root.NodeNew(GetGDNodeName(gd_EventStatus));
-  tmp:=GetEnumName(TypeInfo(TEventStatus),ord(FRel));
-  Delete(tmp,1,3);
-  tmp:=ReplaceStr(tmp,'_','.');
-  Result.WriteAttributeString(sNodeValueAttr,sSchemaHref+UTF8String(tmp));
-end;
-
-procedure TgdEventStatus.Clear;
-begin
-FRel:=es_None;
+  Result.WriteAttributeString(sNodeValueAttr,sSchemaHref+UTF8String(RelToStr(FRel)));
 end;
 
 constructor TgdEventStatus.Create(const ByNode: TXMLNode);
@@ -694,36 +606,17 @@ begin
   ParseXML(ByNode);
 end;
 
-function TgdEventStatus.IsEmpty: boolean;
-begin
-  Result:=FRel=es_None;
-end;
-
 procedure TgdEventStatus.ParseXML(Node: TXMLNode);
-var tmp: string;
 begin
-  FRel:=es_None;
+  FRel:=ev_None;
   if Node=nil then Exit;
   if GetGDNodeType(Node.Name) <> gd_EventStatus then
     raise Exception.Create(Format(sc_ErrCompNodes,
         [GetGDNodeName(gd_EventStatus)]));
   try
-    tmp:=ReplaceStr(string(Node.ReadAttributeString(sNodeValueAttr)),
-                    sSchemaHref,'');
-    tmp:='es_'+ReplaceStr(tmp,'.','_');
-    Frel:=TEventStatus(GetEnumValue(TypeInfo(TEventStatus),tmp));
+    Frel:=StrToRel(string(Node.ReadAttributeString(sNodeValueAttr)));
   except
     raise Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
-  end;
-end;
-
-function TgdEventStatus.RelToString: string;
-begin
-  case Frel of
-    es_None: Result:='';//значение не определено
-    es_event_canceled:  Result:=LoadStr(c_EventCancel);
-    es_event_confirmed: Result:=LoadStr(c_EventConfirm);
-    es_event_tentative: Result:=LoadStr(c_EventTentative);
   end;
 end;
 
@@ -789,22 +682,11 @@ end;
 { TgdAttendeeStatus }
 
 function TgdAttendeeStatus.AddToXML(Root: TXMLNode): TXMLNode;
-var tmp: string;
 begin
   Result:=nil;
   if (Root=nil) or isEmpty then Exit;
-
-  tmp:=GetEnumName(TypeInfo(TAttendeeStatus),ord(FRel));
-  Delete(tmp,1,3);
-  tmp:=ReplaceStr(tmp,'_','.');
-
   Result:=Root.NodeNew(GetGDNodeName(gd_AttendeeStatus));
-  Result.WriteAttributeString(sNodeValueAttr,sSchemaHref+UTF8String(tmp));
-end;
-
-procedure TgdAttendeeStatus.Clear;
-begin
-  FRel:=as_None;
+  Result.WriteAttributeString(sNodeValueAttr,sSchemaHref+UTF8String(RelToStr(FRel)));
 end;
 
 constructor TgdAttendeeStatus.Create(const ByNode: TXMLNode);
@@ -815,56 +697,28 @@ begin
   ParseXML(ByNode);
 end;
 
-function TgdAttendeeStatus.isEmpty: boolean;
-begin
-  Result:=FRel=as_None
-end;
-
 procedure TgdAttendeeStatus.ParseXML(Node: TXMLNode);
-var tmp: string;
 begin
-FRel:=as_None;
+FRel:=ev_None;
 if (Node=nil)or isEmpty then Exit;
   if GetGDNodeType(Node.Name) <> gd_AttendeeStatus then
     raise Exception.Create(Format(sc_ErrCompNodes,
         [GetGDNodeName(gd_AttendeeStatus)]));
   try
-    tmp:=ReplaceStr(string(Node.ReadAttributeString(sNodeValueAttr)),sSchemaHref,'');
-    tmp:='as_'+ReplaceStr(tmp,'.','_');
-    FRel:=TAttendeeStatus(GetEnumValue(TypeInfo(TAttendeeStatus),tmp));
+    FRel:=StrToRel(string(Node.ReadAttributeString(sNodeValueAttr))); //TAttendeeStatus(GetEnumValue(TypeInfo(TAttendeeStatus),tmp));
  except
     raise Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
-  end;
-end;
-
-function TgdAttendeeStatus.RelToString: string;
-begin
-  case FRel of
-    as_None: Result:='';
-    as_event_accepted: Result:=LoadStr(c_EventAccepted);
-    as_event_declined: Result:=LoadStr(c_EventDeclined);
-    as_event_invited: Result:=LoadStr(c_EventInvited);
-    as_event_tentative: Result:=LoadStr(c_EventTentativ);
   end;
 end;
 
 { TgdAttendeeType }
 
 function TgdAttendeeType.AddToXML(Root: TXMLNode): TXMLNode;
-var tmp: string;
 begin
 Result:=nil;
  if (Root=nil)or IsEmpty then Exit;
-  tmp:=GetEnumName(TypeInfo(TAttendeeType),ord(FRel));
-  Delete(tmp,1,3);
-  tmp:=ReplaceStr(tmp,'_','.');
   Result:=Root.NodeNew(GetGDNodeName(gd_AttendeeType));
-  Result.WriteAttributeString(sNodeValueAttr,sSchemaHref+UTF8String(tmp));
-end;
-
-procedure TgdAttendeeType.Clear;
-begin
-  FRel:=at_None;
+  Result.WriteAttributeString(sNodeValueAttr,sSchemaHref+UTF8String(RelToStr(FRel)));
 end;
 
 constructor TgdAttendeeType.Create(const ByNode: TXMLNode);
@@ -875,35 +729,18 @@ begin
   ParseXML(ByNode);
 end;
 
-function TgdAttendeeType.IsEmpty: boolean;
-begin
-Result:=FRel=at_None
-end;
-
 procedure TgdAttendeeType.ParseXML(Node: TXMLNode);
-var tmp: string;
 begin
-  FRel:=at_None;
+  FRel:=ev_None;
   if Node=nil then Exit;
   if GetGDNodeType(Node.Name) <> gd_AttendeeType then
     raise Exception.Create(
                     Format(sc_ErrCompNodes,
                           [GetGDNodeName(gd_AttendeeType)]));
   try
-    tmp:=ReplaceStr(string(Node.ReadAttributeString(sNodeValueAttr)),sSchemaHref,'');
-    tmp:='at_'+ReplaceStr(tmp,'.','_');
-    FRel:=TAttendeeType(GetEnumValue(TypeInfo(TAttendeeType),tmp));
+    FRel:=StrToRel(string(Node.ReadAttributeString(sNodeValueAttr)));//  TAttendeeType(GetEnumValue(TypeInfo(TAttendeeType),tmp));
   except
     raise Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
-  end;
-end;
-
-function TgdAttendeeType.RelToString: string;
-begin
-  case FREl of
-    at_None: Result:='';//значение не определено
-    at_event_optional: Result:=LoadStr(c_EventOptional);
-    at_event_required: Result:=LoadStr(c_EventRequired);
   end;
 end;
 
@@ -1086,20 +923,10 @@ end;
 { TgdTransparency }
 
 function TgdTransparency.AddToXML(Root: TXMLNode): TXMLNode;
-var tmp: string;
 begin
 Result:=nil;
 if (Root=nil)or IsEmpty then Exit;
-
-tmp:=ReplaceStr(GetEnumName(TypeInfo(TTransparency),ord(FRel)),'_','.');
-Delete(tmp,1,3);
-Result:=Root.NodeNew(GetGDNodeName(gd_Transparency));
-Result.WriteAttributeString(sNodeValueAttr,sSchemaHref+UTF8String(tmp));
-end;
-
-procedure TgdTransparency.Clear;
-begin
-  FRel:=tt_None;
+Result.WriteAttributeString(sNodeValueAttr,sSchemaHref+UTF8String(RelToStr(FRel)));
 end;
 
 constructor TgdTransparency.Create(const ByNode: TXMLNode);
@@ -1110,53 +937,27 @@ begin
   ParseXML(ByNode);
 end;
 
-function TgdTransparency.IsEmpty: boolean;
-begin
-  Result:=FRel=tt_None
-end;
-
 procedure TgdTransparency.ParseXML(Node: TXMLNode);
-var tmp: string;
 begin
- FRel:=tt_None;
+ FRel:=ev_None;
  if Node=nil then Exit;
   if GetGDNodeType(Node.Name) <> gd_Transparency then
     raise Exception.Create(Format(sc_ErrCompNodes,
         [GetGDNodeName(gd_Transparency)]));
   try
-    tmp:= ReplaceStr(string(Node.ReadAttributeString(sNodeValueAttr)),sSchemaHref,'');
-    tmp:='tt_'+ReplaceStr(tmp,'.','_');
-    FRel:=TTransparency(GetEnumValue(TypeInfo(TTransparency),tmp));
+    FRel:=StrToRel(string(Node.ReadAttributeString(sNodeValueAttr)));
   except
     raise Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
-  end;
-end;
-
-function TgdTransparency.RelToString: string;
-begin
-  case FRel of
-    tt_None: Result:='';
-    tt_event_opaque: Result:=LoadStr(c_EventOpaque);
-    tt_event_transparent: Result:=LoadStr(c_EventTransp);
   end;
 end;
 
 { TgdVisibility }
 
 function TgdVisibility.AddToXML(Root: TXMLNode): TXMLNode;
-var tmp: string;
 begin
 Result:=nil;
 if (Root=nil)or IsEmpty then Exit;
-tmp:=ReplaceStr(GetEnumName(TypeInfo(TVisibility),ord(FRel)),'_','.');
-Delete(tmp,1,3);
-Result:=Root.NodeNew(GetGDNodeName(gd_Visibility));
-Result.WriteAttributeString(sNodeValueAttr,sSchemaHref+UTF8String(tmp));
-end;
-
-procedure TgdVisibility.Clear;
-begin
-  FRel:=vs_None;
+Result.WriteAttributeString(sNodeValueAttr,sSchemaHref+UTF8String(RelToStr(FRel)));
 end;
 
 constructor TgdVisibility.Create(const ByNode: TXMLNode);
@@ -1167,41 +968,17 @@ begin
   ParseXML(ByNode);
 end;
 
-function TgdVisibility.IsEmpty: boolean;
-begin
-  Result:=FRel=vs_None
-end;
-
 procedure TgdVisibility.ParseXML(Node: TXMLNode);
-var tmp:string;
 begin
- FRel:=vs_None;
-{TVisibility = (vs_None, vs_event_confidential, vs_event_default,
-                 vs_event_private, vs_event_public);}
+ FRel:=ev_None;
  if Node=nil then Exit;
   if GetGDNodeType(Node.Name) <> gd_Visibility then
     raise Exception.Create(Format(sc_ErrCompNodes,
         [GetGDNodeName(gd_Visibility)]));
   try
-    tmp:=ReplaceStr(string(Node.ReadAttributeString(sNodeValueAttr)),sSchemaHref,'');
-    tmp:='vs_'+ReplaceStr(tmp,'.','_');
-    FRel:=TVisibility(GetEnumValue(TypeInfo(TVisibility),tmp));
-//    FValue := ;
-//    FValue:=StringReplace(FValue,sSchemaHref,'',[rfIgnoreCase]);
-//    FVisible := TVisibility(AnsiIndexStr(FValue, RelValues));
+    FRel:=StrToRel(string(Node.ReadAttributeString(sNodeValueAttr)));
   except
     raise Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
-  end;
-end;
-
-function TgdVisibility.RelToString: string;
-begin
-  case FRel of
-    vs_None: Result:='';//значение не определено
-    vs_event_confidential: Result:=LoadStr(c_EventConfident);
-    vs_event_default:Result:=LoadStr(c_EventDefault);
-    vs_event_private:Result:=LoadStr(c_EventPrivate);
-    vs_event_public:Result:=LoadStr(c_EventPublic);
   end;
 end;
 
@@ -1321,7 +1098,6 @@ end;
 procedure TgdEmail.ParseXML(const Node: TXmlNode);
 var tmp: string;
 begin
-  {TTypeElement = (em_None, em_home,em_other, em_work);}
   FRel:=em_None;
   if Node=nil then Exit;
   if GetGDNodeType(Node.Name) <> gd_Email then
@@ -1351,20 +1127,6 @@ begin
     em_work: Result:=LoadStr(c_EmailWork);
   end;
 end;
-
-//procedure TgdEmail.SetEmailType(aType: TTypeElement);
-//begin
-//FEmailType:=aType;
-//SetRel(RelValues[ord(aType)]);
-//end;
-//
-//procedure TgdEmail.SetRel(const aRel: string);
-//begin
-//  if AnsiIndexStr(aRel,RelValues)<0 then
-//   raise Exception.Create
-//      (Format(sc_ErrWriteNode, [GetGDNodeName(gd_Email)])+' '+Format(sc_WrongAttr,['rel']));
-//  FRel:=sSchemaHref+aRel;
-//end;
 
 { TgdNameStruct }
 
@@ -1546,10 +1308,6 @@ end;
 procedure TgdPhoneNumber.ParseXML(const Node: TXmlNode);
 var tmp:string;
 begin
-{ TPhonesRel=(tp_None, tp_Assistant,tp_Callback,tp_Car,Tp_Company_main,
-      tp_Fax, tp_Home,tp_Home_fax,tp_Isdn,tp_Main,tp_Mobile,tp_Other,
-      tp_Other_fax, tp_Pager,tp_Radio,tp_Telex,tp_Tty_tdd,Tp_Work,
-      tp_Work_fax,  tp_Work_mobile,tp_Work_pager);}
   FRel:=tp_None;
   if Node=nil then Exit;
   if GetGDNodeType(Node.Name) <> gd_PhoneNumber then
@@ -1559,12 +1317,6 @@ begin
     tmp:='tp_'+ReplaceStr(string(Node.ReadAttributeString(sNodeRelAttr)),sSchemaHref,'');
     if Length(tmp)>3 then
       FRel:=TPhonesRel(GetEnumValue(TypeInfo(TPhonesRel),tmp));
-
-//    s:=StringReplace(s,sSchemaHref,'',[rfIgnoreCase]);
-//    if AnsiIndexStr(s,RelValues)>-1 then
-//      FPhoneType:=TPhonesRel(AnsiIndexStr(s,RelValues))
-//    else
-//      FPhoneType:=tpOther;
     if Node.HasAttribute('primary') then
       Fprimary:=Node.ReadAttributeBool('primary');
     if Node.HasAttribute(sNodeLabelAttr) then
@@ -1789,11 +1541,6 @@ begin
 Result:=nil;
   if (Root=nil)or IsEmpty then Exit;
   Result:=Root.NodeNew(GetGDNodeName(gd_Im));
-
-{TIMProtocol = (ti_None, ti_AIM,ti_MSN,ti_YAHOO,ti_SKYPE,ti_QQ,ti_GOOGLE_TALK,
-                 ti_ICQ, ti_JABBER);
-  TIMtype = (im_None, im_home,im_netmeeting,im_other,im_work);}
-
   tmp:=GetEnumName(TypeInfo(TIMtype),ord(FIMType));
   Delete(tmp,1,3);
   Result.WriteAttributeString(sNodeRelAttr,sSchemaHref+UTF8String(tmp));
@@ -1868,6 +1615,63 @@ if Node=nil then Exit;
   except
      raise Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
+end;
+
+{ TgdEvent }
+
+procedure TgdEvent.Clear;
+begin
+  FRel:=ev_None;
+end;
+
+constructor TgdEvent.Create;
+begin
+  inherited Create;
+end;
+
+function TgdEvent.IsEmpty: boolean;
+begin
+  Result:=FRel=ev_None;
+end;
+
+function TgdEvent.RelToStr(aRel: TEventRel): string;
+var tmp: string;
+begin
+  tmp:=ReplaceStr(GetEnumName(TypeInfo(TEventRel),ord(aRel)),EvSuffix,'');
+  Result:=sSchemaHref+sEventRelSuffix+tmp;
+end;
+
+function TgdEvent.RelToString: string;
+begin
+ case FRel of
+    ev_attendee: ;
+    ev_organizer: ;
+    ev_performer: ;
+    ev_speaker: ;
+    ev_canceled:     Result:=LoadStr(c_EventCancel);
+    ev_confirmed:    Result:=LoadStr(c_EventConfirm);
+    ev_tentative:    Result:=LoadStr(c_EventTentative);
+    ev_confidential: Result:=LoadStr(c_EventConfident);
+    ev_default:      Result:=LoadStr(c_EventDefault);
+    ev_private:      Result:=LoadStr(c_EventPrivate);
+    ev_public:       Result:=LoadStr(c_EventPublic);
+    ev_opaque:       Result:=LoadStr(c_EventOpaque);
+    ev_transparent:  Result:=LoadStr(c_EventTransp);
+    ev_optional:     Result:=LoadStr(c_EventOptional);
+    ev_required:     Result:=LoadStr(c_EventRequired);
+    ev_accepted:     Result:=LoadStr(c_EventAccepted);
+    ev_declined:     Result:=LoadStr(c_EventDeclined);
+    ev_invited:      Result:=LoadStr(c_EventInvited);
+    else
+      Result:='';
+  end;
+end;
+
+function TgdEvent.StrToRel(const aRel: string): TEventRel;
+var tmp: string;
+begin
+  tmp:=EvSuffix+ReplaceStr(aRel,sSchemaHref+sEventRelSuffix,'');
+  Result:=TEventRel(GetEnumValue(TypeInfo(TEventRel),tmp));
 end;
 
 end.
