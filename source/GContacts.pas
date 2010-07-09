@@ -2,7 +2,7 @@
 
 interface
 
-uses NativeXML, strUtils, httpsend, GHelper,Classes,SysUtils,
+uses NativeXML, strUtils, httpsend, Classes,SysUtils,
 GDataCommon,Generics.Collections,Dialogs,jpeg, Graphics, typinfo,
 IOUtils,uLanguage,blcksock,Windows,GConsts;
 

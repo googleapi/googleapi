@@ -1,10 +1,19 @@
+{ћодуль содержит наиболее общие классы дл€ работы с Google API, а также
+классы и методы дл€ работы с основой всех API - GData API}
 unit GDataCommon;
 
 interface
 
-uses NativeXML, Classes, StrUtils, SysUtils, GHelper, typinfo, uLanguage,GConsts;
+uses
+  NativeXML, Classes, StrUtils, SysUtils, typinfo,
+  uLanguage, GConsts, Generics.Collections, DateUtils;
 
 type
+  {ѕеречислитель, определ€ющий узлы которые могут содержатьс€ в XML-документе,
+   присланном Google и которые могут быть преобразованы классами модул€.
+   Ќапример,
+   gd_email - определ€ет узел gd:email, который может быть преобразован с помощью
+   класса TgdEmail}
   TgdEnum = (gd_country, gd_additionalName,gd_name, gd_email, gd_extendedProperty,
   gd_geoPt, gd_im,gd_orgName, gd_orgTitle, gd_organization, gd_originalEvent,
   gd_phoneNumber, gd_postalAddress, gd_rating, gd_recurrence,gd_reminder,
@@ -22,6 +31,91 @@ type
                ev_confidential, ev_default, ev_private, ev_public,
                ev_opaque, ev_transparent, ev_optional, ev_required,
                ev_accepted, ev_declined, ev_invited);
+
+
+{ лассы и структуры общего назначени€ дл€ парсинга XML-документов.
+ѕримен€ютс€ в большинстве API Google и, как правило, узлы в XML-дереве не иеют
+каких-либо префиксов}
+
+type
+  {јтрибут XML-узла}
+  TAttribute = packed record
+    {им€ атрибута}
+    Name: string;
+    {значение атрибута}
+    Value: string;
+  end;
+
+type
+  { ласс общего назначени€, определющий любой XML-узел, который
+   содержит значение (текст).
+   Ќапример:
+   <node attr="attribute">Text of Node</node>
+   —войства класса будут иметь следующие значени€:
+     Name = node
+     Value = "Text of Node"
+     Attributes = (("attr","attribute"))}
+  TTextTag = class
+  private
+    {Ќазвание узда}
+    FName: string;
+    {значение узла}
+    FValue: string;
+    {атрибуты узла}
+    FAtributes: TList<TAttribute>;
+  public
+    { онструктор дл€ создани€ "пустого" экземпл€ра, т.е. не содержащего
+     каких-либо значений, либо дл€ создани€ экземпл€ра по данным XML-узла документа}
+    Constructor Create(const ByNode: TXMLNode=nil);overload;
+    { онструктор дл€ создани€ эземпл€ра класса по известным значени€м имени и текста}
+    constructor Create(const NodeName: string; NodeValue:string='');overload;
+    {‘ункци€ возвращает True в случае, если не определено свойство Name или
+     не определено значение узла или хот€ бы один атрибут}
+    function IsEmpty: boolean;
+    {ќчищает все пол€ класса}
+    procedure Clear;
+    {–азбирает узел XML и заполн€ет на основании полученных данных пол€ класса}
+    procedure ParseXML(Node: TXMLNode);
+    {Ќа основании значений свойст формирует новый XML-узел и помещает его как
+    дочерний дл€ узла Root}
+    function AddToXML(Root: TXMLNode): TXMLNode;
+    {значение узла}
+    property Value: string read FValue write FValue;
+    {Ќазвание узда}
+    property Name: string read FName write FName;
+    {атрибуты узла}
+    property Attributes: TList<TAttribute>read FAtributes write FAtributes;
+  end;
+
+type
+  TEntryLink = class
+  private
+    Frel: string;
+    Ftype: string;
+    Fhref: string;
+    FEtag: string;
+  public
+    Constructor Create(const ByNode: TXMLNode=nil);
+    procedure ParseXML(Node: TXMLNode);
+    function AddToXML(Root: TXMLNode): TXMLNode;
+    property Rel:   string read Frel write Frel;
+    property Ltype: string read Ftype write Ftype;
+    property Href:  string read Fhref write Fhref;
+    property Etag:  string read FEtag write FEtag;
+  end;
+
+type
+  TAuthorTag = Class
+  private
+    FAuthor: string;
+    FEmail : string;
+    FUID   : string;
+  public
+    constructor Create(ByNode: TXMLNode=nil);
+    procedure ParseXML(Node: TXMLNode);
+    property Author: string read FAuthor write FAuthor;
+    property Email: string read FEmail write FEmail;
+  end;
 
   type
     TgdEvent = class
@@ -143,7 +237,7 @@ end;
 
 type
   TTypeElement = (em_None, em_home,em_other, em_work);
-  TgdEmail = class(TPersistent)
+  TgdEmail = class
     private
       FAddress: string;
       FRel: TTypeElement;
@@ -461,10 +555,59 @@ type
     property EntryLink: TgdEntryLink read FEntryLink write FEntryLink;
 end;
 
-function GetGDNodeType(cName: UTF8string): TgdEnum;
+function GetGDNodeType(cName: UTF8string): TgdEnum;inline;
 function GetGDNodeName(NodeType:TgdEnum):UTF8String;inline;
+function ServerDateToDateTime(cServerDate:string):TDateTime;inline;
+function DateTimeToServerDate(DateTime:TDateTime):string;inline;
 
 implementation
+
+function DateTimeToServerDate(DateTime:TDateTime):string;
+var Year, Mounth, Day, hours, Mins, Seconds,MSec: Word;
+    aYear, aMounth, aDay, ahours, aMins, aSeconds,aMSec: string;
+begin
+  DecodeDateTime(DateTime,Year, Mounth, Day, hours, Mins, Seconds,MSec);
+  aYear:=IntToStr(Year);
+  if Mounth<10 then aMounth:='0'+IntToStr(Mounth)
+  else aMounth:=IntToStr(Mounth);
+  if Day<10 then aDay:='0'+IntToStr(Day)
+  else aDay:=IntToStr(Day);
+  if hours<10 then ahours:='0'+IntToStr(hours)
+  else ahours:=IntToStr(hours);
+  if Mins<10 then aMins:='0'+IntToStr(Mins)
+  else aMins:=IntToStr(Mins);
+  if Seconds<10 then aSeconds:='0'+IntToStr(Seconds)
+  else aSeconds:=IntToStr(Seconds);
+
+  case MSec of
+    0..9:aMSec:='00'+IntToStr(MSec);
+    10..99:aMSec:='0'+IntToStr(MSec);
+    else
+      aMSec:=IntToStr(MSec);
+  end;
+  Result:=aYear+'-'+aMounth+'-'+aDay+'T'+ahours+':'+aMins+':'+aSeconds+'.'+aMSec+'Z';
+end;
+
+function ServerDateToDateTime(cServerDate:string):TDateTime;
+var Year, Mounth, Day, hours, Mins, Seconds: Word;
+begin
+  Year:=StrToInt(copy(cServerDate,1,4));
+  Mounth:=StrToInt(copy(cServerDate,6,2));
+  Day:=StrToInt(copy(cServerDate,9,2));
+  if Length(cServerDate)>10 then
+     begin
+       hours:=StrToInt(copy(cServerDate,12,2));
+       Mins:=StrToInt(copy(cServerDate,15,2));
+       Seconds:=StrToInt(copy(cServerDate,18,2));
+     end
+  else
+    begin
+      hours:=0;
+      Mins:=0;
+      Seconds:=0;
+    end;
+  Result:=EncodeDateTime(Year, Mounth, Day, hours, Mins, Seconds,0)
+end;
 
 function GetGDNodeName(NodeType:TgdEnum):UTF8string;inline;
 begin
@@ -1672,6 +1815,128 @@ var tmp: string;
 begin
   tmp:=EvSuffix+ReplaceStr(aRel,sSchemaHref+sEventRelSuffix,'');
   Result:=TEventRel(GetEnumValue(TypeInfo(TEventRel),tmp));
+end;
+
+{ TTextTag }
+
+function TTextTag.AddToXML(Root: TXMLNode): TXMLNode;
+var
+  i: integer;
+begin
+Result:=nil;
+  if (Root=nil)or IsEmpty then Exit;
+  Result:= Root.NodeNew(UTF8String(FName));
+  Result.ValueAsString:=AnsiToUtf8(FValue);
+  for i := 0 to FAtributes.Count - 1 do
+    Result.AttributeAdd(UTF8String(FAtributes[i].Name),UTF8String(FAtributes[i].Value));
+end;
+
+constructor TTextTag.Create(const ByNode: TXMLNode);
+begin
+  inherited Create;
+  FAtributes:=TList<TAttribute>.Create;
+  Clear;
+  if ByNode = nil then
+    Exit;
+  ParseXML(ByNode);
+end;
+
+procedure TTextTag.Clear;
+begin
+  FName:='';
+  FValue:='';
+  FAtributes.Clear;
+end;
+
+constructor TTextTag.Create(const NodeName: string; NodeValue: string);
+begin
+  inherited Create;
+  FName:=NodeName;
+  FValue:=NodeValue;
+  FAtributes:=TList<TAttribute>.Create;
+end;
+
+function TTextTag.IsEmpty: boolean;
+begin
+  Result:=(Length(Trim(FName))=0)or
+   ((Length(Trim(FValue))=0)and(FAtributes.Count=0));
+end;
+
+procedure TTextTag.ParseXML(Node: TXMLNode);
+var
+  i: integer;
+  Attr: TAttribute;
+begin
+  try
+    FValue := string(Node.ValueAsString);
+    FName := string(Node.Name);
+    for i := 0 to Node.AttributeCount - 1 do
+    begin
+      Attr.Name := string(Node.AttributeName[i]);
+      Attr.Value := string(Node.AttributeValue[i]);
+      FAtributes.Add(Attr)
+    end;
+  except
+    Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
+  end;
+end;
+
+{ TAuthorTag }
+constructor TAuthorTag.Create(ByNode: TXMLNode);
+begin
+  inherited Create;
+  if ByNode = nil then
+    Exit;
+  ParseXML(ByNode);
+end;
+
+procedure TAuthorTag.ParseXML(Node: TXMLNode);
+var
+  i: integer;
+begin
+  try
+    for i := 0 to Node.NodeCount - 1 do
+    begin
+      if Node.Nodes[i].Name = 'name' then
+        FAuthor:= string(Node.Nodes[i].ValueAsString)
+      else
+        if Node.Nodes[i].Name = 'email' then
+          FEmail := string(Node.Nodes[i].ValueAsString)
+        else
+          if Node.Nodes[i].Name = 'uid' then
+            FUID:=string(Node.Nodes[i].ValueAsString);
+    end;
+  except
+    Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
+  end;
+end;
+
+
+{ TEntryLink }
+
+function TEntryLink.AddToXML(Root: TXMLNode): TXMLNode;
+begin
+  Result:=nil;
+end;
+
+constructor TEntryLink.Create(const ByNode: TXMLNode);
+begin
+  inherited Create;
+  if ByNode<>nil then
+    ParseXML(ByNode);
+end;
+
+procedure TEntryLink.ParseXML(Node: TXMLNode);
+begin
+  if Node=nil then Exit;
+  try
+    Frel:=string(Node.ReadAttributeString(sNodeRelAttr));
+    Ftype:=string(Node.ReadAttributeString('type'));
+    Fhref:=string(Node.ReadAttributeString(sNodeHrefAttr));
+    FEtag:=string(Node.ReadAttributeString(gdNodeAlias+'etag'))
+  except
+    Exception.Create(Format(sc_ErrPrepareNode, ['link']));
+  end;
 end;
 
 end.

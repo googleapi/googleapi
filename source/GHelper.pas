@@ -30,60 +30,60 @@ type
   end;
 
 
-type
-  TAttribute = packed record
-    Name: string;
-    Value: string;
-  end;
-
-type
-  TTextTag = class
-  private
-    FName: string;
-    FValue: string;
-    FAtributes: TList<TAttribute>;
-  public
-    Constructor Create(const ByNode: TXMLNode=nil);overload;
-    constructor Create(const NodeName: string; NodeValue:string='');overload;
-
-    function IsEmpty: boolean;
-    procedure Clear;
-    procedure ParseXML(Node: TXMLNode);
-    function AddToXML(Root: TXMLNode): TXMLNode;
-    property Value: string read FValue write FValue;
-    property Name: string read FName write FName;
-    property Attributes: TList<TAttribute>read FAtributes write FAtributes;
-  end;
-
-type
-  TEntryLink = class
-  private
-    Frel: string;
-    Ftype: string;
-    Fhref: string;
-    FEtag: string;
-  public
-    Constructor Create(const ByNode: TXMLNode=nil);
-    procedure ParseXML(Node: TXMLNode);
-    function AddToXML(Root: TXMLNode): TXMLNode;
-    property Rel:   string read Frel write Frel;
-    property Ltype: string read Ftype write Ftype;
-    property Href:  string read Fhref write Fhref;
-    property Etag:  string read FEtag write FEtag;
-  end;
-
-type
-  TAuthorTag = Class
-  private
-    FAuthor: string;
-    FEmail : string;
-    FUID   : string;
-  public
-    constructor Create(ByNode: IXMLNode=nil);
-    procedure ParseXML(Node: IXMLNode);
-    property Author: string read FAuthor write FAuthor;
-    property Email: string read FEmail write FEmail;
-  end;
+//type
+//  TAttribute = packed record
+//    Name: string;
+//    Value: string;
+//  end;
+//
+//type
+//  TTextTag = class
+//  private
+//    FName: string;
+//    FValue: string;
+//    FAtributes: TList<TAttribute>;
+//  public
+//    Constructor Create(const ByNode: TXMLNode=nil);overload;
+//    constructor Create(const NodeName: string; NodeValue:string='');overload;
+//
+//    function IsEmpty: boolean;
+//    procedure Clear;
+//    procedure ParseXML(Node: TXMLNode);
+//    function AddToXML(Root: TXMLNode): TXMLNode;
+//    property Value: string read FValue write FValue;
+//    property Name: string read FName write FName;
+//    property Attributes: TList<TAttribute>read FAtributes write FAtributes;
+//  end;
+//
+//type
+//  TEntryLink = class
+//  private
+//    Frel: string;
+//    Ftype: string;
+//    Fhref: string;
+//    FEtag: string;
+//  public
+//    Constructor Create(const ByNode: TXMLNode=nil);
+//    procedure ParseXML(Node: TXMLNode);
+//    function AddToXML(Root: TXMLNode): TXMLNode;
+//    property Rel:   string read Frel write Frel;
+//    property Ltype: string read Ftype write Ftype;
+//    property Href:  string read Fhref write Fhref;
+//    property Etag:  string read FEtag write FEtag;
+//  end;
+//
+//type
+//  TAuthorTag = Class
+//  private
+//    FAuthor: string;
+//    FEmail : string;
+//    FUID   : string;
+//  public
+//    constructor Create(ByNode: IXMLNode=nil);
+//    procedure ParseXML(Node: IXMLNode);
+//    property Author: string read FAuthor write FAuthor;
+//    property Email: string read FEmail write FEmail;
+//  end;
 
 
 function HexToColor(Color: string): TColor;
@@ -289,133 +289,6 @@ begin
     if p <> nil then
       Dispose(p);
     Items[index] := Ptr;
-  end;
-end;
-
-
-{ TTextTag }
-
-function TTextTag.AddToXML(Root: TXMLNode): TXMLNode;
-var
-  i: integer;
-begin
-Result:=nil;
-  if (Root=nil)or IsEmpty then Exit;
-  Result:= Root.NodeNew(UTF8String(FName));
-  Result.ValueAsString:=AnsiToUtf8(FValue);
-  for i := 0 to FAtributes.Count - 1 do
-    Result.AttributeAdd(UTF8String(FAtributes[i].Name),UTF8String(FAtributes[i].Value));
-  //Root.ChildNodes.Add(Result);
-end;
-
-constructor TTextTag.Create(const ByNode: TXMLNode);
-begin
-  inherited Create;
-  FAtributes:=TList<TAttribute>.Create;
-  Clear;
-  if ByNode = nil then
-    Exit;
-  ParseXML(ByNode);
-end;
-
-procedure TTextTag.Clear;
-begin
-  FName:='';
-  FValue:='';
-  FAtributes.Clear;
-end;
-
-constructor TTextTag.Create(const NodeName: string; NodeValue: string);
-begin
-  inherited Create;
-  FName:=NodeName;
-  FValue:=NodeValue;
-  FAtributes:=TList<TAttribute>.Create;
-end;
-
-function TTextTag.IsEmpty: boolean;
-begin
-  Result:=(Length(Trim(FName))=0)or
-   ((Length(Trim(FValue))=0)and(FAtributes.Count=0));
-end;
-
-procedure TTextTag.ParseXML(Node: TXMLNode);
-var
-  i: integer;
-  Attr: TAttribute;
-begin
-  try
-    FValue := string(Node.ValueAsString);
-    FName := string(Node.Name);
-    for i := 0 to Node.AttributeCount - 1 do
-    begin
-      Attr.Name := string(Node.AttributeName[i]);
-      Attr.Value := string(Node.AttributeValue[i]);
-      FAtributes.Add(Attr)
-    end;
-  except
-    Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
-  end;
-end;
-
-{ TAuthorTag }
-
-{ TAuthorTag }
-
-constructor TAuthorTag.Create(ByNode: IXMLNode);
-begin
-  inherited Create;
-  if ByNode = nil then
-    Exit;
-  ParseXML(ByNode);
-end;
-
-procedure TAuthorTag.ParseXML(Node: IXMLNode);
-var
-  i: integer;
-begin
-  try
-    for i := 0 to Node.ChildNodes.Count - 1 do
-    begin
-      if Node.ChildNodes[i].NodeName = 'name' then
-        FAuthor := Node.ChildNodes[i].Text
-      else
-        if Node.ChildNodes[i].NodeName = 'email' then
-          FEmail := Node.ChildNodes[i].Text
-        else
-          if Node.ChildNodes[i].NodeName = 'uid' then
-            FUID:=Node.ChildNodes[i].Text;
-    end;
-  except
-    Exception.Create(Format(sc_ErrPrepareNode, [Node.NodeName]));
-  end;
-end;
-
-
-{ TEntryLink }
-
-function TEntryLink.AddToXML(Root: TXMLNode): TXMLNode;
-begin
-  Result:=nil;
-end;
-
-constructor TEntryLink.Create(const ByNode: TXMLNode);
-begin
-  inherited Create;
-  if ByNode<>nil then
-    ParseXML(ByNode);
-end;
-
-procedure TEntryLink.ParseXML(Node: TXMLNode);
-begin
-  if Node=nil then Exit;
-  try
-    Frel:=string(Node.ReadAttributeString(sNodeRelAttr));
-    Ftype:=string(Node.ReadAttributeString('type'));
-    Fhref:=string(Node.ReadAttributeString(sNodeHrefAttr));
-    FEtag:=string(Node.ReadAttributeString(gdNodeAlias+'etag'))
-  except
-    Exception.Create(Format(sc_ErrPrepareNode, ['link']));
   end;
 end;
 
