@@ -15,33 +15,6 @@ type
   TOnReadData = procedure (const TotalBytes, ReadBytes: int64) of object;
 
 type
-  THTTPSender = class(THTTPSend)
-  private
-    FMethod: string;
-    FURL: string;
-    FAuthKey:string;
-    FApiVersion:string;
-    FExtendedHeaders:TStringList;
-    procedure SetApiVersion(const Value: string);
-    procedure SetAuthKey(const Value: string);
-    procedure SetExtendedHeaders(const Value: TStringList);
-    procedure SetMethod(const Value: string);
-    procedure SetURL(const Value: string);
-    function HeadByName(const aHead:string;aHeaders:TStringList):string;
-    procedure AddGoogleHeaders;
-  public
-    constructor Create(const aMethod,aAuthKey, aURL, aAPIVersion:string);
-    procedure Clear;
-    function GetLength(const aURL:string):integer;
-    function  SendRequest: boolean;
-    property  Method: string  read FMethod write SetMethod;
-    property  URL: string read FURL write SetURL;
-    property  AuthKey:string read FAuthKey write SetAuthKey;
-    property  ApiVersion:string read FApiVersion write SetApiVersion;
-    property  ExtendedHeaders:TStringList read FExtendedHeaders write SetExtendedHeaders;
-end;
-
-type
   TcpTagEnum = (cp_billingInformation,cp_birthday,cp_calendarLink,
   cp_directoryServer,cp_event,cp_externalId,cp_gender,
   cp_groupMembershipInfo,cp_hobby, cp_initials,
@@ -375,7 +348,6 @@ type
     property ToXMLText[XMLType:TFileType]: string read GenerateText;
 end;
 
-//type
   TContactGroup = class
   private
     FEtag: string;
@@ -385,20 +357,24 @@ end;
     FTitle: TTextTag;
     FContent: TTextTag;
     FSystemGroup: TcpSystemGroup;
+    function GetTitle: string;
+    function GetContent: string;
+    function GetSysGroupId: TcpSysGroupId;
+    procedure SetTitle(const aTitle: string);
+    procedure SetContent(const aContent:string);
+    procedure SetSysGroupId(aSysGroupId: TcpSysGroupId);
   public
     constructor Create(const ByNode: TXMLNode);
     procedure ParseXML(Node: TXmlNode);
-    function CreateContact(const aContact: TContact):boolean;
     property Etag: string read FEtag write FEtag;
     property id: string read Fid write Fid;
     property Links: TList<TEntryLink> read FLinks write FLinks;
     property Update: TDateTime read FUpdate write FUpdate;
-    property Title: TTextTag read FTitle write FTitle;
-    property Content: TTextTag read FContent write FContent;
-    property SystemGroup: TcpSystemGroup read FSystemGroup write FSystemGroup;
+    property Title: string read GetTitle write SetTitle;
+    property Content: string read GetContent write SetContent;
+    property SystemGroup: TcpSysGroupId read GetSysGroupId write SetSysGroupId;
 end;
 
-//TGoogleContact
   TGoogleContact = class(TComponent)
   private
     FAuth: string; //AUTH для доступа к API
@@ -416,7 +392,6 @@ end;
     FUpdatesMin: TDateTime;
     FSortOrder: TSortOrder;
     FShowDeleted: boolean;
-    FContactsNames: TStrings;
     function GetNextLink(Stream:TStream):string;overload;
     function GetNextLink(aXMLDoc:TNativeXml):string;overload;
     function GetContactsByGroup(GroupName:string):TList<TContact>;
@@ -438,20 +413,21 @@ end;
     procedure SetAuth(const aAuth:string);
     procedure SetGmail(const aGMail:string);
     function GetContactNames: TStrings;
+    function GetGropsNames: TStrings;
   public
     constructor Create(AOwner:TComponent);override;
-//    constructor Create(AOwner:TComponent; const aAuth,aEmail: string);overload;
     destructor Destroy;override;
     //получение всех групп пользователя
     function RetriveGroups:integer;
     //получение всех контактов пользователя
     function RetriveContacts: integer;overload;
-
     //удаление контакта
     function DeleteContact(index:integer):boolean;overload;//по индексу в списке FContacts
     function DeleteContact(aContact:TContact):boolean;overload;
     //добавление контакта на сервер
     function AddContact(aContact:TContact):boolean;
+    //добавление новой группы контактов
+    function AddContactGroup(const aName, aDescription:string):boolean;
     //обновление информации о контакте
     function UpdateContact(aContact:TContact):boolean;overload;
     function UpdateContact(index:integer):boolean;overload;
@@ -490,6 +466,8 @@ end;
     property SortOrder:TSortOrder read FSortOrder write SetSortOrder;
     //список имен контактов
     property ContactsNames: TStrings read GetContactNames;
+    //список имен групп контактов
+    property GroupsNames: TStrings read GetGropsNames;
     { ----------------События компонента-------------------------}
     //начало загрузки XML-документа с сервера
     property OnRetriveXML: TOnRetriveXML read FOnRetriveXML write FOnRetriveXML;
@@ -501,26 +479,26 @@ end;
  end;
 
 //получение типа узла
-function GetContactNodeType(const NodeName: UTF8string):TcpTagEnum;inline;
+function GetContactNodeType(const NodeName: string):TcpTagEnum;inline;
 //получение имени узла по его типу
-function GetContactNodeName(const NodeType:TcpTagEnum):UTF8string;inline;
+function GetContactNodeName(const NodeType:TcpTagEnum):string;inline;
 
 implementation
 
-function GetContactNodeName(const NodeType:TcpTagEnum):UTF8string;inline;
+function GetContactNodeName(const NodeType:TcpTagEnum):string;inline;
 begin
-    Result:=UTF8String(GetEnumName(TypeInfo(TcpTagEnum),ord(NodeType)));
+    Result:=GetEnumName(TypeInfo(TcpTagEnum),ord(NodeType));
     Delete(Result,1,3);
     Result:=CpNodeAlias+Result;
 end;
 
-function GetContactNodeType(const NodeName: UTF8string):TcpTagEnum;inline;
+function GetContactNodeType(const NodeName: string):TcpTagEnum;inline;
 var i: integer;
 begin
-  if pos(CpNodeAlias,string(NodeName))>0 then
+  if pos(CpNodeAlias,NodeName)>0 then
     begin
       i:=GetEnumValue(TypeInfo(TcpTagEnum),
-                      Trim(ReplaceStr(string(NodeName),CpNodeAlias,'cp_')));
+                      Trim(ReplaceStr(NodeName,CpNodeAlias,'cp_')));
       if i>-1 then
         Result := TcpTagEnum(i)
       else
@@ -945,7 +923,7 @@ begin
      Delete(sRel,1,2);
      Result.WriteAttributeString(sNodeRelAttr,UTF8String(sRel));
    end;
- Result.ValueAsString:=UTF8String(FText);
+ Result.ValueAsString:=FText;
 end;
 
 procedure TcpJot.Clear;
@@ -1102,7 +1080,7 @@ if FRealition=tr_None then
   Result.WriteAttributeString(sNodeLabelAttr,UTF8String(FLabel))
 else
   Result.WriteAttributeString(sNodeRelAttr,UTF8String(GetRelStr(FRealition)));
-Result.ValueAsString:=UTF8String(FValue);
+Result.ValueAsString:=FValue;
 end;
 
 procedure TcpRelation.Clear;
@@ -1765,9 +1743,19 @@ begin
     ParseXML(ByNode);
 end;
 
-function TContactGroup.CreateContact(const aContact: TContact): boolean;
+function TContactGroup.GetContent: string;
 begin
-  Result:=false
+  Result:=FContent.Value;
+end;
+
+function TContactGroup.GetSysGroupId: TcpSysGroupId;
+begin
+  Result:=FSystemGroup.ID;
+end;
+
+function TContactGroup.GetTitle: string;
+begin
+  Result:=FTitle.Value;
 end;
 
 procedure TContactGroup.ParseXML(Node: TXmlNode);
@@ -1795,6 +1783,21 @@ begin
                 if Node.Nodes[i].Name='link' then
                   FLinks.Add(TEntryLink.Create(Node.Nodes[i]));
     end;
+end;
+
+procedure TContactGroup.SetContent(const aContent: string);
+begin
+  FContent.Value:=aContent
+end;
+
+procedure TContactGroup.SetSysGroupId(aSysGroupId: TcpSysGroupId);
+begin
+  FSystemGroup.ID:=aSysGroupId;
+end;
+
+procedure TContactGroup.SetTitle(const aTitle: string);
+begin
+  FTitle.Value:=aTitle;
 end;
 
 { TGoogleContact }
@@ -1843,6 +1846,28 @@ except
 end;
 end;
 
+function TGoogleContact.AddContactGroup(const aName,
+  aDescription: string): boolean;
+var XMLDoc: TNativeXml;
+    Node: TXMLNode;
+begin
+{<atom:entry xmlns:gd="http://schemas.google.com/g/2005">
+  <atom:category scheme="http://schemas.google.com/g/2005#kind"
+    term="http://schemas.google.com/contact/2008#group"/>
+  <atom:title type="text">Salsa group</atom:title>
+  <gd:extendedProperty name="more info about the group">
+    <info>Nice people.</info>
+  </gd:extendedProperty>
+</atom:entry>
+}
+ XMLDoc:=TNativeXml.Create;
+ XMLDoc.CreateName(sAtomAlias+sEntryNodeName);
+ XMLDoc.Root.WriteAttributeString('xmlns:gd','http://schemas.google.com/g/2005');
+ Node:=XMLDoc.Root.NodeNew(sAtomAlias+'category');
+ Node.WriteAttributeString('scheme','http://schemas.google.com/g/2005#kind');
+ Node.WriteAttributeString('term','http://schemas.google.com/contact/2008#group');
+end;
+
 constructor TGoogleContact.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
@@ -1854,7 +1879,6 @@ begin
 
   FGroups:=TList<TContactGroup>.Create;
   FContacts:=TList<TContact>.Create;
-  FContactsNames:= TStringList.Create;
 end;
 
 function TGoogleContact.DeleteContact(aContact: TContact): boolean;
@@ -2000,6 +2024,14 @@ Result:='';
         Result:=aContact.FLinks[i].Href;
         break;
       end;
+end;
+
+function TGoogleContact.GetGropsNames: TStrings;
+var i:integer;
+begin
+Result:=TStringList.Create;
+  for I := 0 to FGroups.Count - 1 do
+    Result.Add(FGroups[i].GetTitle);
 end;
 
 function TGoogleContact.GetNextLink(aXMLDoc: TNativeXml): string;
@@ -2468,116 +2500,5 @@ Result:=nil;
   Result:=TJPEGImage.Create;
   Result.Assign(RetriveContactPhoto(index,DefaultImage));
 end;
-
-{ THTTPSender }
-
-procedure THTTPSender.AddGoogleHeaders;
-begin
-  Headers.Add('GData-Version: '+FApiVersion);
-  Headers.Add('Authorization: GoogleLogin auth=' + FAuthKey);
-end;
-
-procedure THTTPSender.Clear;
-begin
-  inherited Clear;
-  FMethod:='';
-  FURL:='';
-  FAuthKey:='';
-  FApiVersion:='';
-  FExtendedHeaders.Clear;
-end;
-
-constructor THTTPSender.Create(const aMethod, aAuthKey, aURL, aAPIVersion: string);
-begin
-  inherited Create;
-  FAuthKey:=aAuthKey;
-  FURL:=aURL;
-  FApiVersion:=aAPIVersion;
-  FMethod:=aMethod;
-  FExtendedHeaders:=TStringList.Create;
-end;
-
-function THTTPSender.GetLength(const aURL: string): integer;
-var size,content:Ansistring;
-    ch:AnsiChar;
-    h:TStringList;
-begin
-  with THTTPSend.Create do
-    begin
-      Headers.Add('GData-Version: '+FApiVersion);
-      Headers.Add('Authorization: GoogleLogin auth=' + FAuthKey);
-      if HTTPMethod('HEAD',aURL)and (ResultCode=200) then
-        begin
-          h:=TStringList.Create;
-          h.Assign(Headers);
-          content:=AnsiString(HeadByName('content-length',H));
-          H.Delete(H.IndexOf(HeadByName('Connection',H)));
-          H.Delete(H.IndexOf(string(content)));
-          for ch in content do
-            if ch in ['0'..'9'] then
-               size:=size+ch;
-          Result:=StrToIntDef(string(size),0)+Length(BytesOf(H.Text));
-        end
-      else
-       Result:=-1;
-    end
-end;
-
-function THTTPSender.HeadByName(const aHead: string;aHeaders:TStringList): string;
-var str: string;
-begin
-Result:='';
-for str in aHeaders do
-   begin
-     if pos(LowerCase(aHead),lowercase(str))>0 then
-       begin
-         Result:=str;
-         break;
-       end;
-   end;
-end;
-
-function THTTPSender.SendRequest: boolean;
-var str: string;
-begin
-Result:=false;
-  if (Length(Trim(FMethod))=0)or
-     (Length(Trim(FURL))=0)or
-     (Length(Trim(FAuthKey))=0)or
-     (Length(Trim(FApiVersion))=0) then Exit;
-  //добавляем необходимые заголовки
-  AddGoogleHeaders;
-  if FExtendedHeaders.Count>0 then
-    for str in FExtendedHeaders do
-      Headers.Add(str);
-  Result:=HTTPMethod(FMethod,FURL);
-end;
-
-procedure THTTPSender.SetApiVersion(const Value: string);
-begin
-  FApiVersion := Value;
-end;
-
-procedure THTTPSender.SetAuthKey(const Value: string);
-begin
-  FAuthKey := Value;
-end;
-
-procedure THTTPSender.SetExtendedHeaders(const Value: TStringList);
-begin
-  FExtendedHeaders := Value;
-end;
-
-procedure THTTPSender.SetMethod(const Value: string);
-begin
-  FMethod := Value;
-end;
-
-procedure THTTPSender.SetURL(const Value: string);
-begin
-  FURL := Value;
-end;
-
-
 
 end.

@@ -80,6 +80,7 @@
 			<None Include="ModelSupport_contacts\GDataCommon\default.txvpck"/>
 			<None Include="ModelSupport_contacts\main\default.txvpck"/>
 			<None Include="ModelSupport_contacts\GData\default.txvpck"/>
+			<None Include="ModelSupport_contacts\GDataCommon\default.txaPackage"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
@@ -134,7 +135,7 @@
 						<VersionInfoKeys Name="Comments"/>
 					</VersionInfoKeys>
 				</Delphi.Personality>
-				<ModelSupport>False</ModelSupport>
+				<ModelSupport>True</ModelSupport>
 			</BorlandProject>
 			<ProjectFileVersion>12</ProjectFileVersion>
 		</ProjectExtensions>

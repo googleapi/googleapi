@@ -181,7 +181,7 @@ end;
 procedure TForm3.EndParse(const What: TParseElement; Element: TObject);
 begin
   case What of
-    T_Group: fLog.Memo1.Lines.Add('Получена группа '+ (Element as TContactGroup).Title.Value);
+    T_Group: fLog.Memo1.Lines.Add('Получена группа '+ (Element as TContactGroup).Title);
     T_Contact:fLog.Memo1.Lines.Add('Получен контакт '+ (Element as TContact).ContactName);
   end;
 end;
@@ -286,8 +286,7 @@ begin
 end;
 
 procedure TForm3.RetriveMyContacts;
-var i:integer;
-     iCounterPerSec: TLargeInteger;
+var  iCounterPerSec: TLargeInteger;
      T1, T2: TLargeInteger; //значение счётчика ДО и ПОСЛЕ операции
 begin
   if Loginer.Login()=lrOk then
@@ -311,11 +310,10 @@ begin
       ListBox1.Items.Clear;
       ListBox1.Items.Assign(Contact.ContactsNames);
 
-      ComboBox1.Items.Clear;
-      ComboBox1.Items.Add('Все');
-      for i:=0 to Contact.Groups.Count - 1 do
-        ComboBox1.Items.Add(Contact.Groups[i].Title.Value);
+      ComboBox1.Items.Assign(Contact.GroupsNames);
+      ComboBox1.Items.Insert(0,'Все');
       ComboBox1.ItemIndex:=0;
+
     end;
 end;
 
