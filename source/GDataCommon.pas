@@ -10,9 +10,27 @@ uses
 
 type
  TXMLNode_ = class helper for TXMLNode
+ private
+   function GetNameUnicode: string;
+   procedure SetNodeUnicode(const aName: string);
+   function GetAttributeUnicodeValue(index:integer): string;
+   procedure SetAttributeUnicodeValue(index:integer; const aValue:string);
+   function GetAttributeUnicodeName(index:integer):string;
+   procedure SetAttributeUnicodeName(index:integer; aValue:string);
+   function GetAttributeByUnicodeName(const aName: string):string;
+   procedure SetAttributeByUnicodeName(const aName,aValue: string);
  public
+   function  NodeNew(const AName: String): TXmlNode;overload;
+   function  FindNode(const NodeName: String): TXmlNode;overload;
+   function  ReadAttributeString(const AName: String; const ADefault: String = ''): String; overload;
+   procedure AttributeAdd(const AName, AValue: String); overload;
+   procedure WriteAttributeString(const AName: String; const AValue: String; const ADefault: String = ''); overload;
    procedure NodesByName(const AName: string; AList: TList);overload;
-
+   property  NameUnicode: string read GetNameUnicode write SetNodeUnicode;
+   property  AttributeUnicodeValue[Index: integer]: String read GetAttributeUnicodeValue write SetAttributeUnicodeValue;
+   property  AttributeUnicodeName[Index: integer]: String read GetAttributeUnicodeName write SetAttributeUnicodeName;
+   property AttributeByUnicodeName[const AName: String]: String read GetAttributeByUnicodeName
+            write SetAttributeByUnicodeName;
 end;
 
 
@@ -716,7 +734,7 @@ end;
 function GetGDNodeType(cName: string): TgdEnum;
 begin
   Result := TgdEnum(GetEnumValue(TypeInfo(TgdEnum), ReplaceStr
-        (string(cName), ':', '_')));
+        (cName, ':', '_')));
 end;
 
 { TgdWhere }
@@ -729,11 +747,11 @@ begin
     Exit;
   Result := Root.NodeNew(GetGDNodeName(gd_where));
   if Length(FLabel) > 0 then
-    Result.WriteAttributeString(UTF8string(sNodeLabelAttr), UTF8string(FLabel));
+    Result.WriteAttributeString(sNodeLabelAttr, FLabel);
   if Length(Frel) > 0 then
-    Result.WriteAttributeString(UTF8string(sNodeRelAttr), UTF8string(Frel));
+    Result.WriteAttributeString(sNodeRelAttr, Frel);
   if Length(FvalueString) > 0 then
-    Result.WriteAttributeString('valueString', UTF8string(FvalueString));
+    Result.WriteAttributeString('valueString', FvalueString);
   if FEntryLink <> nil then
     if (FEntryLink.FAtomEntry <> nil) or (Length(FEntryLink.Fhref) > 0) then
       FEntryLink.AddToXML(Result);
@@ -764,13 +782,13 @@ end;
 
 procedure TgdWhere.ParseXML(Node: TXMLNode);
 begin
-  if GetGDNodeType(Node.Name) <> gd_where then
+  if GetGDNodeType(Node.NameUnicode) <> gd_where then
     raise Exception.Create(Format(sc_ErrCompNodes, [GetGDNodeName(gd_where)]));
   try
-    FLabel := string(Node.ReadAttributeString(sNodeLabelAttr));
+    FLabel := Node.ReadAttributeString(sNodeLabelAttr);
     if Length(FLabel) = 0 then
-      FLabel := string(Node.ReadAttributeString(sNodeRelAttr));
-    FvalueString := string(Node.ReadAttributeString('valueString'));
+      FLabel := Node.ReadAttributeString(sNodeRelAttr);
+    FvalueString := Node.ReadAttributeString('valueString');
     if Node.NodeCount > 0 then // есть дочерний узел с EntryLink
     begin
       FEntryLink.ParseXML(Node.FindNode(gdNodeAlias + sEntryNodeName));
@@ -789,9 +807,9 @@ begin
     Exit;
   Result := Root.NodeNew(GetGDNodeName(gd_entryLink));
   if Length(Trim(Fhref)) > 0 then
-    Result.WriteAttributeString(sNodeHrefAttr, UTF8string(Fhref));
+    Result.WriteAttributeString(sNodeHrefAttr, Fhref);
   if Length(Trim(Frel)) > 0 then
-    Result.WriteAttributeString(sNodeRelAttr, UTF8string(Frel));
+    Result.WriteAttributeString(sNodeRelAttr, Frel);
   Result.WriteAttributeBool('readOnly', FReadOnly);
   if FAtomEntry <> nil then
     Result.NodeAdd(FAtomEntry);
@@ -819,12 +837,12 @@ end;
 
 procedure TgdEntryLink.ParseXML(Node: TXMLNode);
 begin
-  if GetGDNodeType(Node.Name) <> gd_entryLink then
+  if GetGDNodeType(Node.NameUnicode) <> gd_entryLink then
     raise Exception.Create
       (Format(sc_ErrCompNodes, [GetGDNodeName(gd_entryLink)]));
   try
-    Fhref := string(Node.ReadAttributeString(sNodeHrefAttr));
-    Frel := string(Node.ReadAttributeString(sNodeRelAttr));
+    Fhref := Node.ReadAttributeString(sNodeHrefAttr);
+    Frel := Node.ReadAttributeString(sNodeRelAttr);
     FReadOnly := Node.ReadAttributeBool('readOnly');
     if Node.NodeCount > 0 then // есть дочерний узел с EntryLink
       FAtomEntry := Node.FindNode(sEntryNodeName);
@@ -841,8 +859,7 @@ begin
   if (Root = nil) or IsEmpty then
     Exit;
   Result := Root.NodeNew(GetGDNodeName(gd_eventStatus));
-  Result.WriteAttributeString(sNodeValueAttr, sSchemaHref + UTF8string
-      (RelToStr(Frel)));
+  Result.WriteAttributeString(sNodeValueAttr, sSchemaHref + RelToStr(Frel));
 end;
 
 constructor TgdEventStatus.Create(const ByNode: TXMLNode);
@@ -859,11 +876,11 @@ begin
   Frel := ev_None;
   if Node = nil then
     Exit;
-  if GetGDNodeType(Node.Name) <> gd_eventStatus then
+  if GetGDNodeType(Node.NameUnicode) <> gd_eventStatus then
     raise Exception.Create
       (Format(sc_ErrCompNodes, [GetGDNodeName(gd_eventStatus)]));
   try
-    Frel := StrToRel(string(Node.ReadAttributeString(sNodeValueAttr)));
+    Frel := StrToRel(Node.ReadAttributeString(sNodeValueAttr));
   except
     raise Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
@@ -879,18 +896,16 @@ begin
   Result := Root.NodeNew(GetGDNodeName(gd_when));
   case DateFormat of
     tdDate:
-      Result.WriteAttributeString('startTime', UTF8string
-          (FormatDateTime('yyyy-mm-dd', FstartTime)));
+      Result.WriteAttributeString('startTime', FormatDateTime('yyyy-mm-dd', FstartTime));
     tdServerDate:
-      Result.WriteAttributeString('startTime', UTF8string
-          (DateTimeToServerDate(FstartTime)));
+      Result.WriteAttributeString('startTime', DateTimeToServerDate(FstartTime));
   end;
 
   if FendTime > 0 then
     Result.WriteAttributeString
-      ('endTime', UTF8string(DateTimeToServerDate(FendTime)));
+      ('endTime', DateTimeToServerDate(FendTime));
   if Length(Trim(FvalueString)) > 0 then
-    Result.WriteAttributeString('valueString', UTF8string(FvalueString));
+    Result.WriteAttributeString('valueString', FvalueString);
 end;
 
 procedure TgdWhen.Clear;
@@ -918,7 +933,7 @@ procedure TgdWhen.ParseXML(Node: TXMLNode);
 begin
   if Node = nil then
     Exit;
-  if GetGDNodeType(Node.Name) <> gd_when then
+  if GetGDNodeType(Node.NameUnicode) <> gd_when then
     raise Exception.Create(Format(sc_ErrCompNodes, [GetGDNodeName(gd_when)]));
   try
     FendTime := 0;
@@ -926,11 +941,11 @@ begin
     FvalueString := '';
     if Node.HasAttribute('endTime') then
       FendTime := ServerDateToDateTime
-        (string(Node.ReadAttributeString('endTime')));
+        (Node.ReadAttributeString('endTime'));
     FstartTime := ServerDateToDateTime
-      (string(Node.ReadAttributeString('startTime')));
+      (Node.ReadAttributeString('startTime'));
     if Node.HasAttribute('valueString') then
-      FvalueString := string(Node.ReadAttributeString('valueString'));
+      FvalueString := Node.ReadAttributeString('valueString');
   except
     raise Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
@@ -944,8 +959,7 @@ begin
   if (Root = nil) or IsEmpty then
     Exit;
   Result := Root.NodeNew(GetGDNodeName(gd_attendeeStatus));
-  Result.WriteAttributeString(sNodeValueAttr, sSchemaHref + UTF8string
-      (RelToStr(Frel)));
+  Result.WriteAttributeString(sNodeValueAttr, sSchemaHref + RelToStr(Frel));
 end;
 
 constructor TgdAttendeeStatus.Create(const ByNode: TXMLNode);
@@ -962,11 +976,11 @@ begin
   Frel := ev_None;
   if (Node = nil) or IsEmpty then
     Exit;
-  if GetGDNodeType(Node.Name) <> gd_attendeeStatus then
+  if GetGDNodeType(Node.NameUnicode) <> gd_attendeeStatus then
     raise Exception.Create(Format(sc_ErrCompNodes, [GetGDNodeName
           (gd_attendeeStatus)]));
   try
-    Frel := StrToRel(string(Node.ReadAttributeString(sNodeValueAttr)));
+    Frel := StrToRel(Node.ReadAttributeString(sNodeValueAttr));
     // TAttendeeStatus(GetEnumValue(TypeInfo(TAttendeeStatus),tmp));
   except
     raise Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
@@ -981,8 +995,7 @@ begin
   if (Root = nil) or IsEmpty then
     Exit;
   Result := Root.NodeNew(GetGDNodeName(gd_attendeeType));
-  Result.WriteAttributeString(sNodeValueAttr, sSchemaHref + UTF8string
-      (RelToStr(Frel)));
+  Result.WriteAttributeString(sNodeValueAttr, sSchemaHref + RelToStr(Frel));
 end;
 
 constructor TgdAttendeeType.Create(const ByNode: TXMLNode);
@@ -999,11 +1012,11 @@ begin
   Frel := ev_None;
   if Node = nil then
     Exit;
-  if GetGDNodeType(Node.Name) <> gd_attendeeType then
+  if GetGDNodeType(Node.NameUnicode) <> gd_attendeeType then
     raise Exception.Create(Format(sc_ErrCompNodes, [GetGDNodeName
           (gd_attendeeType)]));
   try
-    Frel := StrToRel(string(Node.ReadAttributeString(sNodeValueAttr)));
+    Frel := StrToRel(Node.ReadAttributeString(sNodeValueAttr));
     // TAttendeeType(GetEnumValue(TypeInfo(TAttendeeType),tmp));
   except
     raise Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
@@ -1019,12 +1032,11 @@ begin
     Exit;
   Result := Root.NodeNew(GetGDNodeName(gd_who));
   if Length(Trim(FEmail)) > 0 then
-    Result.WriteAttributeString('email', UTF8string(FEmail));
+    Result.WriteAttributeString('email', FEmail);
   if Length(Trim(Frel)) > 0 then
-    Result.WriteAttributeString(sNodeRelAttr, sSchemaHref + UTF8string
-        (RelValues[ord(FRelValue)]));
+    Result.WriteAttributeString(sNodeRelAttr, sSchemaHref + RelValues[ord(FRelValue)]);
   if Length(Trim(FvalueString)) > 0 then
-    Result.WriteAttributeString('valueString', UTF8string(FvalueString));
+    Result.WriteAttributeString('valueString', FvalueString);
   FAttendeeStatus.AddToXML(Result);
   FAttendeeType.AddToXML(Result);
   FEntryLink.AddToXML(Result);
@@ -1066,21 +1078,21 @@ var
 begin
   if Node = nil then
     Exit;
-  if GetGDNodeType(Node.Name) <> gd_who then
+  if GetGDNodeType(Node.NameUnicode) <> gd_who then
     raise Exception.Create(Format(sc_ErrCompNodes, [GetGDNodeName(gd_who)]));
   try
-    FEmail := string(Node.ReadAttributeString('email'));
+    FEmail := Node.ReadAttributeString('email');
     if Length(Node.ReadAttributeString(sNodeRelAttr)) > 0 then
     begin
-      s := string(Node.ReadAttributeString(sNodeRelAttr));
+      s := Node.ReadAttributeString(sNodeRelAttr);
       s := StringReplace(s, sSchemaHref, '', [rfIgnoreCase]);
       FRelValue := TWhoRel(AnsiIndexStr(s, RelValues));
     end;
-    FvalueString := string(Node.ReadAttributeString('valueString'));
+    FvalueString := Node.ReadAttributeString('valueString');
     if Node.NodeCount > 0 then
     begin
       for i := 0 to Node.NodeCount - 1 do
-        case GetGDNodeType(Node.Nodes[i].Name) of
+        case GetGDNodeType(Node.Nodes[i].NameUnicode) of
           gd_attendeeStatus:
             FAttendeeStatus := TgdAttendeeStatus.Create(Node.Nodes[i]);
           gd_attendeeType:
@@ -1128,11 +1140,11 @@ procedure TgdRecurrence.ParseXML(Node: TXMLNode);
 begin
   if Node = nil then
     Exit;
-  if GetGDNodeType(Node.Name) <> gd_recurrence then
+  if GetGDNodeType(Node.NameUnicode) <> gd_recurrence then
     raise Exception.Create
       (Format(sc_ErrCompNodes, [GetGDNodeName(gd_recurrence)]));
   try
-    FText.Text := string(Node.ValueAsString);
+    FText.Text := Node.ValueAsUnicodeString;
   except
     raise Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
@@ -1146,7 +1158,7 @@ begin
   if Root = nil then
     Exit;
   Result := Root.NodeNew(GetGDNodeName(gd_reminder));
-  Result.WriteAttributeString('method', UTF8string(cMethods[ord(FMethod)]));
+  Result.WriteAttributeString('method', cMethods[ord(FMethod)]);
   case FPeriod of
     tpDays:
       Result.WriteAttributeInteger('days', FPeriodValue);
@@ -1156,8 +1168,7 @@ begin
       Result.WriteAttributeInteger('minutes', FPeriodValue);
   end;
   if FabsoluteTime > 0 then
-    Result.WriteAttributeString('absoluteTime', UTF8string
-        (DateTimeToServerDate(FabsoluteTime)))
+    Result.WriteAttributeString('absoluteTime', DateTimeToServerDate(FabsoluteTime))
 end;
 
 constructor TgdReminder.Create(const ByNode: TXMLNode);
@@ -1173,15 +1184,15 @@ procedure TgdReminder.ParseXML(Node: TXMLNode);
 begin
   if Node = nil then
     Exit;
-  if GetGDNodeType(Node.Name) <> gd_reminder then
+  if GetGDNodeType(Node.NameUnicode) <> gd_reminder then
     raise Exception.Create(Format(sc_ErrCompNodes, [GetGDNodeName(gd_reminder)])
       );
   try
     if Length(Node.ReadAttributeString('absoluteTime')) > 0 then
       FabsoluteTime := ServerDateToDateTime
-        (string(Node.ReadAttributeString('absoluteTime')));
+        (Node.ReadAttributeString('absoluteTime'));
     if Length(Node.ReadAttributeString('method')) > 0 then
-      FMethod := TMethod(AnsiIndexStr(string(Node.ReadAttributeString('method'))
+      FMethod := TMethod(AnsiIndexStr(Node.ReadAttributeString('method')
             , cMethods));
     if Node.AttributeIndexByname('days') >= 0 then
       FPeriod := tpDays;
@@ -1210,8 +1221,7 @@ begin
   Result := nil;
   if (Root = nil) or IsEmpty then
     Exit;
-  Result.WriteAttributeString(sNodeValueAttr, sSchemaHref + UTF8string
-      (RelToStr(Frel)));
+  Result.WriteAttributeString(sNodeValueAttr, sSchemaHref + RelToStr(Frel));
 end;
 
 constructor TgdTransparency.Create(const ByNode: TXMLNode);
@@ -1228,11 +1238,11 @@ begin
   Frel := ev_None;
   if Node = nil then
     Exit;
-  if GetGDNodeType(Node.Name) <> gd_transparency then
+  if GetGDNodeType(Node.NameUnicode) <> gd_transparency then
     raise Exception.Create(Format(sc_ErrCompNodes, [GetGDNodeName
           (gd_transparency)]));
   try
-    Frel := StrToRel(string(Node.ReadAttributeString(sNodeValueAttr)));
+    Frel := StrToRel(Node.ReadAttributeString(sNodeValueAttr));
   except
     raise Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
@@ -1245,8 +1255,7 @@ begin
   Result := nil;
   if (Root = nil) or IsEmpty then
     Exit;
-  Result.WriteAttributeString(sNodeValueAttr, sSchemaHref + UTF8string
-      (RelToStr(Frel)));
+  Result.WriteAttributeString(sNodeValueAttr, sSchemaHref + RelToStr(Frel));
 end;
 
 constructor TgdVisibility.Create(const ByNode: TXMLNode);
@@ -1263,11 +1272,11 @@ begin
   Frel := ev_None;
   if Node = nil then
     Exit;
-  if GetGDNodeType(Node.Name) <> gd_visibility then
+  if GetGDNodeType(Node.NameUnicode) <> gd_visibility then
     raise Exception.Create
       (Format(sc_ErrCompNodes, [GetGDNodeName(gd_visibility)]));
   try
-    Frel := StrToRel(string(Node.ReadAttributeString(sNodeValueAttr)));
+    Frel := StrToRel(Node.ReadAttributeString(sNodeValueAttr));
   except
     raise Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
@@ -1283,9 +1292,9 @@ begin
 
   Result := Root.NodeNew(GetGDNodeName(gd_organization));
   if Trim(Frel) <> '' then
-    Result.WriteAttributeString(sNodeRelAttr, UTF8string(Frel));
+    Result.WriteAttributeString(sNodeRelAttr, Frel);
   if Trim(FLabel) <> '' then
-    Result.WriteAttributeString(sNodeLabelAttr, UTF8string(FLabel));
+    Result.WriteAttributeString(sNodeLabelAttr, FLabel);
   if FPrimary then
     Result.WriteAttributeBool('primary', FPrimary);
   if Trim(ForgName.Value) <> '' then
@@ -1323,22 +1332,22 @@ var
 begin
   if (Node = nil) or IsEmpty then
     Exit;
-  if GetGDNodeType(Node.Name) <> gd_organization then
+  if GetGDNodeType(Node.NameUnicode) <> gd_organization then
     raise Exception.Create(Format(sc_ErrCompNodes, [GetGDNodeName
           (gd_organization)]));
   try
-    Frel := string(Node.ReadAttributeString(sNodeRelAttr));
+    Frel := Node.ReadAttributeString(sNodeRelAttr);
     if Node.HasAttribute('primary') then
       FPrimary := Node.ReadAttributeBool('primary');
     if Node.HasAttribute(sNodeLabelAttr) then
-      FLabel := string(Node.ReadAttributeString(sNodeLabelAttr));
+      FLabel := Node.ReadAttributeString(sNodeLabelAttr);
     for i := 0 to Node.NodeCount - 1 do
     begin
-      if LowerCase(string(Node.Nodes[i].Name)) = LowerCase
-        (string(GetGDNodeName(gd_orgName))) then
+      if LowerCase(Node.Nodes[i].NameUnicode) = LowerCase
+        (GetGDNodeName(gd_orgName)) then
         ForgName := TgdOrgName.Create(Node.Nodes[i])
-      else if LowerCase(string(Node.Nodes[i].Name)) = LowerCase
-        (string(GetGDNodeName(gd_orgTitle))) then
+      else if LowerCase(Node.Nodes[i].NameUnicode) = LowerCase
+        (GetGDNodeName(gd_orgTitle)) then
         ForgTitle := TgdOrgTitle.Create(Node.Nodes[i]);
     end;
   except
@@ -1360,15 +1369,15 @@ begin
   begin
     tmp := GetEnumName(TypeInfo(TTypeElement), ord(Frel));
     Delete(tmp, 1, 3);
-    Result.WriteAttributeString(sNodeRelAttr, sSchemaHref + UTF8string(tmp));
+    Result.WriteAttributeString(sNodeRelAttr, sSchemaHref + tmp);
   end;
   if Trim(FLabel) <> '' then
-    Result.WriteAttributeString(sNodeLabelAttr, UTF8string(FLabel));
+    Result.WriteAttributeString(sNodeLabelAttr, FLabel);
   if Trim(FLabel) <> '' then
-    Result.WriteAttributeString('displayName', UTF8string(FDisplayName));
+    Result.WriteAttributeString('displayName', FDisplayName);
   if FPrimary then
     Result.WriteAttributeBool('primary', FPrimary);
-  Result.WriteAttributeString('address', UTF8string(FAddress));
+  Result.WriteAttributeString('address', FAddress);
 end;
 
 procedure TgdEmail.Clear;
@@ -1399,19 +1408,19 @@ begin
   Frel := em_None;
   if Node = nil then
     Exit;
-  if GetGDNodeType(Node.Name) <> gd_email then
+  if GetGDNodeType(Node.NameUnicode) <> gd_email then
     raise Exception.Create(Format(sc_ErrCompNodes, [GetGDNodeName(gd_email)]));
   try
-    tmp := 'em_' + ReplaceStr(string(Node.ReadAttributeString(sNodeRelAttr)),
+    tmp := 'em_' + ReplaceStr(Node.ReadAttributeString(sNodeRelAttr),
       sSchemaHref, '');
     Frel := TTypeElement(GetEnumValue(TypeInfo(TTypeElement), tmp));
     if Node.HasAttribute('primary') then
       FPrimary := Node.ReadAttributeBool('primary');
     if Node.HasAttribute(sNodeLabelAttr) then
-      FLabel := string(Node.ReadAttributeString(sNodeLabelAttr));
+      FLabel := Node.ReadAttributeString(sNodeLabelAttr);
     if Node.HasAttribute('displayName') then
-      FDisplayName := string(Node.ReadAttributeString('displayName'));
-    FAddress := string(Node.ReadAttributeString('address'));
+      FDisplayName := Node.ReadAttributeString('displayName');
+    FAddress := Node.ReadAttributeString('address');
   except
     raise Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
@@ -1468,13 +1477,13 @@ end;
 constructor TgdName.Create(ByNode: TXMLNode);
 begin
   inherited Create;
-  FGivenName := TgdGivenName.Create(string(GetGDNodeName(gd_givenName)));
+  FGivenName := TgdGivenName.Create(GetGDNodeName(gd_givenName));
   FAdditionalName := TgdAdditionalName.Create
     (string(GetGDNodeName(gd_additionalName)));
-  FFamilyName := TgdFamilyName.Create(string(GetGDNodeName(gd_familyName)));
-  FNamePrefix := TgdNamePrefix.Create(string(GetGDNodeName(gd_namePrefix)));
-  FNameSuffix := TgdNameSuffix.Create(string(GetGDNodeName(gd_nameSuffix)));
-  FFullName := TgdFullName.Create(string(GetGDNodeName(gd_fullName)));
+  FFamilyName := TgdFamilyName.Create(GetGDNodeName(gd_familyName));
+  FNamePrefix := TgdNamePrefix.Create(GetGDNodeName(gd_namePrefix));
+  FNameSuffix := TgdNameSuffix.Create(GetGDNodeName(gd_nameSuffix));
+  FFullName := TgdFullName.Create(GetGDNodeName(gd_fullName));
   if ByNode <> nil then
     ParseXML(ByNode);
 end;
@@ -1498,12 +1507,12 @@ var
 begin
   if Node = nil then
     Exit;
-  if GetGDNodeType(Node.Name) <> gd_name then
+  if GetGDNodeType(Node.NameUnicode) <> gd_name then
     raise Exception.Create(Format(sc_ErrCompNodes, [GetGDNodeName(gd_name)]));
   try
     for i := 0 to Node.NodeCount - 1 do
     begin
-      case GetGDNodeType(Node.Nodes[i].Name) of
+      case GetGDNodeType(Node.Nodes[i].NameUnicode) of
         gd_givenName:
           FGivenName.ParseXML(Node.Nodes[i]);
         gd_additionalName:
@@ -1528,7 +1537,7 @@ begin
   if aAdditionalName = nil then
     Exit;
   if Length(FAdditionalName.Name) = 0 then
-    FAdditionalName.Name := string(GetGDNodeName(gd_additionalName));
+    FAdditionalName.Name := GetGDNodeName(gd_additionalName);
   FAdditionalName.Value := aAdditionalName.Value;
 end;
 
@@ -1537,7 +1546,7 @@ begin
   if aFamilyName = nil then
     Exit;
   if Length(FFamilyName.Name) = 0 then
-    FFamilyName.Name := string(GetGDNodeName(gd_familyName));
+    FFamilyName.Name := GetGDNodeName(gd_familyName);
   FFamilyName.Value := aFamilyName.Value;
 end;
 
@@ -1546,7 +1555,7 @@ begin
   if aFullName = nil then
     Exit;
   if Length(FFullName.Name) = 0 then
-    FFullName.Name := string(GetGDNodeName(gd_fullName));
+    FFullName.Name := GetGDNodeName(gd_fullName);
   FFullName.Value := aFullName.Value;
 end;
 
@@ -1555,7 +1564,7 @@ begin
   if aGivenName = nil then
     Exit;
   if Length(FGivenName.Name) = 0 then
-    FGivenName.Name := string(GetGDNodeName(gd_givenName));
+    FGivenName.Name := GetGDNodeName(gd_givenName);
   FFullName.Value := aGivenName.Value;
 end;
 
@@ -1564,7 +1573,7 @@ begin
   if aNamePrefix = nil then
     Exit;
   if Length(FNamePrefix.Name) = 0 then
-    FNamePrefix.Name := string(GetGDNodeName(gd_namePrefix));
+    FNamePrefix.Name := GetGDNodeName(gd_namePrefix);
   FNamePrefix.Value := aNamePrefix.Value;
 end;
 
@@ -1573,7 +1582,7 @@ begin
   if aNameSuffix = nil then
     Exit;
   if Length(FNameSuffix.Name) = 0 then
-    FNameSuffix.Name := string(GetGDNodeName(gd_nameSuffix));
+    FNameSuffix.Name := GetGDNodeName(gd_nameSuffix);
   FNameSuffix.Value := aNameSuffix.Value;
 end;
 
@@ -1592,14 +1601,14 @@ begin
   begin
     tmp := GetEnumName(TypeInfo(TPhonesRel), ord(Frel));
     Delete(tmp, 1, 3);
-    Result.WriteAttributeString(sNodeRelAttr, sSchemaHref + UTF8string(tmp));
+    Result.WriteAttributeString(sNodeRelAttr, sSchemaHref + tmp);
   end;
 
-  Result.ValueAsString := FValue;
+  Result.ValueAsUnicodeString := FValue;
   if Trim(FLabel) <> '' then
-    Result.WriteAttributeString(sNodeLabelAttr, UTF8string(FLabel));
+    Result.WriteAttributeString(sNodeLabelAttr, FLabel);
   if Trim(FUri) <> '' then
-    Result.WriteAttributeString('uri', UTF8string(FUri));
+    Result.WriteAttributeString('uri', FUri);
   if FPrimary then
     Result.WriteAttributeBool('primary', FPrimary);
 end;
@@ -1632,21 +1641,21 @@ begin
   Frel := tp_None;
   if Node = nil then
     Exit;
-  if GetGDNodeType(Node.Name) <> gd_phoneNumber then
+  if GetGDNodeType(Node.NameUnicode) <> gd_phoneNumber then
     raise Exception.Create
       (Format(sc_ErrCompNodes, [GetGDNodeName(gd_phoneNumber)]));
   try
-    tmp := 'tp_' + ReplaceStr(string(Node.ReadAttributeString(sNodeRelAttr)),
+    tmp := 'tp_' + ReplaceStr(Node.ReadAttributeString(sNodeRelAttr),
       sSchemaHref, '');
     if Length(tmp) > 3 then
       Frel := TPhonesRel(GetEnumValue(TypeInfo(TPhonesRel), tmp));
     if Node.HasAttribute('primary') then
       FPrimary := Node.ReadAttributeBool('primary');
     if Node.HasAttribute(sNodeLabelAttr) then
-      FLabel := string(Node.ReadAttributeString(sNodeLabelAttr));
+      FLabel := Node.ReadAttributeString(sNodeLabelAttr);
     if Node.HasAttribute('uri') then
-      FUri := string(Node.ReadAttributeString('uri'));
-    FValue := string(Node.ValueAsString);
+      FUri := Node.ReadAttributeString('uri');
+    FValue := Node.ValueAsUnicodeString;
   except
     raise Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
@@ -1709,8 +1718,8 @@ begin
     Exit;
   Result := Root.NodeNew(GetGDNodeName(gd_country));
   if Trim(FCode) <> '' then
-    Result.WriteAttributeString('code', UTF8string(FCode));
-  Result.ValueAsString := FValue;
+    Result.WriteAttributeString('code', FCode);
+  Result.ValueAsUnicodeString := FValue;
 end;
 
 procedure TgdCountry.Clear;
@@ -1736,12 +1745,12 @@ procedure TgdCountry.ParseXML(Node: TXMLNode);
 begin
   if Node = nil then
     Exit;
-  if GetGDNodeType(Node.Name) <> gd_country then
+  if GetGDNodeType(Node.NameUnicode) <> gd_country then
     raise Exception.Create(Format(sc_ErrCompNodes, [GetGDNodeName(gd_country)])
       );
   try
-    FCode := string(Node.ReadAttributeString(sNodeRelAttr));
-    FValue := string(Node.ValueAsString);
+    FCode := Node.ReadAttributeString(sNodeRelAttr);
+    FValue := Node.ValueAsUnicodeString;
   except
     raise Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
@@ -1756,13 +1765,13 @@ begin
     Exit;
   Result := Root.NodeNew(GetGDNodeName(gd_structuredPostalAddress));
   if Trim(Frel) <> '' then
-    Result.WriteAttributeString(sNodeRelAttr, UTF8string(Frel));
+    Result.WriteAttributeString(sNodeRelAttr, Frel);
   if Trim(FMailClass) <> '' then
-    Result.WriteAttributeString('mailClass', UTF8string(FMailClass));
+    Result.WriteAttributeString('mailClass', FMailClass);
   if Trim(FLabel) <> '' then
-    Result.WriteAttributeString(sNodeLabelAttr, UTF8string(FLabel));
+    Result.WriteAttributeString(sNodeLabelAttr, FLabel);
   if Trim(FUsage) <> '' then
-    Result.WriteAttributeString('Usage', UTF8string(FUsage));
+    Result.WriteAttributeString('Usage', FUsage);
   if FPrimary then
     Result.WriteAttributeBool('primary', FPrimary);
   if FAgent <> nil then
@@ -1844,22 +1853,22 @@ var
 begin
   if Node = nil then
     Exit;
-  if GetGDNodeType(Node.Name) <> gd_structuredPostalAddress then
+  if GetGDNodeType(Node.NameUnicode) <> gd_structuredPostalAddress then
     raise Exception.Create(Format(sc_ErrCompNodes, [GetGDNodeName
           (gd_structuredPostalAddress)]));
   try
-    Frel := string(Node.ReadAttributeString(sNodeRelAttr));
-    FMailClass := string(Node.ReadAttributeString('mailClass'));
-    FLabel := string(Node.ReadAttributeString(sNodeLabelAttr));
+    Frel := Node.ReadAttributeString(sNodeRelAttr);
+    FMailClass := Node.ReadAttributeString('mailClass');
+    FLabel := Node.ReadAttributeString(sNodeLabelAttr);
     if Node.HasAttribute('primaty') then
       FPrimary := Node.ReadAttributeBool('primary');
-    FUsage := String(Node.ReadAttributeString('Usage'));
+    FUsage := Node.ReadAttributeString('Usage');
   except
     raise Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
   end;
   for i := 0 to Node.NodeCount - 1 do
   begin
-    case GetGDNodeType(Node.Nodes[i].Name) of
+    case GetGDNodeType(Node.Nodes[i].NameUnicode) of
       gd_agent:
         FAgent.ParseXML(Node.Nodes[i]);
       gd_housename:
@@ -1898,13 +1907,13 @@ begin
   Result := Root.NodeNew(GetGDNodeName(gd_im));
   tmp := GetEnumName(TypeInfo(TIMtype), ord(FIMType));
   Delete(tmp, 1, 3);
-  Result.WriteAttributeString(sNodeRelAttr, sSchemaHref + UTF8string(tmp));
-  Result.WriteAttributeString('address', UTF8string(FAddress));
-  Result.WriteAttributeString(sNodeLabelAttr, UTF8string(FLabel));
+  Result.WriteAttributeString(sNodeRelAttr, sSchemaHref + tmp);
+  Result.WriteAttributeString('address', FAddress);
+  Result.WriteAttributeString(sNodeLabelAttr, FLabel);
 
   tmp := GetEnumName(TypeInfo(TIMProtocol), ord(FIMProtocol));
   Delete(tmp, 1, 3);
-  Result.WriteAttributeString('protocol', sSchemaHref + UTF8string(tmp));
+  Result.WriteAttributeString('protocol', sSchemaHref + tmp);
 
   if FPrimary then
     Result.WriteAttributeBool('primary', FPrimary);
@@ -1959,17 +1968,17 @@ begin
   FIMType := im_None;
   if Node = nil then
     Exit;
-  if GetGDNodeType(Node.Name) <> gd_im then
+  if GetGDNodeType(Node.NameUnicode) <> gd_im then
     raise Exception.Create(Format(sc_ErrCompNodes, [GetGDNodeName(gd_im)]));
   try
-    tmp := 'im_' + ReplaceStr(string(Node.ReadAttributeString(sNodeRelAttr)),
+    tmp := 'im_' + ReplaceStr(Node.ReadAttributeString(sNodeRelAttr),
       sSchemaHref, '');
     FIMType := TIMtype(GetEnumValue(TypeInfo(TIMtype), tmp));
 
-    FLabel := string(Node.ReadAttributeString(sNodeLabelAttr));
-    FAddress := string(Node.ReadAttributeString('address'));
+    FLabel := Node.ReadAttributeString(sNodeLabelAttr);
+    FAddress := Node.ReadAttributeString('address');
 
-    tmp := 'ti_' + ReplaceStr(string(Node.ReadAttributeString('protocol')),
+    tmp := 'ti_' + ReplaceStr(Node.ReadAttributeString('protocol'),
       sSchemaHref, '');
     FIMProtocol := TIMProtocol(GetEnumValue(TypeInfo(TIMProtocol), tmp));
 
@@ -2066,7 +2075,7 @@ begin
   if (Root = nil) or IsEmpty then
     Exit;
   Result := Root.NodeNew(UTF8string(FName));
-  Result.ValueAsString := FValue;
+  Result.ValueAsUnicodeString := FValue;
   for i := 0 to FAtributes.Count - 1 do
     Result.AttributeAdd(UTF8string(FAtributes[i].Name), UTF8string
         (FAtributes[i].Value));
@@ -2108,12 +2117,12 @@ var
   Attr: TAttribute;
 begin
   try
-    FValue := string(Node.ValueAsString);
-    FName := string(Node.Name);
+    FValue := Node.ValueAsUnicodeString;
+    FName := Node.NameUnicode;
     for i := 0 to Node.AttributeCount - 1 do
     begin
-      Attr.Name := string(Node.AttributeName[i]);
-      Attr.Value := string(Node.AttributeValue[i]);
+      Attr.Name := Node.AttributeUnicodeName[i];
+      Attr.Value := Node.AttributeUnicodeValue[i];
       FAtributes.Add(Attr)
     end;
   except
@@ -2138,11 +2147,11 @@ begin
     for i := 0 to Node.NodeCount - 1 do
     begin
       if Node.Nodes[i].Name = 'name' then
-        FAuthor := string(Node.Nodes[i].ValueAsString)
+        FAuthor := Node.Nodes[i].ValueAsUnicodeString
       else if Node.Nodes[i].Name = 'email' then
-        FEmail := string(Node.Nodes[i].ValueAsString)
+        FEmail := Node.Nodes[i].ValueAsUnicodeString
       else if Node.Nodes[i].Name = 'uid' then
-        FUID := string(Node.Nodes[i].ValueAsString);
+        FUID := Node.Nodes[i].ValueAsUnicodeString;
     end;
   except
     Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
@@ -2168,10 +2177,10 @@ begin
   if Node = nil then
     Exit;
   try
-    Frel := string(Node.ReadAttributeString(sNodeRelAttr));
-    Ftype := string(Node.ReadAttributeString('type'));
-    Fhref := string(Node.ReadAttributeString(sNodeHrefAttr));
-    FEtag := string(Node.ReadAttributeString(gdNodeAlias + 'etag'))
+    Frel := Node.ReadAttributeString(sNodeRelAttr);
+    Ftype := Node.ReadAttributeString('type');
+    Fhref := Node.ReadAttributeString(sNodeHrefAttr);
+    FEtag := Node.ReadAttributeString(gdNodeAlias + 'etag')
       except Exception.Create(Format(sc_ErrPrepareNode, ['link']));
   end;
 end;
@@ -2293,6 +2302,41 @@ end;
 
 { TXMLNode_ }
 
+procedure TXMLNode_.AttributeAdd(const AName, AValue: String);
+begin
+  AttributeAdd(UTF8String(AName),UTF8String(AValue));
+end;
+
+function TXMLNode_.FindNode(const NodeName: String): TXmlNode;
+begin
+  Result:=FindNode(UTF8String(NodeName))
+end;
+
+function TXMLNode_.GetAttributeByUnicodeName(const aName: string): string;
+begin
+  Result:=string(AttributeByName[UTF8String(aName)]);
+end;
+
+function TXMLNode_.GetAttributeUnicodeName(index: integer): string;
+begin
+  Result:=string(AttributeName[index])
+end;
+
+function TXMLNode_.GetAttributeUnicodeValue(index:integer): string;
+begin
+  Result:=string(AttributeValue[index])
+end;
+
+function TXMLNode_.GetNameUnicode: string;
+begin
+  Result:=string(Name);
+end;
+
+function TXMLNode_.NodeNew(const AName: String): TXmlNode;
+begin
+  Result:=NodeNew(UTF8String(AName));
+end;
+
 procedure TXMLNode_.NodesByName(const AName: string; AList: TList);
 begin
   if AList = nil then
@@ -2301,5 +2345,36 @@ begin
   NodesByName(UTF8String(AName),AList);
 end;
 
+
+function TXMLNode_.ReadAttributeString(const AName,
+  ADefault: String): String;
+begin
+  Result:=string(ReadAttributeString(UTF8String(AName),UTF8String(ADefault)))
+end;
+
+procedure TXMLNode_.SetAttributeByUnicodeName(const aName, aValue: string);
+begin
+  AttributeByName[UTF8String(aName)]:=UTF8String(aValue);
+end;
+
+procedure TXMLNode_.SetAttributeUnicodeName(index: integer; aValue: string);
+begin
+  AttributeName[index]:=UTF8String(aValue);
+end;
+
+procedure TXMLNode_.SetAttributeUnicodeValue(index:integer;const aValue: string);
+begin
+  AttributeValue[index]:=UTF8String(aValue);
+end;
+
+procedure TXMLNode_.SetNodeUnicode(const aName: string);
+begin
+  Name:=UTF8String(aName);
+end;
+
+procedure TXMLNode_.WriteAttributeString(const AName, AValue, ADefault: String);
+begin
+  WriteAttributeString(UTF8String(AName),UTF8String(AValue),UTF8String(ADefault));
+end;
 
 end.

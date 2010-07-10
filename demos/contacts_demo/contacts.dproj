@@ -68,6 +68,7 @@
 				<Form>fNewContact</Form>
 			</DCCReference>
 			<DCCReference Include="..\..\source\GConsts.pas"/>
+			<DCCReference Include="G:\NativeHelper\NativeHelper.pas"/>
 			<None Include="ModelSupport_contacts\default.txaPackage"/>
 			<None Include="ModelSupport_contacts\default.txvpck"/>
 			<None Include="ModelSupport_contacts\NativeXml\default.txvpck"/>

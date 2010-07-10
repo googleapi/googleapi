@@ -14,7 +14,8 @@ uses
   uQueryForm in 'uQueryForm.pas' {fQuery},
   uUpdate in 'uUpdate.pas' {fUpdateContact},
   NewContact in 'NewContact.pas' {fNewContact},
-  GConsts in '..\..\source\GConsts.pas';
+  GConsts in '..\..\source\GConsts.pas',
+  NativeHelper in 'G:\NativeHelper\NativeHelper.pas';
 
 {$R *.res}
 

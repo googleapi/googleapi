@@ -15,7 +15,7 @@
   Original Author: Nils Haeck M.Sc. (n.haeck@simdesign.nl)
   Original Date: 01 Apr 2003
   Version: see below
-  Copyright (c) 2003-2009 Simdesign BV
+  Copyright (c) 2003-2010 Simdesign BV
 
   It is NOT allowed under ANY circumstances to publish or copy this code
   without accepting the license conditions in accompanying LICENSE.txt
@@ -26,87 +26,11 @@
 
   Please visit http://www.simdesign.nl/xml.html for more information.
 }
-
-{$DEFINE USEGRAPHICS} // uncomment if you do not want to include the Graphics unit.
-
-// Delphi and BCB versions
-
-// Delphi 5
-{$IFDEF VER130}
-  {$DEFINE D5UP}
-{$ENDIF}
-//Delphi 6
-{$IFDEF VER140}
-  {$DEFINE D5UP}
-  {$DEFINE D6UP}
-{$ENDIF}
-//Delphi 7
-{$IFDEF VER150}
-  {$DEFINE D5UP}
-  {$DEFINE D6UP}
-  {$DEFINE D7UP}
-{$ENDIF}
-//Delphi 8
-{$IFDEF VER160}
-  {$DEFINE D5UP}
-  {$DEFINE D6UP}
-  {$DEFINE D7UP}
-  {$DEFINE D8UP}
-{$ENDIF}
-// Delphi 2005
-{$IFDEF VER170}
-  {$DEFINE D5UP}
-  {$DEFINE D6UP}
-  {$DEFINE D7UP}
-  {$DEFINE D8UP}
-  {$DEFINE D9UP}
-{$ENDIF}
-// Delphi 2006
-{$IFDEF VER180}
-  {$DEFINE D5UP}
-  {$DEFINE D6UP}
-  {$DEFINE D7UP}
-  {$DEFINE D8UP}
-  {$DEFINE D9UP}
-  {$DEFINE D10UP}
-{$ENDIF}
-// Delphi 2007 - NET
-{$IFDEF VER190}
-  {$DEFINE D5UP}
-  {$DEFINE D6UP}
-  {$DEFINE D7UP}
-  {$DEFINE D8UP}
-  {$DEFINE D9UP}
-  {$DEFINE D10UP}
-{$ENDIF}
-// Delphi 2009
-{$IFDEF VER200}
-  {$DEFINE D5UP}
-  {$DEFINE D6UP}
-  {$DEFINE D7UP}
-  {$DEFINE D8UP}
-  {$DEFINE D9UP}
-  {$DEFINE D10UP}
-  {$DEFINE D11UP}
-  {$DEFINE D12UP}
-{$ENDIF}
-// Delphi 2010
-{$IFDEF VER210}
-  {$DEFINE D5UP}
-  {$DEFINE D6UP}
-  {$DEFINE D7UP}
-  {$DEFINE D8UP}
-  {$DEFINE D9UP}
-  {$DEFINE D10UP}
-  {$DEFINE D11UP}
-  {$DEFINE D12UP}
-  {$DEFINE D14UP}
-{$ENDIF}
-
-
 unit NativeXml;
 
 interface
+
+{$I NativeXml.inc}
 
 uses
   {$IFDEF D9UP}
@@ -128,7 +52,7 @@ uses
 const
 
   // Current version of the NativeXml unit
-  cNativeXmlVersion = '3.06';
+  cNativeXmlVersion = '3.07';
 
 // cross-platform pointer type
 type
@@ -1911,6 +1835,11 @@ begin
 end;
 
 function IntToUTF8Str(Value: integer): UTF8String;
+begin
+  Result := UTF8String(IntToStr(Value));
+end;
+
+function Int64ToUTF8Str(Value: int64): UTF8String;
 begin
   Result := UTF8String(IntToStr(Value));
 end;
@@ -4607,7 +4536,7 @@ end;
 
 procedure TXmlNode.SetValueAsInt64(const Value: int64);
 begin
-  FValue := IntToUTF8Str(Value);
+  FValue := Int64ToUTF8Str(Value);
 end;
 
 procedure TXmlNode.SetValueAsInteger(const Value: integer);
@@ -5834,7 +5763,8 @@ begin
     for i := 0 to cBomInfoCount - 1 do
       if cBomInfo[i].Encoding = FEncoding then
       begin
-        FWriteBom := cBomInfo[i].HasBOM;
+        // we do not write BOM if UTF8 since UTF8 is default
+        FWriteBom := cBomInfo[i].HasBOM and (FEncoding <>  seUTF8);
         break;
       end;
 
