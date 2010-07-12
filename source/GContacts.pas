@@ -1,4 +1,5 @@
-﻿unit GContacts;
+﻿{ Модуль содержит классы и методы для работы с Google Contacts API.}
+unit GContacts;
 
 interface
 
@@ -7,50 +8,192 @@ uses NativeXML, strUtils, httpsend, Classes, SysUtils,
   IOUtils, uLanguage, blcksock, Windows, GConsts;
 
 type
+  {Элемент парсинга.
+   * <b>T_Group</b> - группа контактов
+   * <b>T_Contact</b> - группа контактов}
   TParseElement = (T_Group, T_Contact);
-  // события компонента
+  {Событие <b>TOnRetriveXML</b> возникает каждый раз, когда компонент или класс
+  обращается на сервер для получения XML-документа.
+  <b>FromURL</b> содержит URL на который отправляется GET-запрос}
   TOnRetriveXML = procedure(const FromURL: string) of object;
+  {Событие <b>TOnBeginParse</b> возникает каждый раз, когда компонент или класс
+  готов начать парсинг элемента в XML-документе.
+  * <b>What: TParseElement</b> - элемент парсинга (группа или контакт)
+  * <b>Total, Number: integer</b> - соответственно общее количество и текущий номер
+       однотипных элементов парсинга.
+  Общее количество однотипных элементов определяется по значению узла
+  <b>openSearch:totalResults</b> в первом возвращенном с сервера документе.}
   TOnBeginParse = procedure(const What: TParseElement; Total, Number: integer)
     of object;
+  {Событие <b>TOnEndParse</b> возникает каждый раз, когда компонент или класс
+  заканчивает парсинг элемента в XML-документе.
+  * <b>What: TParseElement</b> - элемент парсинга (группа или контакт)
+  * <b>Element: TObject</b> - элемент, полученный в результате парсинга.
+  Если был проведен парсинг группы, то Element имеет тип TContactGroup,
+  если контакта, то - TContact}
   TOnEndParse = procedure(const What: TParseElement; Element: TObject)
     of object;
+  {Событие <b>TOnReadData</b> возникает каждый раз, когда компонент или класс
+  считывает данные из Сети.
+  * <b>TotalBytes</b> - содержит значение объема данных, который должен быть получен, байт
+  * <b>ReadBytes</b> - содержит количество байт информации полученных из Сети на текущий момент.
+  <b>TotalBytes</b> содержит информацию по размеру получаемого документа, включая размер
+  всех заголовков, возвращаемых сервером}
   TOnReadData = procedure(const TotalBytes, ReadBytes: int64) of object;
 
+
+{Перечислитель, содержащий все типы узлов, относящихся к Google Contacts API
+ и обрабатываемых с помощью классов модуля}
 type
-  TcpTagEnum = (cp_billingInformation, cp_birthday, cp_calendarLink,
-    cp_directoryServer, cp_event, cp_externalId, cp_gender,
-    cp_groupMembershipInfo, cp_hobby, cp_initials, cp_jot, cp_language,
-    cp_maidenName, cp_mileage, cp_nickname, cp_occupation, cp_priority,
-    cp_relation, cp_sensitivity, cp_shortName, cp_subject, cp_userDefinedField,
-    cp_website, cp_systemGroup, cp_None);
+  TcpTagEnum = (cp_billingInformation {тип узла gContact:billingInformation},
+                cp_birthday {тип узла gContact:birthday},
+                cp_calendarLink {тип узла gContact:calendarLink},
+                cp_directoryServer {тип узла gContact:directoryServer},
+                cp_event {тип узла gContact:event},
+                cp_externalId {тип узла gContact:externalId},
+                cp_gender {тип узла gContact:gender},
+                cp_groupMembershipInfo {тип узла gContact:groupMembershipInfo},
+                cp_hobby {тип узла gContact:hobby},
+                cp_initials {тип узла gContact:initials},
+                cp_jot {тип узла gContact:jot},
+                cp_language {тип узла gContact:language},
+                cp_maidenName {тип узла gContact:maidenName},
+                cp_mileage {тип узла gContact:mileage},
+                cp_nickname {тип узла gContact:nickname},
+                cp_occupation {тип узла gContact:occupation},
+                cp_priority {тип узла gContact:priority},
+                cp_relation {тип узла gContact:relation},
+                cp_sensitivity {тип узла gContact:sensitivity},
+                cp_shortName {тип узла gContact:shortName},
+                cp_subject {тип узла gContact:subject},
+                cp_userDefinedField {тип узла gContact:userDefinedField},
+                cp_website {тип узла gContact:website},
+                cp_systemGroup {тип узла gContact:systemGroup},
+                cp_None {используется в случае, если тип узла не определен});
 
 type
-  TcpBillingInformation = TTextTag;
-  TcpDirectoryServer = TTextTag;
-  TcpHobby = TTextTag;
-  TcpInitials = TTextTag;
-  TcpShortName = TTextTag;
-  TcpSubject = TTextTag;
-  TcpMaidenName = TTextTag;
-  TcpMileage = TTextTag;
-  TcpNickname = TTextTag;
-  TcpOccupation = TTextTag;
+  {Класс, описывающий узел <b>gContact:billingInformation</b>.
+   Этот узел используется для описания платежной информации контакта.
+   Элемент <b>gContact:billingInformation</b> не может быть повторен в рамках
+   описания одного контакта.
+   Вся информация содержится в текстовой части узла.
+   Узел <b>gContact:billingInformation</b> может отсутствовать в XML-документе}
+  TcpBillingInformation = class(TTextTag);
 
+  {Класс, описывающий узел <b>gContact:directoryServer</b>.
+   Этот узел используется для указания сервера катологов, связанного с контактом.
+   Элемент <b>gContact:directoryServer</b> может быть повторен в рамках описания
+   одного контакта.
+   Вся информация содержится в текстовой части узла.
+   Узел <b>gContact:directoryServer</b> может отсутствовать в XML-документе}
+  TcpDirectoryServer = class(TTextTag);
+
+  {Класс, описывающий узел <b>gContact:hobby</b>.
+   Этот узел используется для указания хобби контакта.
+   Элемент <b>gContact:hobby</b> может быть повторен в рамках описания
+   одного контакта.
+   Вся информация о хобби содержится в текстовой части узла.
+   Узел <b>gContact:hobby</b> может отсутствовать в XML-документе}
+  TcpHobby = class(TTextTag);
+
+  {Класс, описывающий узел <b>gContact:initials</b>.
+   Этот узел используется для указания инициалов контакта.
+   Элемент <b>gContact:initials</b> не может быть повторен в рамках описания
+   одного контакта.
+   Вся информация об инициалах содержится в текстовой части узла.
+   Узел <b>gContact:initials</b> может отсутствовать в XML-документе}
+  TcpInitials = class(TTextTag);
+
+  {Класс, описывающий узел <b>gContact:shortName</b>.
+   Этот узел используется для указания сокращенного имени контакта (например,
+   для имени Владислав коротким является - Влад).
+   Элемент <b>gContact:shortName</b> не может быть повторен в рамках описания
+   одного контакта.
+   Вся информация о коротком имени содержится в текстовой части узла.
+   Узел <b>gContact:shortName</b> может отсутствовать в XML-документе}
+  TcpShortName = class(TTextTag);
+
+  {Класс, описывающий узел <b>gContact:subject</b>.
+   Этот узел используется для указания дополнительной информации о контакте,
+   например, области деятельности в которой пользователь пересекается с контактом.
+   Элемент <b>gContact:subject</b> не может быть повторен в рамках описания
+   одного контакта.
+   Вся дополнительная информация о контакте содержится в текстовой части узла.
+   Узел <b>gContact:subject</b> может отсутствовать в XML-документе}
+  TcpSubject = class(TTextTag);
+
+  {Класс, описывающий узел <b>gContact:maidenName</b>.
+   Этот узел используется для указания девичьей фамилии контакта (для контактов женского пола).
+   Элемент <b>gContact:maidenName</b> не может быть повторен в рамках описания
+   одного контакта.
+   Вся информация о девичьей фамилии содержится в текстовой части узла.
+   Узел <b>gContact:maidenName</b> может отсутствовать в XML-документе}
+  TcpMaidenName = class(TTextTag);
+
+  {Класс, описывающий узел <b>gContact:mileage</b>.
+   Этот узел используется для указания расстояния, отделяющего пользователя от контакта.
+   Элемент <b>gContact:mileage</b> не может быть повторен в рамках описания
+   одного контакта.
+   Вся информация о расстоянии содержится в текстовой части узла. Текст,
+   содержащий информацию о расстоянии может содержать подстроки размерности,
+   например "км.". Размерности никак не интерпретируются сервером Google.
+   Узел <b>gContact:mileage</b> может отсутствовать в XML-документе}
+  TcpMileage = class(TTextTag);
+
+  {Класс, описывающий узел <b>gContact:nickname</b>.
+   Этот узел используется для ника (клички) контакта.
+   Элемент <b>gContact:nickname</b> не может быть повторен в рамках описания
+   одного контакта.
+   Вся информация о нике содержится в текстовой части узла.
+   Узел <b>gContact:nickname</b> может отсутствовать в XML-документе}
+  TcpNickname = class(TTextTag);
+
+  {Класс, описывающий узел <b>gContact:occupation</b>.
+   Этот узел используется для описания рода занятий/профессии контакта.
+   Элемент <b>gContact:occupation</b> не может быть повторен в рамках описания
+   одного контакта.
+   Вся информация о профессии содержится в текстовой части узла.
+   Узел <b>gContact:occupation</b> может отсутствовать в XML-документе}
+  TcpOccupation = class(TTextTag);
+
+
+{Класс, описывающий узел <b>gContact:birthday</b>.
+   Этот узел используется для указания даты рождения контакта.
+   Элемент <b>gContact:birthday</b> не может быть повторен в рамках описания
+   одного контакта.
+   Вся информация о дате рождения содержится в аттрибуте "when"  узла. Дата может
+   быть представлена как в полном формате "YYYY-MM-DD", так и в укороченном "--MM-DD"
+   Узел <b>gContact:birthday</b> может отсутствовать в XML-документе}
 type
   TcpBirthday = class
   private
-    FDate: TDate;
-    FShortFormat: boolean; // укороченый формат дня рождения --MM-DD
+    FDate: TDate; //дата рождения контакта
+    FShortFormat: boolean; //если True, то в указании даты рождения используется укороченный формат даты
     procedure SetDate(aDate: TDate);
     function GetServerDate: string;
   public
+   {Конструктор создает экземпляр класса. Если определен входной параметр
+    <b>ByNode: TXMLNode</b>, то на основании этого узла заполняются поля класса}
     constructor Create(const byNode: TXmlNode = nil);
+    {Очищает поля класса от всех данных. Поле FShortFormat получает значение <b>false</b>}
     procedure Clear;
+    {Проверка экземпляра класса на "пустоту". Возвращает <b>true</b> в случае, если
+    поле FDate<=0}
     function IsEmpty: boolean;
+    { Разбирает узел XML <b>Node</b> и заполняет на основании полученных данных
+    поля класса }
     procedure ParseXML(const Node: TXmlNode);
+    {На основании значений полей класса формирует новый XML-узел и помещает его как
+     дочерний для узла <b>Root</b>. Если экземпляр класса не содержит данных (функция
+     IsEmpty возвращает true) выполнение функции прерывается и результатом функции
+     будет <b>nil</b>}
     function AddToXML(Root: TXmlNode): TXmlNode;
+    {Указывает используется ли в описании даты рождения контакта укороченный формат датты (без года рождения)}
     property ShotrFormat: boolean read FShortFormat write FShortFormat;
+    {Дата рождения контакта. Если используется укороченный формат даты, то в Date указывается текущий год}
     property Date: TDate read FDate write SetDate;
+    {Строка используемая для указания даты рождения контакта в XML-документе.
+    Фактически - это значение атрибута <b>when</b> узла <b>gContact:birthday</b>}
     property ServerDate: string read GetServerDate;
   end;
 
@@ -394,6 +537,8 @@ type
     property SystemGroup: TcpSysGroupId read GetSysGroupId write SetSysGroupId;
   end;
 
+  {Основной компонент для работы с Google Contacts. Содкржит необходимые свойства
+   и методы для работы с группами контактов и контактами}
   TGoogleContact = class(TComponent)
   private
     FAuth: string; // AUTH для доступа к API
@@ -436,84 +581,107 @@ type
     function GetContactNames: TStrings;
     function GetGropsNames: TStrings;
   public
+    {Конструктор. Создает объект с настройками по умолчанию}
     constructor Create(AOwner: TComponent); override;
+    {Деструктор. Корректно удаляет объект из памяти}
     destructor Destroy; override;
-    // получение всех групп пользователя
+    {Получение всех групп контактов пользователя. Результатом выполнения функции
+    является число групп, полученных в результате выполнения запроса на сервер}
     function RetriveGroups: integer;
-    // получение всех контактов пользователя
+    {Получение всех контактов пользователя. Результатом выполнения функции
+    является число контактов, полученных в результате выполнения запроса на сервер}
     function RetriveContacts: integer; overload;
-    // удаление контакта
+    {Удаление контакта с сервера по его индексу в списке <b>Contacts</b>.
+    Функция возвращает <b>true</b> в случае, если контакт корректно удален с сервера.
+    Удаленный с сервера контакт автоматически удаляется из списка контактов <b>Contacts</b>}
     function DeleteContact(index: integer): boolean; overload;
-    // по индексу в списке FContacts
+    {Удаление контакта с сервера. Контакт <b>aContact</b> должен находиться в списке <b>Contacts</b>
+    Функция возвращает <b>true</b> в случае, если контакт корректно удален с сервера.
+    Удаленный с сервера контакт автоматически удаляется из списка контактов <b>Contacts</b>}
     function DeleteContact(aContact: TContact): boolean; overload;
-    // добавление контакта на сервер
+    {Добавление контакта <b>aContact</b> на сервер.  успешного выполнения операции
+    новый контакт автоматически добавляется в список <b>Contacts</b>}
     function AddContact(aContact: TContact): boolean;
-    // добавление новой группы контактов
+    {Добавление новой группы контактов с названием <b>aName</b> и описанием <b>aDescription</b> на сервер.
+    В случае, если операция выполнена успешно новая группа автоматически добавляется в список <b>Groups</b>}
     function AddContactGroup(const aName, aDescription: string): boolean;
-    //Редактирование группы контактов
+    {Редактирование информации группы контактов <b>aGroup</b>. Редактируемая группа
+    должна находится на сервере (содержать список ссылок </b>Links<b>)}
     function UpdateContactGroup(const aGroup:TContactGroup):boolean;overload;
+    {Редактирование информации группы контактов с индексом <b>Index</b> в списке <b>Groups</b>.
+    Редактируемая группа должна находится на сервере (содержать список ссылок </b>Links<b>)}
     function UpdateContactGroup(const Index:integer):boolean;overload;
-    //Удаление групп контактов
+    {Удаление групп контактов <b>aGroup</b> с сервера. В случае успешно выполненной
+    операции группа также удляется из списка <b>Groups</b>}
     function DeleteContactGroup(const aGroup:TContactGroup):boolean;overload;
-
-    // обновление информации о контакте
+    {Удаление групп контактов с индексом <b>Index</b> в списке <b>Groups</b> с сервера.
+    В случае успешно выполненной операции группа также удляется из списка <b>Groups</b>}
+    function DeleteContactGroup(const Index:integer):boolean;overload;
+    {Обновление информации о контакте <b>aContact</b>. Контакт должен находится в списке <b>Contacts</b>
+    В случае успешно выполненной операции информация о контакте обновляется как в списке <b>Contacts</b>
+    так и на сервере}
     function UpdateContact(aContact: TContact): boolean; overload;
+    {Обновление информации о контакте с индексом <b>Index</b> в списке <b>Contacts</b>
+    В случае успешно выполненной операции информация о контакте обновляется как в списке <b>Contacts</b>
+    так и на сервере}
     function UpdateContact(index: integer): boolean; overload;
-    // получение фотографии контакта
+    {Получение с сервера фотографии контакта <b>aContact</b>. В случае, если контакт не содержит фотографии
+    результатом выполнения функции будет изображение, загруженное из файла <b>DefaultImage</b>}
     function RetriveContactPhoto(aContact: TContact; DefaultImage: TFileName)
       : TJPEGImage; overload;
+    {Получение с сервера фотографии контакта с индексом <b>Index</b> в списке <b>Contacts</b>.
+    В случае, если контакт не содержит фотографии результатом выполнения функции
+    будет изображение, загруженное из файла <b>DefaultImage</b>}
     function RetriveContactPhoto(index: integer; DefaultImage: TFileName)
       : TJPEGImage; overload;
-    // обновление фото контакта
+
+    {Загружает на сервер файл <b>PhotoFile</b> в качестве изображения контакта,
+    имеющего индекс <b>Index</b> в списке <b>Contacts</b>. Функция возращает
+    <b>True</b> в случае успешной загрузки}
     function UpdatePhoto(index: integer; const PhotoFile: TFileName): boolean;
       overload;
+    {Загружает на сервер файл <b>PhotoFile</b> в качестве изображения контакта
+    <b>aContact</b>. Функция возращает <b>True</b> в случае успешной загрузки}
     function UpdatePhoto(aContact: TContact; const PhotoFile: TFileName)
       : boolean; overload;
-    // удаление фотографии контакта
+    {Удаление изображения контакта <b>aContact</b> с сервера. Функция возвращает
+    <b>true</b> в случае, если удаление прошло успешно}
     function DeletePhoto(aContact: TContact): boolean; overload;
+    {Удаление изображения контакта с индексом <b>Index</b> в списке <b>Contacts</b>
+    с сервера. Функция возвращает <b>true</b> в случае, если удаление прошло успешно}
     function DeletePhoto(index: integer): boolean; overload;
-    // сохранение/загрузка контактов в/из файл/-а
+    {Сохранение всего списка контактов <b>Contacts</b> в файл <b>FileName</b>.
+    Формат файла - <b>XML</b>}
     procedure SaveContactsToFile(const FileName: string);
+    {Загружает локальную копию списка контактов из XML-файла <b>FileName</b>}
     procedure LoadContactsFromFile(const FileName: string);
 
-    { ----------------Свойства компонента------------------------- }
-    property Auth: string read FAuth write SetAuth;
-    property Gmail: string read FEmail write SetGmail;
-    // группы контактов
-    property Groups: TList<TContactGroup>read FGroups write FGroups;
-    // все контакты пользователя
-    property Contacts: TList<TContact>read FContacts write FContacts;
+
+    property Auth: string read FAuth write SetAuth;//Ключ Auth для авторизации в сервисе. Может быть получен с использованием компонента TClientLogin
+    property Gmail: string read FEmail write SetGmail;//адрес почтового ящика на GMail. Используется для работы с группами и контактами
+    property Groups: TList<TContactGroup>read FGroups write FGroups;//список все групп контактов пользователя
+    property Contacts: TList<TContact>read FContacts write FContacts;//список всех контактов пользователя
     property ContactByGroupIndex[Group: string; I: integer]
-      : TContact read GetContact;
-    // контакты, находящиеся в группе GroupName
+      : TContact read GetContact;//контакт, находящийся в группе с именем
+      //<b>Group</b> и имеющий в этой группе индекс <b>i</b>
     property ContactsByGroup[GroupName: string]
-      : TList<TContact>read GetContactsByGroup;
-    // максимальное количество записей контактов возвращаемое в одном фиде
+      : TList<TContact>read GetContactsByGroup;//список всех контактов, находящихся в группе с именем <b>GroupName</b>
     property MaximumResults
-      : integer read FMaximumResults write SetMaximumResults;
-    // начальный номер контакта с которого начинать принятие данных
-    property StartIndex: integer read FStartIndex write SetStartIndex;
-    // нижняя граница обновления контактов
-    property UpdatesMin: TDateTime read FUpdatesMin write SetUpdatesMin;
-    // определяет будут ли показываться в списке удаленные контакты
-    property ShowDeleted: boolean read FShowDeleted write SetShowDeleted;
-    // сортировка контактов
-    property SortOrder: TSortOrder read FSortOrder write SetSortOrder;
-    // список имен контактов
-    property ContactsNames: TStrings read GetContactNames;
-    // список имен групп контактов
-    property GroupsNames: TStrings read GetGropsNames;
-    { ----------------События компонента------------------------- }
-    // начало загрузки XML-документа с сервера
-    property OnRetriveXML: TOnRetriveXML read FOnRetriveXML write FOnRetriveXML;
-    // старт парсинга XML
-    property OnBeginParse: TOnBeginParse read FOnBeginParse write FOnBeginParse;
-    // окончание парсинга XML
-    property OnEndParse: TOnEndParse read FOnEndParse write FOnEndParse;
-    property OnReadData: TOnReadData read FOnReadData write FOnReadData;
+      : integer read FMaximumResults write SetMaximumResults;// максимальное количество записей контактов возвращаемое в одном фиде
+    property StartIndex: integer read FStartIndex write SetStartIndex;// начальный номер контакта с которого начинать принятие данных
+    property UpdatesMin: TDateTime read FUpdatesMin write SetUpdatesMin;// нижняя граница обновления контактов
+    property ShowDeleted: boolean read FShowDeleted write SetShowDeleted;// определяет будут ли показываться в списке удаленные контакты
+    property SortOrder: TSortOrder read FSortOrder write SetSortOrder;// сортировка контактов
+    property ContactsNames: TStrings read GetContactNames;// список имен контактов
+    property GroupsNames: TStrings read GetGropsNames;// список имен групп контактов
+
+    property OnRetriveXML: TOnRetriveXML read FOnRetriveXML write FOnRetriveXML;// начало загрузки XML-документа с сервера
+    property OnBeginParse: TOnBeginParse read FOnBeginParse write FOnBeginParse;// старт парсинга XML
+    property OnEndParse: TOnEndParse read FOnEndParse write FOnEndParse;// окончание парсинга XML
+    property OnReadData: TOnReadData read FOnReadData write FOnReadData;// чтение данных из Сети
   end;
 
-  // получение типа узла
+// получение типа узла
 function GetContactNodeType(const NodeName: string): TcpTagEnum; inline;
 // получение имени узла по его типу
 function GetContactNodeName(const NodeType: TcpTagEnum): string; inline;
@@ -558,6 +726,7 @@ end;
 procedure TcpBirthday.Clear;
 begin
   FDate := 0;
+  FShortFormat:=false;
 end;
 
 constructor TcpBirthday.Create(const byNode: TXmlNode);
@@ -1581,7 +1750,7 @@ begin
   FTitle := TTextTag.Create();
   FContent := TTextTag.Create();
   FName := TgdName.Create();
-  FNickName := TTextTag.Create();
+  FNickName := TcpNickname.Create();
   FBirthDay := TcpBirthday.Create(nil);
   if byNode <> nil then
     ParseXML(byNode);
@@ -1858,7 +2027,7 @@ begin
         FBirthDay := TcpBirthday.Create(Node.Nodes[I])
       else if LowerCase(Node.Nodes[I].NameUnicode) = LowerCase
         (GetContactNodeName(cp_nickname)) then
-        FNickName := TTextTag.Create(Node.Nodes[I]);
+        FNickName := TagNickName.Create(Node.Nodes[I]);
     end;
   finally
     FreeAndNil(List)
@@ -2144,6 +2313,13 @@ begin
   except
     Result := false;
   end;
+end;
+
+function TGoogleContact.DeleteContactGroup(const Index: integer): boolean;
+begin
+  Result:=false;
+  if (Index>=0)and(Index<FGroups.Count) then
+    Result:=DeleteContactGroup(FGroups[index]);
 end;
 
 function TGoogleContact.DeleteContactGroup(
