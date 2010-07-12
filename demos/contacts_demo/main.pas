@@ -60,6 +60,10 @@ type
     OpenDialog1: TOpenDialog;
     Label16: TLabel;
     Label20: TLabel;
+    Button1: TButton;
+    ToolButton10: TToolButton;
+    ToolButton11: TToolButton;
+    ToolButton12: TToolButton;
     procedure ComboBox1Change(Sender: TObject);
     procedure ToolButton1Click(Sender: TObject);
     procedure ToolButton2Click(Sender: TObject);
@@ -77,6 +81,9 @@ type
     procedure ToolButton7Click(Sender: TObject);
     procedure ToolButton6Click(Sender: TObject);
     procedure ToolButton5Click(Sender: TObject);
+    procedure ToolButton10Click(Sender: TObject);
+    procedure ToolButton11Click(Sender: TObject);
+    procedure ToolButton12Click(Sender: TObject);
   private
     //TOnRetriveXML
     procedure RetriveXML (const FromURL:string);
@@ -314,12 +321,63 @@ begin
       ComboBox1.Items.Insert(0,'Все');
       ComboBox1.ItemIndex:=0;
 
+
+      Form3.ToolButton3.Enabled:=true;
+      Form3.ToolButton4.Enabled:=true;
+      Form3.ToolButton5.Enabled:=true;
+      Form3.ToolButton6.Enabled:=true;
+      Form3.ToolButton7.Enabled:=true;
+      Form3.ToolButton8.Enabled:=true;
+      Form3.ToolButton9.Enabled:=true;
+      Form3.ToolButton10.Enabled:=true;
+      Form3.ToolButton11.Enabled:=true;
     end;
 end;
 
 procedure TForm3.RetriveXML(const FromURL: string);
 begin
   fLog.Memo1.Lines.Add('Получаем данные с URL '+FromURL)
+end;
+
+procedure TForm3.ToolButton10Click(Sender: TObject);
+var S: string;
+begin
+ if InputQuery('Введите название группы','Название группы',S) then
+   if Contact.AddContactGroup(S,Contact.Gmail) then
+     begin
+       ComboBox1.Clear;
+       ComboBox1.Items.Assign(Contact.GroupsNames);
+       ComboBox1.Items.Insert(0,'Все');
+     end;
+end;
+
+procedure TForm3.ToolButton11Click(Sender: TObject);
+var S:string;
+begin
+ if ComboBox1.ItemIndex>0 then
+  begin
+    if InputQuery('Новое название группы','Новое название',S) then
+      begin
+        Contact.Groups[ComboBox1.ItemIndex-1].Title:=S;
+        Contact.UpdateContactGroup(ComboBox1.ItemIndex-1);
+        ComboBox1.Items.Assign(Contact.GroupsNames);
+        ComboBox1.Items.Insert(0,'Все');
+      end;
+  end;
+end;
+
+procedure TForm3.ToolButton12Click(Sender: TObject);
+begin
+ if ComboBox1.ItemIndex>0 then
+  begin
+    if Contact.DeleteContactGroup(Contact.Groups[ComboBox1.ItemIndex-1])then
+      begin
+        ComboBox1.Items.Assign(Contact.GroupsNames);
+        ComboBox1.Items.Insert(0,'Все');
+      end
+    else
+      ShowMessage('Группа НЕ удалена');
+  end;
 end;
 
 procedure TForm3.ToolButton1Click(Sender: TObject);

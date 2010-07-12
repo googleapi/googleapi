@@ -373,6 +373,7 @@ type
     FUpdate: TDateTime;
     FTitle: TTextTag;
     FContent: TTextTag;
+    FExtendedProps: TgdExtendedProperty;
     FSystemGroup: TcpSystemGroup;
     function GetTitle: string;
     function GetContent: string;
@@ -380,6 +381,7 @@ type
     procedure SetTitle(const aTitle: string);
     procedure SetContent(const aContent: string);
     procedure SetSysGroupId(aSysGroupId: TcpSysGroupId);
+    function GenerateXML(const WintExtended: boolean): TNativeXml;
   public
     constructor Create(const byNode: TXmlNode);
     procedure ParseXML(Node: TXmlNode);
@@ -448,6 +450,12 @@ type
     function AddContact(aContact: TContact): boolean;
     // добавление новой группы контактов
     function AddContactGroup(const aName, aDescription: string): boolean;
+    //Редактирование группы контактов
+    function UpdateContactGroup(const aGroup:TContactGroup):boolean;overload;
+    function UpdateContactGroup(const Index:integer):boolean;overload;
+    //Удаление групп контактов
+    function DeleteContactGroup(const aGroup:TContactGroup):boolean;overload;
+
     // обновление информации о контакте
     function UpdateContact(aContact: TContact): boolean; overload;
     function UpdateContact(index: integer): boolean; overload;
@@ -1332,8 +1340,7 @@ var
   tmp: string;
 begin
   Result := nil;
-  if Root = nil then
-    Exit;
+  if (Root = nil) or IsEmpty then Exit;
   if FIdRel = tg_None then
     raise Exception.Create(Format(sc_ErrWriteNode, [GetContactNodeName
           (cp_systemGroup)]) + ' ' + Format(sc_WrongAttr, ['id']));
@@ -1363,7 +1370,7 @@ end;
 
 procedure TcpSystemGroup.ParseXML(const Node: TXmlNode);
 begin
-  if (Node = nil) or IsEmpty then
+  if (Node = nil) then
     Exit;
   if GetContactNodeType(Node.NameUnicode) <> cp_systemGroup then
     raise Exception.Create(Format(sc_ErrCompNodes, [GetContactNodeName
@@ -1882,12 +1889,35 @@ end;
 
 { TContactGroup }
 
+
 constructor TContactGroup.Create(const byNode: TXmlNode);
 begin
   inherited Create;
   FLinks := TList<TEntryLink>.Create;
+  FExtendedProps:=TgdExtendedProperty.Create();
+  FSystemGroup:=TcpSystemGroup.Create();
+  FSystemGroup.ID:=tg_None;
   if byNode <> nil then
     ParseXML(byNode);
+end;
+
+function TContactGroup.GenerateXML(const WintExtended: boolean): TNativeXml;
+var Node,IdNode:TXmlNode;
+begin
+  Result:=TNativeXml.Create;
+  Result.CreateName('entry');
+  Result.Root.WriteAttributeString('xmlns:gd','http://schemas.google.com/g/2005');
+  Result.Root.WriteAttributeString('xmlns','http://www.w3.org/2005/Atom');
+  Result.Root.WriteAttributeString(gdNodeAlias+'etag',FEtag);
+  Node:=Result.Root.NodeNew('category');
+  Node.WriteAttributeString('scheme','http://schemas.google.com/g/2005#kind');
+  Node.WriteAttributeString('term','http://schemas.google.com/g/2005#group');
+  IdNode:=Result.Root.NodeNew('id');
+  idNode.ValueAsUnicodeString:=Fid;
+  FTitle.AddToXML(Result.Root);
+  FContent.AddToXML(Result.Root);
+  if WintExtended then
+    FExtendedProps.AddToXML(Result.Root);
 end;
 
 function TContactGroup.GetContent: string;
@@ -1925,7 +1955,9 @@ begin
     else if Node.Nodes[I].NameUnicode = GetContactNodeName(cp_systemGroup) then
       FSystemGroup := TcpSystemGroup.Create(Node.Nodes[I])
     else if Node.Nodes[I].NameUnicode = 'link' then
-      FLinks.Add(TEntryLink.Create(Node.Nodes[I]));
+      FLinks.Add(TEntryLink.Create(Node.Nodes[I]))
+    else if Node.Nodes[i].NameUnicode=GetGDNodeName(gd_extendedProperty)then
+      FExtendedProps:=TgdExtendedProperty.Create(Node.Nodes[i]);
   end;
 end;
 
@@ -1958,7 +1990,6 @@ begin
     XML.ReadFromString(UTF8String(aContact.ToXMLText[tfAtom]));
     with THTTPSender.Create('POST', FAuth, CpContactsLink, CpProtocolVer) do
     begin
-      MimeType := 'application/atom+xml';
       XML.SaveToStream(Document);
       if SendRequest then
       begin
@@ -1998,24 +2029,59 @@ function TGoogleContact.AddContactGroup(const aName, aDescription: string)
 var
   XMLDoc: TNativeXml;
   Node: TXmlNode;
+  Ext: TgdExtendedProperty;
+  List: TStringList;
 begin
-  { <atom:entry xmlns:gd="http://schemas.google.com/g/2005">
-    <atom:category scheme="http://schemas.google.com/g/2005#kind"
-    term="http://schemas.google.com/contact/2008#group"/>
-    <atom:title type="text">Salsa group</atom:title>
-    <gd:extendedProperty name="more info about the group">
-    <info>Nice people.</info>
-    </gd:extendedProperty>
-    </atom:entry>
-  }
+Result:=false;
+List:=TStringList.Create;
+try
+  Ext:=TgdExtendedProperty.Create();
+  Ext.Name:=aDescription;
+  Ext.ChildNodes.Add(TTextTag.Create('info',aDescription));
   XMLDoc := TNativeXml.Create;
   XMLDoc.CreateName(sAtomAlias + sEntryNodeName);
-  XMLDoc.Root.WriteAttributeString('xmlns:gd',
-    'http://schemas.google.com/g/2005');
+  XMLDoc.Root.WriteAttributeString('xmlns:gd','http://schemas.google.com/g/2005');
+  XMLDoc.Root.WriteAttributeString('xmlns:atom','http://www.w3.org/2005/Atom');
   Node := XMLDoc.Root.NodeNew(sAtomAlias + 'category');
   Node.WriteAttributeString('scheme', 'http://schemas.google.com/g/2005#kind');
-  Node.WriteAttributeString('term',
-    'http://schemas.google.com/contact/2008#group');
+  Node.WriteAttributeString('term', 'http://schemas.google.com/contact/2008#group');
+  Node:=XMLDoc.Root.NodeNew(sAtomAlias + 'title');
+  Node.ValueAsUnicodeString:=aName;
+  Ext.AddToXML(XMLDoc.Root);
+
+  with THTTPSender.Create('POST',FAuth,Format(CpGroupLink,[FEmail]),CpProtocolVer)do
+    begin
+      XMLDoc.SaveToStream(Document);
+      if SendRequest then
+        begin
+          Result:=ResultCode=201;
+          if Result then
+            begin
+              XMLDoc.Clear;
+              XMLDoc.LoadFromStream(Document);
+              // если событие определено - отправляем данные
+              if Assigned(FOnBeginParse) then
+                OnBeginParse(T_Group, FGroups.Count+1,FGroups.Count + 1);
+            // парсим группу
+              FGroups.Add(TContactGroup.Create(XMLDoc.Root));
+            // если событие определено - отправляем данные
+              if Assigned(FOnEndParse) then
+                OnEndParse(T_Group, FGroups.Last);
+            end
+          else
+            begin
+              List.LoadFromStream(Document);
+              ShowMessage(List.Text);
+            end;
+        end
+      else
+        ShowMessage(IntToStr(ResultCode)+' '+ResultString);
+    end;
+finally
+  FreeAndNil(Ext);
+  FReeAndNil(XMLDoc);
+  FreeAndNil(List);
+end;
 end;
 
 constructor TGoogleContact.Create(AOwner: TComponent);
@@ -2026,7 +2092,6 @@ begin
   FUpdatesMin := 0;
   FShowDeleted := false;
   FSortOrder := Ts_None;
-
   FGroups := TList<TContactGroup>.Create;
   FContacts := TList<TContact>.Create;
 end;
@@ -2079,6 +2144,56 @@ begin
   except
     Result := false;
   end;
+end;
+
+function TGoogleContact.DeleteContactGroup(
+  const aGroup: TContactGroup): boolean;
+var i,j:integer;
+    List: TStringList;
+begin
+  Result:=false;
+  List:=TStringList.Create;
+try
+  if aGroup=nil then Exit;
+  if aGroup.Links.Count=0 then
+    raise Exception.Create(sc_ErrGroupLink);
+  for I := 0 to aGroup.FLinks.Count - 1 do
+    begin
+      if aGroup.FLinks[i].Rel='edit' then
+        begin
+          with THTTPSender.Create('DELETE',FAuth,aGroup.FLinks[i].Href,CpProtocolVer)do
+            begin
+              ExtendedHeaders.Add('If-Match: ' + aGroup.Etag);
+              if SendRequest then
+                begin
+                  Result:=ResultCode=200;
+                  //удвляем из списка
+                  if Result then
+                    begin
+                     for j := 0 to FGroups.Count - 1 do
+                       begin
+                         if FGroups[i]=aGroup then
+                            begin
+                              FGroups.DeleteRange(i,1);
+                              break;
+                            end;
+                       end;
+                    end
+                  else
+                    begin
+                      List.LoadFromStream(Document);
+                      ShowMessage(List.Text);
+                    end;
+                end
+              else
+                ShowMessage(IntToStr(ResultCode)+' '+ResultString);
+            end;
+          break;
+        end;
+    end;
+finally
+  FreeAndNil(List)
+end;
 end;
 
 function TGoogleContact.DeletePhoto(index: integer): boolean;
@@ -2510,6 +2625,7 @@ var
   NextLink: string;
 begin
   try
+    FGroups.Clear;
     NextLink := Format(CpGroupLink, [FEmail]);
     XMLDoc := TNativeXml.Create;
     repeat
@@ -2617,6 +2733,71 @@ begin
     Exit;
   UpdateContact(FContacts[index]);
   Result := true;
+end;
+
+function TGoogleContact.UpdateContactGroup(const Index: integer): boolean;
+begin
+Result:=false;
+  if (Index>=0)and(Index<FGroups.Count) then
+    Result:=UpdateContactGroup(FGroups[index]);
+end;
+
+function TGoogleContact.UpdateContactGroup(
+  const aGroup: TContactGroup): boolean;
+var List: TStringList;
+    XMLDoc:TNativeXml;
+    i:integer;
+begin
+Result:=false;
+List:=TStringList.Create;
+XMLDoc:=TNativeXml.Create;
+try
+if aGroup.SystemGroup = tg_None then
+  begin
+  with THTTPSender.Create('PUT',FAuth,aGroup.ID,CpProtocolVer)do
+    begin
+      aGroup.GenerateXML(false).SaveToStream(Document);
+      Document.SaveToFile('Document.XML');
+      if SendRequest then
+        begin
+          Result:=ResultCode=200;
+          if not Result then
+            begin
+              List.LoadFromStream(Document);
+              ShowMessage(List.Text);
+            end
+          else
+            begin
+              //удаляем старую группу
+              for I := 0 to FGroups.Count - 1 do
+                begin
+                  if FGroups[i]=aGroup then
+                    begin
+                      FGroups.DeleteRange(i,1);
+                      break;
+                    end;
+                end;
+              XMLDoc.LoadFromStream(Document);
+              // если событие определено - отправляем данные
+              if Assigned(FOnBeginParse) then
+                OnBeginParse(T_Group, FGroups.Count+1,FGroups.Count + 1);
+              // парсим группу
+              FGroups.Add(TContactGroup.Create(XMLDoc.Root));
+              // если событие определено - отправляем данные
+              if Assigned(FOnEndParse) then
+                OnEndParse(T_Group, FGroups.Last);
+            end;
+        end
+      else
+        ShowMessage(IntToStr(ResultCode)+' '+ResultString);
+    end;
+  end
+else
+  ShowMessage(sc_ErrSysGroup)
+finally
+  FreeAndNil(List);
+  FreeAndNil(XMLDoc);
+end;
 end;
 
 function TGoogleContact.UpdatePhoto(aContact: TContact;

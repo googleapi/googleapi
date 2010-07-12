@@ -1,5 +1,7 @@
 ﻿{ Модуль содержит наиболее общие классы для работы с Google API, а также
-  классы и методы для работы с основой всех API - GData API }
+  классы и методы для работы с основой всех API - GData API.
+  Этот содуль должен подключаться в раздел uses всех прочих модулей, реализующих работу
+  с различными Google API}
 unit GDataCommon;
 
 interface
@@ -9,6 +11,8 @@ uses
   uLanguage, GConsts, Generics.Collections, DateUtils, httpsend;
 
 type
+{Class helper для объекта TXMLNode (узел XML-документа)
+ применяется для преобразования строк в кодировке UTF-8 (UTF8String) в UnicodeString (string) и наоборот}
  TXMLNode_ = class helper for TXMLNode
  private
    function GetNameUnicode: string;
@@ -131,9 +135,9 @@ type
     function IsEmpty: boolean;
     { Очищает все поля класса }
     procedure Clear;
-    { Разбирает узел XML и заполняет на основании полученных данных поля класса }
+    { Разбирает узел Node:TXMLNode и заполняет на основании полученных данных поля класса }
     procedure ParseXML(Node: TXMLNode);
-    { На основании значений свойст формирует новый XML-узел и помещает его как
+    { На основании значений свойств формирует новый XML-узел и помещает его как
       дочерний для узла <b>Root</b> }
     function AddToXML(Root: TXMLNode): TXMLNode;
     { Значение узла }
@@ -194,7 +198,7 @@ type
     Constructor Create;
     {Очищает поля класса}
     procedure Clear;
-    {Проверяет экзумпляр класса на "пустоту". Возвращает <b>false</b>, если
+    {Проверяет экземпляр класса на "пустоту". Возвращает <b>false</b>, если
     поле <b>FRel = ev_None</b>}
     function IsEmpty: boolean;
     {перевод значения свойства Rel в тескт на языке разработчика}
@@ -212,9 +216,9 @@ type
     {Конструктор создает экземпляр класса. Если определен входной параметр
      <b>ByNode: TXMLNode</b>, то на основании этого узла заполняются поля класса}
     Constructor Create(const ByNode: TXMLNode = nil);
-    { Разбирает узел XML и заполняет на основании полученных данных поля класса }
+    {Разбирает узел Node:TXMLNode и заполняет на основании полученных данных поля класса}
     procedure ParseXML(Node: TXMLNode);
-    { На основании значений свойст формирует новый XML-узел и помещает его как
+    { На основании значений свойств формирует новый XML-узел и помещает его как
       дочерний для узла <b>Root</b> }
     function AddToXML(Root: TXMLNode): TXMLNode;
   end;
@@ -344,15 +348,28 @@ type
 
 type
   {Класс, описывающие узел GData API <b>gd:extendedProperty</b>, который позволяет хранить ограниченный набор
-  пользовательских данных в виде атрибутов узла и дочерних узлов}
-  TgdExtendedPropertyStruct = class
+  пользовательских данных в виде атрибутов узла и дочерних узлов XML-документа}
+  TgdExtendedProperty = class
    private
      FName: string;
      FValue: string;
      FChildNodes: TList<TTextTag>;
    public
-     property Name: string read FName write FName;//атрибут name
-     property Value: string read FValue write FValue;//атрибут value
+     {Конструктор создает экземпляр класса. Если определен входной параметр
+    <b>ByNode: TXMLNode</b>, то на основании этого узла заполняются поля класса}
+     Constructor Create(const ByNode: TXMLNode = nil);
+     {Разбирает узел Node:TXMLNode и заполняет на основании полученных данных поля класса}
+     procedure ParseXML(const Node: TXMLNode);
+     { На основании значений свойств формирует новый XML-узел и помещает его как
+      дочерний для узла <b>Root</b> }
+     function AddToXML(Root: TXMLNode): TXMLNode;
+     {Проверяет экземпляр класса на "пустоту". Возвращает <b>false</b>, если
+      в классе не определены поля <b>FName</b> и <b>FValue</b>, а также отсутствуют дочерние узлы}
+     function IsEmpty: boolean;
+     {Очищает поля класса}
+     procedure Clear;
+     property Name: string read FName write FName;   //атрибут name узла
+     property Value: string read FValue write FValue;//атрибут value узла
      property ChildNodes: TList<TTextTag> read FChildNodes write FChildNodes;//список дочерних текстовых узлов
   end;
 
@@ -2209,6 +2226,7 @@ constructor THTTPSender.Create(const aMethod, aAuthKey, aURL,
   aAPIVersion: string);
 begin
   inherited Create;
+  MimeType:='application/atom+xml';
   FAuthKey := aAuthKey;
   FURL := aURL;
   FApiVersion := aAPIVersion;
@@ -2375,6 +2393,65 @@ end;
 procedure TXMLNode_.WriteAttributeString(const AName, AValue, ADefault: String);
 begin
   WriteAttributeString(UTF8String(AName),UTF8String(AValue),UTF8String(ADefault));
+end;
+
+{ TgdExtendedPropertyStruct }
+
+function TgdExtendedProperty.AddToXML(Root: TXMLNode): TXMLNode;
+var i: integer;
+begin
+  Result := nil;
+  if (Root = nil) or IsEmpty then Exit;
+  Result := Root.NodeNew(GetGDNodeName(gd_extendedProperty));
+  if Length(Trim(FName))>0 then
+    Result.WriteAttributeString('name',FName);
+  if Length(Trim(FValue))>0 then
+    Result.WriteAttributeString('value',FValue);
+  //добавляем все дочерние узлы
+  for i := 0 to FChildNodes.Count - 1 do
+    FChildNodes[i].AddToXML(Result)
+end;
+
+procedure TgdExtendedProperty.Clear;
+begin
+  FName:='';
+  FValue:='';
+  FChildNodes.Clear;
+end;
+
+constructor TgdExtendedProperty.Create(const ByNode: TXMLNode);
+begin
+  inherited Create;
+  FChildNodes:=TList<TTextTag>.Create;
+  if ByNode<>nil then ParseXML(ByNode);
+end;
+
+function TgdExtendedProperty.IsEmpty: boolean;
+begin
+  Result:=(Length(Trim(FName))=0)
+          and(Length(Trim(FValue))=0)
+          and(FChildNodes.Count=0)
+end;
+
+procedure TgdExtendedProperty.ParseXML(const Node: TXMLNode);
+var i:integer;
+begin
+if Node = nil then Exit; //если узел не определен, то выходим
+  if GetGDNodeType(Node.NameUnicode) <> gd_extendedProperty then //указан не тот узел
+    raise Exception.Create(Format(sc_ErrCompNodes, [GetGDNodeName(gd_extendedProperty)]));
+try
+//заполняем поля класса данными из атрибутов
+FValue:=Node.AttributeByUnicodeName['value'];
+FName:=Node.AttributeByUnicodeName['name'];
+{заполняем список дочерних узлов}
+if Node.NodeCount>0 then
+  begin
+    for I := 0 to Node.NodeCount - 1 do
+      FChildNodes.Add(TTextTag.Create(Node.Nodes[i]));
+  end;
+except
+  raise Exception.Create(Format(sc_ErrPrepareNode, [Node.Name]));
+end;
 end;
 
 end.

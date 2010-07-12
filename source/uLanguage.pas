@@ -19,6 +19,8 @@ const
   c_ErrNullAuth =     GStringsMaxId - 13;
   c_ErrFileName =     GStringsMaxId - 14;
   c_ErrFileNull =     GStringsMaxId - 15;
+  c_ErrSysGroup =     GStringsMaxId - 106;
+  c_ErrGroupLink =    GStringsMaxId - 107;
 {Variables}
 //gContact:calendarLink rel values
   c_Work =            GStringsMaxId - 16;

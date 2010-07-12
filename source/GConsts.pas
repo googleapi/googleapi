@@ -363,6 +363,8 @@ var
   sc_ErrNullAuth     :string;
   sc_ErrFileName     :string;
   sc_ErrFileNull     :string;
+  sc_ErrSysGroup     :string;
+  sc_ErrGroupLink    :string;
 
 implementation
 
@@ -382,4 +384,6 @@ initialization
   sc_ErrNullAuth     :=LoadStr(c_ErrNullAuth);
   sc_ErrFileName     :=LoadStr(c_ErrFileName);
   sc_ErrFileNull     :=LoadStr(c_ErrFileNull);
+  sc_ErrSysGroup     :=LoadStr(c_ErrSysGroup);
+  sc_ErrGroupLink    :=LoadStr(c_ErrGroupLink);
 end.

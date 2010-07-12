@@ -30,62 +30,6 @@ type
   end;
 
 
-//type
-//  TAttribute = packed record
-//    Name: string;
-//    Value: string;
-//  end;
-//
-//type
-//  TTextTag = class
-//  private
-//    FName: string;
-//    FValue: string;
-//    FAtributes: TList<TAttribute>;
-//  public
-//    Constructor Create(const ByNode: TXMLNode=nil);overload;
-//    constructor Create(const NodeName: string; NodeValue:string='');overload;
-//
-//    function IsEmpty: boolean;
-//    procedure Clear;
-//    procedure ParseXML(Node: TXMLNode);
-//    function AddToXML(Root: TXMLNode): TXMLNode;
-//    property Value: string read FValue write FValue;
-//    property Name: string read FName write FName;
-//    property Attributes: TList<TAttribute>read FAtributes write FAtributes;
-//  end;
-//
-//type
-//  TEntryLink = class
-//  private
-//    Frel: string;
-//    Ftype: string;
-//    Fhref: string;
-//    FEtag: string;
-//  public
-//    Constructor Create(const ByNode: TXMLNode=nil);
-//    procedure ParseXML(Node: TXMLNode);
-//    function AddToXML(Root: TXMLNode): TXMLNode;
-//    property Rel:   string read Frel write Frel;
-//    property Ltype: string read Ftype write Ftype;
-//    property Href:  string read Fhref write Fhref;
-//    property Etag:  string read FEtag write FEtag;
-//  end;
-//
-//type
-//  TAuthorTag = Class
-//  private
-//    FAuthor: string;
-//    FEmail : string;
-//    FUID   : string;
-//  public
-//    constructor Create(ByNode: IXMLNode=nil);
-//    procedure ParseXML(Node: IXMLNode);
-//    property Author: string read FAuthor write FAuthor;
-//    property Email: string read FEmail write FEmail;
-//  end;
-
-
 function HexToColor(Color: string): TColor;
 function ColorToHex(Color: TColor): string;
 //преобразование строки 2007-07-11T21:50:15.000Z в TDateTime
