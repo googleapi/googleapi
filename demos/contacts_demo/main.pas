@@ -92,7 +92,7 @@ type
     //OnEndParse
     procedure EndParse(const What: TParseElement; Element: TObject);
     //OnReadData
-     procedure ReadData(const TotalBytes, ReadBytes: int64);
+     procedure ReadData(const TotalBytes:int64; ReadBytes: int64);
   public
      procedure RetriveMyContacts;
   end;
@@ -287,7 +287,7 @@ except
 end;
 end;
 
-procedure TForm3.ReadData(const TotalBytes, ReadBytes: int64);
+procedure TForm3.ReadData(const TotalBytes:int64; ReadBytes: int64);
 begin
   fLog.Memo1.Lines.Add('Прочитано '+IntToStr(ReadBytes)+' из '+IntToStr(TotalBytes))
 end;
@@ -331,6 +331,7 @@ begin
       Form3.ToolButton9.Enabled:=true;
       Form3.ToolButton10.Enabled:=true;
       Form3.ToolButton11.Enabled:=true;
+      Form3.ToolButton12.Enabled:=true;
     end;
 end;
 

@@ -3,43 +3,40 @@ unit GContacts;
 
 interface
 
-uses NativeXML, strUtils, httpsend, Classes, SysUtils,
+uses
+  NativeXML, strUtils, httpsend, Classes, SysUtils,
   GDataCommon, Generics.Collections, Dialogs, jpeg, Graphics, typinfo,
   IOUtils, uLanguage, blcksock, Windows, GConsts;
 
 type
-  {Элемент парсинга.
-   * <b>T_Group</b> - группа контактов
-   * <b>T_Contact</b> - группа контактов}
-  TParseElement = (T_Group, T_Contact);
+  {Элемент парсинга}
+  TParseElement = (T_Group {группа контактов},
+                   T_Contact {группа контактов});
   {Событие <b>TOnRetriveXML</b> возникает каждый раз, когда компонент или класс
   обращается на сервер для получения XML-документа.
   <b>FromURL</b> содержит URL на который отправляется GET-запрос}
-  TOnRetriveXML = procedure(const FromURL: string) of object;
+  TOnRetriveXML = procedure(const FromURL: string {URL на который отправляется HTTP-запрос для получения документа}) of object;
   {Событие <b>TOnBeginParse</b> возникает каждый раз, когда компонент или класс
   готов начать парсинг элемента в XML-документе.
-  * <b>What: TParseElement</b> - элемент парсинга (группа или контакт)
-  * <b>Total, Number: integer</b> - соответственно общее количество и текущий номер
-       однотипных элементов парсинга.
   Общее количество однотипных элементов определяется по значению узла
   <b>openSearch:totalResults</b> в первом возвращенном с сервера документе.}
-  TOnBeginParse = procedure(const What: TParseElement; Total, Number: integer)
+  TOnBeginParse = procedure(const What: TParseElement{элемент парсинга (группа или контакт) см. TParseElement};
+                                  Total:integer{общее количество элементов доступных для парсинга};
+                                  Number: integer{текущий номер элементапарсинга})
     of object;
   {Событие <b>TOnEndParse</b> возникает каждый раз, когда компонент или класс
-  заканчивает парсинг элемента в XML-документе.
-  * <b>What: TParseElement</b> - элемент парсинга (группа или контакт)
-  * <b>Element: TObject</b> - элемент, полученный в результате парсинга.
+  заканчивает парсинг элемента в XML-документе.}
+  TOnEndParse = procedure(const What: TParseElement;{элемент парсинга (группа или контакт) см. TParseElement}
+                                      Element: TObject{элемент, полученный в результате парсинга.
   Если был проведен парсинг группы, то Element имеет тип TContactGroup,
-  если контакта, то - TContact}
-  TOnEndParse = procedure(const What: TParseElement; Element: TObject)
+  если контакта, то - TContact})
     of object;
   {Событие <b>TOnReadData</b> возникает каждый раз, когда компонент или класс
   считывает данные из Сети.
-  * <b>TotalBytes</b> - содержит значение объема данных, который должен быть получен, байт
-  * <b>ReadBytes</b> - содержит количество байт информации полученных из Сети на текущий момент.
   <b>TotalBytes</b> содержит информацию по размеру получаемого документа, включая размер
   всех заголовков, возвращаемых сервером}
-  TOnReadData = procedure(const TotalBytes, ReadBytes: int64) of object;
+  TOnReadData = procedure(const TotalBytes:int64 {содержит значение объема данных, который должен быть получен, байт};
+                                ReadBytes: int64 {содержит количество байт информации полученных из Сети на текущий момент}) of object;
 
 
 {Перечислитель, содержащий все типы узлов, относящихся к Google Contacts API
@@ -174,7 +171,7 @@ type
   public
    {Конструктор создает экземпляр класса. Если определен входной параметр
     <b>ByNode: TXMLNode</b>, то на основании этого узла заполняются поля класса}
-    constructor Create(const byNode: TXmlNode = nil);
+    constructor Create(const byNode: TXmlNode{XML-узел на основании которого будет создан экземпляр класса} = nil);
     {Очищает поля класса от всех данных. Поле FShortFormat получает значение <b>false</b>}
     procedure Clear;
     {Проверка экземпляра класса на "пустоту". Возвращает <b>true</b> в случае, если
@@ -182,12 +179,12 @@ type
     function IsEmpty: boolean;
     { Разбирает узел XML <b>Node</b> и заполняет на основании полученных данных
     поля класса }
-    procedure ParseXML(const Node: TXmlNode);
+    procedure ParseXML(const Node: TXmlNode{узел на основании которого будет проходить заполнение полей объекта});
     {На основании значений полей класса формирует новый XML-узел и помещает его как
      дочерний для узла <b>Root</b>. Если экземпляр класса не содержит данных (функция
      IsEmpty возвращает true) выполнение функции прерывается и результатом функции
      будет <b>nil</b>}
-    function AddToXML(Root: TXmlNode): TXmlNode;
+    function AddToXML(Root: TXmlNode{родительский узел для вновь создаваемого узла}): TXmlNode;
     {Указывает используется ли в описании даты рождения контакта укороченный формат датты (без года рождения)}
     property ShotrFormat: boolean read FShortFormat write FShortFormat;
     {Дата рождения контакта. Если используется укороченный формат даты, то в Date указывается текущий год}
@@ -197,9 +194,22 @@ type
     property ServerDate: string read GetServerDate;
   end;
 
+{Перечислитель, используемый для определения параметра Rel узла
+<b>gContact:calendarLink</b>}
 type
-  TCalendarRel = (tc_none, tc_work, tc_home, tc_free_busy);
+  TCalendarRel = (tc_none {значение парамета не определено},
+                  tc_work {определяет ссылку на рабочий календарь контакта},
+                  tc_home {определяет ссылку на календарь контакта, используемого для домашних записей},
+                  tc_free_busy {определяет ссылку на календарь контака в котором указана информация о занятости});
 
+
+{Класс, описывающий узел <b>gContact:calendarLink</b>.
+   Этот узел используется для указания ссылок на календари контакта.
+   Тип календаря, указанного в ссылке, определяется атрибутом Rel XML-узла
+   Элемент <b>gContact:calendarLink</b> может быть повторен в рамках описания
+   одного контакта, но только один календарь пользователя может помечаться как основной
+   (иметь аттрибут <b>primary=true</b>).
+   Узел <b>gContact:calendarLink</b> может отсутствовать в XML-документе}
   TcpCalendarLink = class
   private
     FRel: TCalendarRel;
@@ -207,141 +217,414 @@ type
     FPrimary: boolean;
     FHref: string;
   public
-    constructor Create(const byNode: TXmlNode = nil);
-    procedure ParseXML(const Node: TXmlNode);
+    {Конструктор создает экземпляр класса. Если определен входной параметр
+    <b>ByNode: TXMLNode</b>, то на основании этого узла заполняются поля класса}
+    constructor Create(const byNode: TXmlNode = nil{XML-узел на основании которого будет создан экземпляр класса});
+    { Разбирает узел XML <b>Node</b> и заполняет на основании полученных данных
+    поля класса }
+    procedure ParseXML(const Node: TXmlNode {узел на основании которого будет проходить заполнение полей объекта});
+    {Возвращает строку на языке пользователя, определяющую тип календаря в ссылке
+
+    * Пример использования *
+    <code>
+       ...
+       property Rel: TCalendarRel read FRel write FRel;
+       ...
+       S:string;
+
+       Rel:=tc_work;
+       S:=RelToString;
+       ----------
+       S='Рабочий календарь'
+    </code>}
     function RelToString: string;
+    {Очищает поля класса от всех данных.}
     procedure Clear;
-    function AddToXML(Root: TXmlNode): TXmlNode;
+    {На основании значений полей класса формирует новый XML-узел и помещает его как
+     дочерний для узла <b>Root</b>. Если экземпляр класса не содержит данных (функция
+     IsEmpty возвращает true) выполнение функции прерывается и результатом функции
+     будет <b>nil</b>}
+    function AddToXML(Root: TXmlNode {родительский узел для вновь создаваемого узла}): TXmlNode;
+    {Проверка экземпляра класса на "пустоту". Возвращает <b>true</b> в случае, если
+    ни одно поле объекта не заполнено, либо отсутствует обязательные какие-либо значения}
     function IsEmpty: boolean;
-    property Rel: TCalendarRel read FRel write FRel;
-    property Primary: boolean read FPrimary write FPrimary;
-    property Href: string read FHref write FHref;
+    property Rel: TCalendarRel read FRel write FRel;//атрибут Rel узла. Определяет тип ссылки на календарь
+    property Primary: boolean read FPrimary write FPrimary;//определяет является ли календарь основным для контакта
+    property Href: string read FHref write FHref;//ссылка на календарь контакта
   end;
 
-type
-  TEventRel = (teNone, teAnniversary, teOther);
 
+{Перечислитель, используемый для определения параметра Rel узла
+<b>gContact:event</b>}
+  TEventRel = (teNone {значение парамета не определено - при отправке информации на сервер,
+                       содержащей такой XML-узел закончится неудачей, если не будет определен атрибут <b>label</b>},
+               teAnniversary {значение определяет какой-либо юбилей контакта},
+               teOther {значение определяет другие важные события контакта});
+
+
+{Класс, описывающий узел <b>gContact:event</b>.
+   Этот узел используется для указания каких-либо значимых дат для контакта.
+   Тип события, указанного в XML-элементе, определяется атрибутом Rel.
+   Элемент <b>gContact:event</b> может быть повторен в рамках описания
+   одного контакта.
+   Узел <b>gContact:event</b> может отсутствовать в XML-документе}
   TcpEvent = class
   private
     FEventType: TEventRel;
     FLabel: string;
     FWhen: TgdWhen;
   public
-    constructor Create(const byNode: TXmlNode = nil);
+    {Конструктор создает экземпляр класса. Если определен входной параметр
+    <b>ByNode: TXMLNode</b>, то на основании этого узла заполняются поля класса}
+    constructor Create(const byNode: TXmlNode = nil{XML-узел на основании которого будет создан экземпляр класса});
+    {Очищает поля класса от всех данных.}
     procedure Clear;
-    procedure ParseXML(const Node: TXmlNode);
+    { Разбирает узел XML <b>Node</b> и заполняет на основании полученных данных
+    поля класса }
+    procedure ParseXML(const Node: TXmlNode {узел на основании которого будет проходить заполнение полей объекта});
+    {Возвращает строку на языке пользователя, определяющую тип календаря в ссылке
+
+    * Пример использования *
+    <code>
+       ...
+       property EventType: TEventRel read FEventType write FEventType;
+       ...
+       S:string;
+
+       Rel:=teAnniversary;
+       S:=RelToString;
+       ----------
+       S='Юбилей'
+    </code>}
     function RelToString: string;
+    {Проверка экземпляра класса на "пустоту". Возвращает <b>true</b> в случае, если
+    ни одно поле объекта не заполнено, либо отсутствует обязательные какие-либо значения}
     function IsEmpty: boolean;
-    function AddToXML(Root: TXmlNode): TXmlNode;
-    property EventType: TEventRel read FEventType write FEventType;
-    property Labl: string read FLabel write FLabel;
+    {На основании значений полей класса формирует новый XML-узел и помещает его как
+     дочерний для узла <b>Root</b>. Если экземпляр класса не содержит данных (функция
+     IsEmpty возвращает true) выполнение функции прерывается и результатом функции
+     будет <b>nil</b>}
+    function AddToXML(Root: TXmlNode{родительский узел для вновь создаваемого узла}): TXmlNode;
+
+    property EventType: TEventRel read FEventType write FEventType;//тип события, указанного в элементе
+    property Labl: string read FLabel write FLabel;//тектсовая метка, определяющая событие, если параметр Rel XML-узла имеет значение <b>Other</b>
+    property When: TgdWhen read FWhen write FWhen; //определет дату наступления события
   end;
 
-type
-  TExternalIdType = (tiNone, tiAccount, tiCustomer, tiNetwork, tiOrganization);
 
+{Перечислитель, используемый для определения параметра Rel узла
+<b>gContact:externalId</b>}
+type
+  TExternalIdType = (tiNone {значение не определено},
+                     tiAccount {указан ID аккаунта},
+                     tiCustomer {указан ID клиента какой-либо внешней сети},
+                     tiNetwork {указан сетевой идентификатор в какой-либо сети},
+                     tiOrganization {указан ID организации в которой работает контакт});
+
+{Класс, описывающий узел <b>gContact:externalId</b>.
+   Этот узел используется для указания каких-либо идентификаторов внешних систем в которых участвует контакт.
+   Тип ID, указанного в XML-элементе, определяется атрибутом Rel.
+   Элемент <b>gContact:externalId</b> может быть повторен в рамках описания
+   одного контакта.
+   Узел <b>gContact:externalId</b> может отсутствовать в XML-документе}
   TcpExternalId = class
   private
     FRel: TExternalIdType;
     FLabel: string;
     FValue: string;
   public
-    constructor Create(const byNode: TXmlNode = nil);
+    {Конструктор создает экземпляр класса. Если определен входной параметр
+    <b>ByNode: TXMLNode</b>, то на основании этого узла заполняются поля класса}
+    constructor Create(const byNode: TXmlNode = nil{XML-узел на основании которого будет создан экземпляр класса});
+    {Очищает поля класса от всех данных.}
     procedure Clear;
-    procedure ParseXML(const Node: TXmlNode);
+    { Разбирает узел XML <b>Node</b> и заполняет на основании полученных данных
+    поля класса }
+    procedure ParseXML(const Node: TXmlNode {узел на основании которого будет проходить заполнение полей объекта});
+    {Возвращает строку на языке пользователя, определяющую тип календаря в ссылке
+
+    * Пример использования *
+    <code>
+       ...
+       property Rel: TExternalIdType read FRel write FRel;
+       ...
+       S:string;
+
+       Rel:=tiAccount;
+       S:=RelToString;
+       ----------
+       S='ID аккаунта'
+    </code>}
     function RelToString: string;
+    {Проверка экземпляра класса на "пустоту". Возвращает <b>true</b> в случае, если
+    ни одно поле объекта не заполнено, либо отсутствует обязательные какие-либо значения}
     function IsEmpty: boolean;
-    function AddToXML(Root: TXmlNode): TXmlNode;
-    property Rel: TExternalIdType read FRel write FRel;
-    property Labl: string read FLabel write FLabel;
-    property Value: string read FValue write FValue;
+    {На основании значений полей класса формирует новый XML-узел и помещает его как
+     дочерний для узла <b>Root</b>. Если экземпляр класса не содержит данных (функция
+     IsEmpty возвращает true) выполнение функции прерывается и результатом функции
+     будет <b>nil</b>}
+    function AddToXML(Root: TXmlNode{родительский узел для вновь создаваемого узла}): TXmlNode;
+
+    property Rel: TExternalIdType read FRel write FRel;//определяет тип ID
+    property Labl: string read FLabel write FLabel;//текстовая метка, определяющая указанный ID
+    property Value: string read FValue write FValue;//значение ID
   end;
 
-type
-  TGenderType = (none, male, female);
 
+{Перечислитель, используемый для определения значения узла
+<b>gContact:gender</b>}
+type
+  TGenderType = (none {пол контакта не указан},
+                 male {мужской},
+                 female{женский});
+
+{Класс, описывающий узел <b>gContact:gender</b>.
+   Этот узел используется для указания пола контакта.
+   Пол указывается в значении в XML-элемента.
+   Элемент <b>gContact:gender</b> не может быть повторен в рамках описания
+   одного контакта.
+   Узел <b>gContact:gender</b> может отсутствовать в XML-документе}
   TcpGender = class
   private
     FValue: TGenderType;
   public
-    constructor Create(const byNode: TXmlNode = nil);
+    {Конструктор создает экземпляр класса. Если определен входной параметр
+    <b>ByNode: TXMLNode</b>, то на основании этого узла заполняются поля класса}
+    constructor Create(const byNode: TXmlNode = nil{XML-узел на основании которого будет создан экземпляр класса});
+    {Очищает поля класса от всех данных.}
     procedure Clear;
+    {Проверка экземпляра класса на "пустоту". Возвращает <b>true</b> в случае, если
+    ни одно поле объекта не заполнено, либо отсутствует обязательные какие-либо значения}
     function IsEmpty: boolean;
+    {Возвращает строку на языке пользователя, определяющую тип календаря в ссылке
+
+    * Пример использования *
+    <code>
+       ...
+       property Value: TGenderType read FValue write FValue;
+       ...
+       S:string;
+
+       Rel:=male;
+       S:=ValueToString;
+       ----------
+       S='мужской'
+    </code>}
     function ValueToString: string;
-    procedure ParseXML(const Node: TXmlNode);
-    function AddToXML(Root: TXmlNode): TXmlNode;
-    property Value: TGenderType read FValue write FValue;
+    {Разбирает узел XML <b>Node</b> и заполняет на основании полученных данных
+    поля класса }
+    procedure ParseXML(const Node: TXmlNode {узел на основании которого будет проходить заполнение полей объекта});
+    {На основании значений полей класса формирует новый XML-узел и помещает его как
+     дочерний для узла <b>Root</b>. Если экземпляр класса не содержит данных (функция
+     IsEmpty возвращает true) выполнение функции прерывается и результатом функции
+     будет <b>nil</b>}
+    function AddToXML(Root: TXmlNode{родительский узел для вновь создаваемого узла}): TXmlNode;
+
+    property Value: TGenderType read FValue write FValue;//пол контакта
   end;
 
+
+{Класс, описывающий узел <b>gContact:groupMembershipInfo</b>.
+   Этот узел используется для указания того в каких группах содержится контакт.
+   Группа указывается в виде строки, содержащей URL группы в адресной книге.
+   Элемент <b>gContact:groupMembershipInfo</b> может быть повторен в рамках описания
+   одного контакта.
+   Узел <b>gContact:groupMembershipInfo</b> обязательно присутствует в XML-документе}
 type
   TcpGroupMembershipInfo = class
   private
     FDeleted: boolean;
     FHref: string;
   public
-    constructor Create(const byNode: TXmlNode = nil);
+    {Конструктор создает экземпляр класса. Если определен входной параметр
+    <b>ByNode: TXMLNode</b>, то на основании этого узла заполняются поля класса}
+    constructor Create(const byNode: TXmlNode = nil{XML-узел на основании которого будет создан экземпляр класса});
+    {Очищает поля класса от всех данных.}
     procedure Clear;
-    procedure ParseXML(const Node: TXmlNode);
+    {Разбирает узел XML <b>Node</b> и заполняет на основании полученных данных
+    поля класса }
+    procedure ParseXML(const Node: TXmlNode {узел на основании которого будет проходить заполнение полей объекта});
+    {Проверка экземпляра класса на "пустоту". Возвращает <b>true</b> в случае, если
+    ни одно поле объекта не заполнено, либо отсутствует обязательные какие-либо значения}
     function IsEmpty: boolean;
-    function AddToXML(Root: TXmlNode): TXmlNode;
-    property Href: string read FHref write FHref;
-    property Deleted: boolean read FDeleted write FDeleted;
+    {На основании значений полей класса формирует новый XML-узел и помещает его как
+     дочерний для узла <b>Root</b>. Если экземпляр класса не содержит данных (функция
+     IsEmpty возвращает true) выполнение функции прерывается и результатом функции
+     будет <b>nil</b>}
+    function AddToXML(Root: TXmlNode{родительский узел для вновь создаваемого узла}): TXmlNode;
+
+    property Href: string read FHref write FHref;//URL группы контактов
+    property Deleted: boolean read FDeleted write FDeleted;//значение <b>true</b> указывает на то, что контакт был удален не позднее, чем 30 дней назад
   end;
 
+{Перечислитель, используемый для определения значения атрибута rel узла
+<b>gContact:jot</b>}
 type
-  TJotRel = (TjNone, Tjhome, Tjwork, Tjother, Tjkeywords, Tjuser);
+  TJotRel = (TjNone,
+             Tjhome,
+             Tjwork,
+             Tjother,
+             Tjkeywords,
+             Tjuser );
 
+{Класс, описывающий узел <b>gContact:jot</b>.
+   Этот узел используется для хранения произвольной информации о контакте.
+   Каждый фрагмент информации обязательно должен иметь свой тип, описываемый в атрибуте rel
+   (см. также значения перечислителя TJotRel)
+   Фрагменты информации храняться в значении XML-узла.
+   Элемент <b>gContact:jot</b> может быть повторен в рамках описания одного контакта.
+   Узел <b>gContact:jot</b> может отсутствовать в XML-документе}
   TcpJot = class
   private
     FRel: TJotRel;
     FText: string;
   public
-    constructor Create(const byNode: TXmlNode = nil);
+    {Конструктор создает экземпляр класса. Если определен входной параметр
+    <b>ByNode: TXMLNode</b>, то на основании этого узла заполняются поля класса}
+    constructor Create(const byNode: TXmlNode = nil{XML-узел на основании которого будет создан экземпляр класса});
+    {Очищает поля класса от всех данных.}
     procedure Clear;
-    procedure ParseXML(const Node: TXmlNode);
+    {Разбирает узел XML <b>Node</b> и заполняет на основании полученных данных
+    поля класса }
+    procedure ParseXML(const Node: TXmlNode {узел на основании которого будет проходить заполнение полей объекта});
+    {Возвращает строку на языке пользователя, определяющую тип календаря в ссылке
+
+    * Пример использования *
+    <code>
+       ...
+       property Rel: TJotRel read FRel write FRel;
+       ...
+       S:string;
+
+       Rel:=Tjkeywords;
+       S:=RelToString;
+       ----------
+       S='Ключевые слова'
+    </code>}
     function RelToString: string;
+    {Проверка экземпляра класса на "пустоту". Возвращает <b>true</b> в случае, если
+    ни одно поле объекта не заполнено, либо отсутствует обязательные какие-либо значения}
     function IsEmpty: boolean;
-    function AddToXML(Root: TXmlNode): TXmlNode;
-    property Rel: TJotRel read FRel write FRel;
-    property Text: string read FText write FText;
+     {На основании значений полей класса формирует новый XML-узел и помещает его как
+     дочерний для узла <b>Root</b>. Если экземпляр класса не содержит данных (функция
+     IsEmpty возвращает true) выполнение функции прерывается и результатом функции
+     будет <b>nil</b>}
+    function AddToXML(Root: TXmlNode{родительский узел для вновь создаваемого узла}): TXmlNode;
+    property Rel: TJotRel read FRel write FRel;//значение атрибута Rel
+    property Text: string read FText write FText;//фрагмент информации о контакте, записанный в XML-узле
   end;
 
+
+{Класс, описывающий узел <b>gContact:language</b>.
+   Этот узел используется для хранения информации о предпочитаемом языке контакта.
+   В атрибуте <b>code</b> указывается код языка согласно спецификации IETF BCP 47. Если код определен не верно, то
+   сервер вернет ошибку.
+   Произвольное описание языка задается в атрибуте <b>label</b> узла. Если определено значение code, то label обязателен к заполнению.
+   Элемент <b>gContact:language</b> может быть повторен в рамках описания одного контакта.
+   Узел <b>gContact:language</b> может отсутствовать в XML-документе}
 type
   TcpLanguage = class
   private
     Fcode: string;
     FLabel: string;
   public
-    constructor Create(const byNode: TXmlNode = nil);
+    {Конструктор создает экземпляр класса. Если определен входной параметр
+    <b>ByNode: TXMLNode</b>, то на основании этого узла заполняются поля класса}
+    constructor Create(const byNode: TXmlNode = nil{XML-узел на основании которого будет создан экземпляр класса});
+    {Очищает поля класса от всех данных.}
     procedure Clear;
+    {Проверка экземпляра класса на "пустоту". Возвращает <b>true</b> в случае, если
+    ни одно поле объекта не заполнено, либо отсутствует обязательные какие-либо значения}
     function IsEmpty: boolean;
-    procedure ParseXML(const Node: TXmlNode);
-    function AddToXML(Root: TXmlNode): TXmlNode;
-    property Code: string read Fcode write Fcode;
-    property Labl: string read FLabel write FLabel;
+    {Разбирает узел XML <b>Node</b> и заполняет на основании полученных данных
+    поля класса }
+    procedure ParseXML(const Node: TXmlNode {узел на основании которого будет проходить заполнение полей объекта});
+    {На основании значений полей класса формирует новый XML-узел и помещает его как
+     дочерний для узла <b>Root</b>. Если экземпляр класса не содержит данных (функция
+     IsEmpty возвращает true) выполнение функции прерывается и результатом функции
+     будет <b>nil</b>}
+    function AddToXML(Root: TXmlNode{родительский узел для вновь создаваемого узла}): TXmlNode;
+    property Code: string read Fcode write Fcode;//код языка согласно спецификации IETF BCP 47
+    property Labl: string read FLabel write FLabel;//произвольная строка определяющая язык пользователя
   end;
 
-type
-  TPriotityRel = (TpNone, Tplow, Tpnormal, Tphigh);
 
+{Перечислитель, используемый для определения значения атрибута rel узла
+<b>gContact:priority</b>}
+type
+  TPriotityRel = (TpNone   {приоритет не определен},
+                  Tplow    {низкий приоритет контакта},
+                  Tpnormal {нормальный приоритет контакта},
+                  Tphigh   {высокий приоритет контакта});
+
+  {Класс, описывающий узел <b>gContact:priority</b>.
+   С помощью этого узла контакты можно разделить по трём категориям важности (см. описание перечислителя TPriotityRel).
+   Важность контакта определяется в атрибуте <b>rel</b> XML-узла.
+   Элемент <b>gContact:priority</b> не может повторяться в рамках описания одного контакта.
+   Узел <b>gContact:priority</b> может отсутствовать в XML-документе}
   TcpPriority = class
   private
     FRel: TPriotityRel;
   public
-    constructor Create(const byNode: TXmlNode = nil);
+    {Конструктор создает экземпляр класса. Если определен входной параметр
+    <b>ByNode: TXMLNode</b>, то на основании этого узла заполняются поля класса}
+    constructor Create(const byNode: TXmlNode = nil{XML-узел на основании которого будет создан экземпляр класса});
+    {Очищает поля класса от всех данных.}
     procedure Clear;
+    {Проверка экземпляра класса на "пустоту". Возвращает <b>true</b> в случае, если
+    ни одно поле объекта не заполнено, либо отсутствует обязательные какие-либо значения}
     function IsEmpty: boolean;
+    {Возвращает строку на языке пользователя, определяющую тип календаря в ссылке
+
+    * Пример использования *
+    <code>
+       ...
+       property Rel: TPriotityRel read FRel write FRel;
+       ...
+       S:string;
+
+       Rel:=Tplow;
+       S:=RelToString;
+       ----------
+       S='Низкий приоритет'
+    </code>}
     function RelToString: string;
-    procedure ParseXML(const Node: TXmlNode);
-    function AddToXML(Root: TXmlNode): TXmlNode;
-    property Rel: TPriotityRel read FRel write FRel;
+    {Разбирает узел XML <b>Node</b> и заполняет на основании полученных данных
+    поля класса }
+    procedure ParseXML(const Node: TXmlNode {узел на основании которого будет проходить заполнение полей объекта});
+    {На основании значений полей класса формирует новый XML-узел и помещает его как
+     дочерний для узла <b>Root</b>. Если экземпляр класса не содержит данных (функция
+     IsEmpty возвращает true) выполнение функции прерывается и результатом функции
+     будет <b>nil</b>}
+    function AddToXML(Root: TXmlNode{родительский узел для вновь создаваемого узла}): TXmlNode;
+    property Rel: TPriotityRel read FRel write FRel;//приоритет пользователя (см. описание перечислителя TPriotityRel)
   end;
 
-type
-  TRelationType = (tr_None, tr_assistant, tr_brother, tr_child,
-    tr_domestic_partner, tr_father, tr_friend, tr_manager, tr_mother,
-    tr_parent, tr_partner, tr_referred_by, tr_relative, tr_sister, tr_spouse);
 
+{Перечислитель, используемый для определения значения атрибута rel узла
+<b>gContact:relation</b>}
+type
+    TRelationType = (tr_None {отношение к контаку не указано},
+                     tr_assistant {указанное лицо является помощником},
+                     tr_brother {указанное лицо является братом},
+                     tr_child {указанное лицо является ребенком},
+                     tr_domestic_partner {указанное лицо является соседом},
+                     tr_father {указанное лицо является отцом},
+                     tr_friend {указанное лицо является другом},
+                     tr_manager {указанное лицо является управляющим (начальником)},
+                     tr_mother {указанное лицо является матерью},
+                     tr_parent {указанное лицо является родителем},
+                     tr_partner {указанное лицо является партнером},
+                     tr_referred_by {указанное лицо является знакомым},
+                     tr_relative {контакт находится с этим лицом в каких-либо других отношениях},
+                     tr_sister {указанное лицо является сестрой},
+                     tr_spouse {указанное лицо является супругой});
+
+  {Класс, описывающий узел <b>gContact:relation</b>.
+   Используется для указания других лиц, состоящих в каки-либо отношениях с контактом  (см. описание перечислителя TRelationType).
+   Отношение к контакту указывается в атрибуте <b>rel</b> XML-узла.
+   Элемент <b>gContact:relation</b> может повторяться в рамках описания одного контакта.
+   Узел <b>gContact:relation</b> может отсутствовать в XML-документе}
   TcpRelation = class
   private
     FValue: string;
@@ -349,67 +632,201 @@ type
     FRealition: TRelationType;
     function GetRelStr(aRel: TRelationType): string;
   public
-    constructor Create(const byNode: TXmlNode = nil);
+    {Конструктор создает экземпляр класса. Если определен входной параметр
+    <b>ByNode: TXMLNode</b>, то на основании этого узла заполняются поля класса}
+    constructor Create(const byNode: TXmlNode = nil{XML-узел на основании которого будет создан экземпляр класса});
+    {Очищает поля класса от всех данных.}
     procedure Clear;
+    {Возвращает строку на языке пользователя, определяющую тип календаря в ссылке
+
+    * Пример использования *
+    <code>
+       ...
+       property Realition: TRelationType read FRealition write FRealition;
+       ...
+       S:string;
+
+       Realition:=tr_brother;
+       S:=RelToString;
+       ----------
+       S='Брат'
+    </code>}
     function RelToString: string;
+    {Проверка экземпляра класса на "пустоту". Возвращает <b>true</b> в случае, если
+    ни одно поле объекта не заполнено, либо отсутствует обязательные какие-либо значения}
     function IsEmpty: boolean;
-    procedure ParseXML(const Node: TXmlNode);
-    function AddToXML(Root: TXmlNode): TXmlNode;
-    property Realition: TRelationType read FRealition write FRealition;
-    property Value: string read FValue write FValue;
+    {Разбирает узел XML <b>Node</b> и заполняет на основании полученных данных
+    поля класса }
+    procedure ParseXML(const Node: TXmlNode {узел на основании которого будет проходить заполнение полей объекта});
+    {На основании значений полей класса формирует новый XML-узел и помещает его как
+     дочерний для узла <b>Root</b>. Если экземпляр класса не содержит данных (функция
+     IsEmpty возвращает true) выполнение функции прерывается и результатом функции
+     будет <b>nil</b>}
+    function AddToXML(Root: TXmlNode{родительский узел для вновь создаваемого узла}): TXmlNode;
+    property Realition: TRelationType read FRealition write FRealition;//отношение к контакту (см. описание значений перечислителя TRelationType)
+    property Value: string read FValue write FValue;//дения об указанном человеке (e-mail, имя, и т.д.)
   end;
 
-type
-  TSensitivityRel = (TsNone, Tsconfidential, Tsnormal, Tspersonal, Tsprivate);
 
+{Перечислитель, используемый для определения значения атрибута rel узла
+<b>gContact:sensitivity</b>}
+type
+  TSensitivityRel = (TsNone {характер контакта не определен},
+                     Tsconfidential {конфеденциальный контакт},
+                     Tsnormal {обычный контакт},
+                     Tspersonal {персональный контакт},
+                     Tsprivate {приватный (скрытый) контакт});
+
+
+
+
+  {Класс, описывающий узел <b>gContact:sensitivity</b>.
+   Используется для классификации контактов по их степени открытости (см. описание значений перечислителя TSensitivityRel).
+   Степень открытости контакта указывается в атрибуте <b>rel</b> XML-узла.
+   Элемент <b>gContact:sensitivity</b> не может повторяться в рамках описания одного контакта.
+   Узел <b>gContact:sensitivity</b> может отсутствовать в XML-документе}
   TcpSensitivity = class
   private
     FRel: TSensitivityRel;
   public
-    constructor Create(const byNode: TXmlNode = nil);
+    {Конструктор создает экземпляр класса. Если определен входной параметр
+    <b>ByNode: TXMLNode</b>, то на основании этого узла заполняются поля класса}
+    constructor Create(const byNode: TXmlNode = nil{XML-узел на основании которого будет создан экземпляр класса});
+    {Очищает поля класса от всех данных.}
     procedure Clear;
+    {Проверка экземпляра класса на "пустоту". Возвращает <b>true</b> в случае, если
+    ни одно поле объекта не заполнено, либо отсутствует обязательные какие-либо значения}
     function IsEmpty: boolean;
+    {Возвращает строку на языке пользователя, определяющую тип календаря в ссылке
+
+    * Пример использования *
+    <code>
+       ...
+       property Rel: TSensitivityRel read FRel write FRel;
+       ...
+       S:string;
+
+       Rel:=Tsconfidential;
+       S:=RelToString;
+       ----------
+       S='Конфеденциальный'
+    </code>}
     function RelToString: string;
-    procedure ParseXML(const Node: TXmlNode);
-    function AddToXML(Root: TXmlNode): TXmlNode;
-    property Rel: TSensitivityRel read FRel write FRel;
+    {Разбирает узел XML <b>Node</b> и заполняет на основании полученных данных
+    поля класса }
+    procedure ParseXML(const Node: TXmlNode {узел на основании которого будет проходить заполнение полей объекта});
+    {На основании значений полей класса формирует новый XML-узел и помещает его как
+     дочерний для узла <b>Root</b>. Если экземпляр класса не содержит данных (функция
+     IsEmpty возвращает true) выполнение функции прерывается и результатом функции
+     будет <b>nil</b>}
+    function AddToXML(Root: TXmlNode{родительский узел для вновь создаваемого узла}): TXmlNode;
+    property Rel: TSensitivityRel read FRel write FRel;//характеристика "открытости" контакта (см. описание значений перечислителя TSensitivityRel)
   end;
 
-type
-  TcpSysGroupId = (tg_None, tg_Contacts, tg_Friends, tg_Family, tg_Coworkers);
 
+{Перечислитель, используемый для определения значения атрибута id узла
+<b>gContact:systemGroup</b>}
+type
+  TcpSysGroupId = (tg_None {идентификатор группы не определен},
+                   tg_Contacts {идентификатор системной группы "Мои контакты"},
+                   tg_Friends {идентификатор системной группы "Друзья"},
+                   tg_Family {идентификатор системной группы "Семья"},
+                   tg_Coworkers {идентификатор системной группы "Коллеги"});
+
+{Класс, описывающий узел <b>gContact:systemGroup</b>.
+   Используется для определения идентификатора групы, если группа является системной.
+   Идентификатор сисемной группы указывается в атрибуте <b>id</b> XML-узла.
+   Элемент <b>gContact:systemGroup</b> не может повторяться в рамках описания одной группы.
+   Узел <b>gContact:systemGroup</b> может отсутствовать в XML-документе}
   TcpSystemGroup = class
   private
     FIdRel: TcpSysGroupId;
   public
-    constructor Create(const byNode: TXmlNode = nil);
+    {Конструктор создает экземпляр класса. Если определен входной параметр
+    <b>ByNode: TXMLNode</b>, то на основании этого узла заполняются поля класса}
+    constructor Create(const byNode: TXmlNode = nil{XML-узел на основании которого будет создан экземпляр класса});
+    {Очищает поля класса от всех данных.}
     procedure Clear;
+    {Проверка экземпляра класса на "пустоту". Возвращает <b>true</b> в случае, если
+    ни одно поле объекта не заполнено, либо отсутствует обязательные какие-либо значения}
     function IsEmpty: boolean;
+    {Возвращает строку на языке пользователя, определяющую тип календаря в ссылке
+
+    * Пример использования *
+    <code>
+       ...
+        property ID: TcpSysGroupId read FIdRel write FIdRel;
+       ...
+       S:string;
+
+       Rel:=tg_Contacts;
+       S:=RelToString;
+       ----------
+       S='Мои контакты'
+    </code>}
     function RelToString: string;
-    procedure ParseXML(const Node: TXmlNode);
-    function AddToXML(Root: TXmlNode): TXmlNode;
-    property ID: TcpSysGroupId read FIdRel write FIdRel;
+    {Разбирает узел XML <b>Node</b> и заполняет на основании полученных данных
+    поля класса }
+    procedure ParseXML(const Node: TXmlNode {узел на основании которого будет проходить заполнение полей объекта});
+     {На основании значений полей класса формирует новый XML-узел и помещает его как
+     дочерний для узла <b>Root</b>. Если экземпляр класса не содержит данных (функция
+     IsEmpty возвращает true) выполнение функции прерывается и результатом функции
+     будет <b>nil</b>}
+    function AddToXML(Root: TXmlNode{родительский узел для вновь создаваемого узла}): TXmlNode;
+    property ID: TcpSysGroupId read FIdRel write FIdRel;//идентификатор системной группы (см. описание перечислителя TcpSysGroupId)
   end;
 
+
+{Класс, описывающий узел <b>gContact:userDefinedField</b>.
+   Используется для указания произвольной информации о контакте.
+   В XML-узле обязательно должен присутствовать атрибут <b>key</b> - имя поля и <b>value</b> - значение
+   Элемент <b>gContact:userDefinedField</b> может повторяться в рамках описания одной группы.
+   Узел <b>gContact:userDefinedField</b> может отсутствовать в XML-документе}
 type
   TcpUserDefinedField = class
   private
     FKey: string;
     FValue: string;
   public
-    constructor Create(const byNode: TXmlNode = nil);
+    {Конструктор создает экземпляр класса. Если определен входной параметр
+    <b>ByNode: TXMLNode</b>, то на основании этого узла заполняются поля класса}
+    constructor Create(const byNode: TXmlNode = nil{XML-узел на основании которого будет создан экземпляр класса});
+    {Очищает поля класса от всех данных.}
     procedure Clear;
+    {Проверка экземпляра класса на "пустоту". Возвращает <b>true</b> в случае, если
+    ни одно поле объекта не заполнено, либо отсутствует обязательные какие-либо значения}
     function IsEmpty: boolean;
-    procedure ParseXML(const Node: TXmlNode);
-    function AddToXML(Root: TXmlNode): TXmlNode;
-    property Key: string read FKey write FKey;
-    property Value: string read FValue write FValue;
+    {Разбирает узел XML <b>Node</b> и заполняет на основании полученных данных
+    поля класса }
+    procedure ParseXML(const Node: TXmlNode {узел на основании которого будет проходить заполнение полей объекта});
+    {На основании значений полей класса формирует новый XML-узел и помещает его как
+     дочерний для узла <b>Root</b>. Если экземпляр класса не содержит данных (функция
+     IsEmpty возвращает true) выполнение функции прерывается и результатом функции
+     будет <b>nil</b>}
+    function AddToXML(Root: TXmlNode{родительский узел для вновь создаваемого узла}): TXmlNode;
+
+    property Key: string read FKey write FKey;//Ключ (имя) поля определенного пользователем
+    property Value: string read FValue write FValue;//значения поля, определенного пользователем
   end;
 
-type
-  TWebSiteType = (tw_None, tw_Home_Page, tw_Blog, tw_Profile, tw_Home, tw_Work,
-    tw_Other, tw_Ftp);
 
+{Перечислитель, используемый для определения значения атрибута rel узла
+<b>gContact:website</b>}
+type
+  TWebSiteType = (tw_None {назначение ресурса не определено},
+                  tw_Home_Page {ресурс является домашней страничкой контакта},
+                  tw_Blog {ресурс яляется блогом контакта},
+                  tw_Profile {ресурс является профилем в Google контакта},
+                  tw_Home {ресурс является домашним сайтом контакта},
+                  tw_Work {ресурс является рабочим сайтом контакта},
+                  tw_Other {назначение ресурса не подходит ни под одно доступное описание},
+                  tw_Ftp {ресурс является FTP-сайтом контакта});
+
+  {Класс, описывающий узел <b>gContact:website</b>.
+   Используется для указания ресурсов в Сети с которыми связан контакт.
+   Назначение ресурса описывается в атрибуте rel XML-узла (см. описание перечислителя TWebSiteType)
+   Элемент <b>gContact:website</b> может повторяться в рамках описания одной группы.
+   Узел <b>gContact:website</b> может отсутствовать в XML-документе}
   TcpWebsite = class
   private
     FHref: string;
@@ -417,26 +834,60 @@ type
     FLabel: string;
     FRel: TWebSiteType;
   public
-    constructor Create(const byNode: TXmlNode = nil);
+    {Конструктор создает экземпляр класса. Если определен входной параметр
+    <b>ByNode: TXMLNode</b>, то на основании этого узла заполняются поля класса}
+    constructor Create(const byNode: TXmlNode = nil{XML-узел на основании которого будет создан экземпляр класса});
+    {Очищает поля класса от всех данных.}
     procedure Clear;
+    {Проверка экземпляра класса на "пустоту". Возвращает <b>true</b> в случае, если
+    ни одно поле объекта не заполнено, либо отсутствует обязательные какие-либо значения}
     function IsEmpty: boolean;
+    {Возвращает строку на языке пользователя, определяющую тип календаря в ссылке
+
+    * Пример использования *
+    <code>
+       ...
+        property Rel: TWebSiteType read FRel write FRel;
+       ...
+       S:string;
+
+       Rel:=tw_Blog;
+       S:=RelToString;
+       ----------
+       S='Блог'
+    </code>}
     function RelToString: string;
-    procedure ParseXML(const Node: TXmlNode);
-    function AddToXML(Root: TXmlNode): TXmlNode;
-    property Href: string read FHref write FHref;
-    property Primary: boolean read FPrimary write FPrimary;
-    property Labl: string read FLabel write FLabel;
-    property Rel: TWebSiteType read FRel write FRel;
+    {Разбирает узел XML <b>Node</b> и заполняет на основании полученных данных
+    поля класса }
+    procedure ParseXML(const Node: TXmlNode {узел на основании которого будет проходить заполнение полей объекта});
+    {На основании значений полей класса формирует новый XML-узел и помещает его как
+     дочерний для узла <b>Root</b>. Если экземпляр класса не содержит данных (функция
+     IsEmpty возвращает true) выполнение функции прерывается и результатом функции
+     будет <b>nil</b>}
+    function AddToXML(Root: TXmlNode{родительский узел для вновь создаваемого узла}): TXmlNode;
+
+    property Href: string read FHref write FHref;//URL ресурса
+    property Primary: boolean read FPrimary write FPrimary;//true, если указанный ресурс является основным для контакта
+    property Labl: string read FLabel write FLabel;//произвольное описание ресурса
+    property Rel: TWebSiteType read FRel write FRel;//назначение ресурса (см. описание перечислителя TWebSiteType)
   end;
 
 type
   TGoogleContact = class;
   TContactGroup = class;
-  // тип формируемого файла
-  TFileType = (tfAtom, tfXML);
-  // тип сортировки конактов
-  TSortOrder = (Ts_None, Ts_ascending, Ts_descending);
 
+  {Перечислитель, пределяющий формат файла, который будет сформирован для
+   передачи на сервер или для сохранения на жесткий диск}
+  TFileType = (tfAtom {файл будет формироваться как документ Atom},
+               tfXML  {файл будет формироваться как обычный XML-документ});
+  {Перечислитель, определяющий способ сортировки контактов пользователя}
+  TSortOrder = (Ts_None {способ сортировки контактов не определен (определяется сервером)},
+                Ts_ascending {сортировка контактов по возрастанию},
+                Ts_descending {сортировка контактов по убыванию});
+
+
+{Класс предоставляющий доступ к информации об одном контакте пользователя. Поля класса могут заполняться на основании
+XML-узла <b>entry</b> XML-документа, содержащего сведения о контактах пользователя}
   TContact = class
   private
     FEtag: string;
@@ -464,48 +915,83 @@ type
     function GetContactName: string;
     function GenerateText(TypeFile: TFileType): string;
   public
-    constructor Create(byNode: TXmlNode = nil);
+    {Конструктор создает экземпляр класса. Если определен входной параметр
+    <b>ByNode: TXMLNode</b>, то на основании этого узла заполняются поля класса}
+    constructor Create(byNode: TXmlNode = nil{XML-узел на основании которого будет создан экземпляр класса});
+    {Деструктор. Корректно удаляет объект из памяти}
     destructor Destroy; override;
+    {Проверка экземпляра класса на "пустоту". Возвращает <b>true</b> в случае, если
+    ни одно поле объекта не заполнено, либо отсутствует обязательные какие-либо значения}
     function IsEmpty: boolean;
+    {Очищает поля класса от всех данных.}
     procedure Clear;
-    procedure ParseXML(Node: TXmlNode); overload;
-    procedure ParseXML(Stream: TStream); overload;
-    function FindEmail(const aEmail: string; out Index: integer): TgdEmail;
-
-    procedure SaveToFile(const FileName: string; FileType: TFileType = tfAtom);
-    procedure LoadFromFile(const FileName: string);
-
+    {Разбирает узел XML <b>Node</b> и заполняет на основании полученных данных
+    поля класса }
+    procedure ParseXML(Node: TXmlNode {узел на основании которого будет проходить заполнение полей объекта}); overload;
+    {Разбирает узел XML, находящийся в потоке <b>Stream</b> и заполняет на основании полученных данных
+    поля класса }
+    procedure ParseXML(Stream: TStream{поток, содержащий информацию об XML-узле}); overload;
+    {находит в списке всех email'ов контакта заданный адрес и возвращает полную информацию по нему в виде объекта TgdEmail}
+    function FindEmail(const aEmail: string {адрес email информацию по которому необходимо найти};
+                             out Index: integer {индекс объекта в списке email'ов контакта}): TgdEmail;
+    {сохраняет всю информацию о контакте в файл}
+    procedure SaveToFile(const FileName: string {имя файла (включая путь к нему)};
+                               FileType: TFileType = tfAtom{тип файла (см. описание TFileType)});
+    {загружает информацию о контакте из файла}
+    procedure LoadFromFile(const FileName: string{имя файла (включая путь к нему});
+    {Заголовок контакта. Представляет собой объект TTextTag}
     property TagTitle: TTextTag read FTitle write FTitle;
+    {Краткое описание контакта. Представляет собой объект TTextTag}
     property TagContent: TTextTag read FContent write FContent;
+    {Имя контакта. Представляет собой объект TgdName}
     property TagName: TgdName read FName write FName;
+    {Псевдоним контакта. Представляет собой объект TcpNickname}
     property TagNickName: TcpNickname read FNickName write FNickName;
+    {День рождения контакта. Представляет собой объект TcpBirthday}
     property TagBirthDay: TcpBirthday read FBirthDay write FBirthDay;
+    {Организация в которой рабоает контакт. Представляет собой объект TgdOrganization}
     property TagOrganization
       : TgdOrganization read GetOrganization write FOrganization;
-
-    property Etag: string read FEtag write FEtag;
+    {Уникальный идентификатор контакта}
+    property Etag: string read FEtag;
+    {Идентификатор контакта, представляющий собой URL по которому находится полная информация о контакте}
     property ID: string read FId write FId;
+    {Дата последнего обновления контакта}
     property Updated: TDateTime read FUpdated write FUpdated;
-
+    {Список ссылок, связанных с контактом. Каждая ссылка представлена в виде объекта TEntryLink
+    Эти ссылки используются для редактирования информации о контакте на сервере, загрузки фотографий, удаления контакта и т.д.}
     property Links: TList<TEntryLink>read FLinks write FLinks;
+    {Список всех email-адресов контакта. Каждый элемент списка представляет собой объект TgdEmail}
     property Emails: TList<TgdEmail>read FEmails write FEmails;
+    {Список всех номеров телефонов контакта. Каждый элемент списка представляет собой объект TgdPhoneNumber}
     property Phones: TList<TgdPhoneNumber>read FPhones write FPhones;
+    {Список всех почтовых адресов контакта. Каждый элемент списка представляет собой объект TgdStructuredPostalAddress}
     property PostalAddreses
       : TList<TgdStructuredPostalAddress>read FPostalAddreses write
       FPostalAddreses;
+    {Список всех значимых событий для контакта. Каждый элемент списка представляет собой объект TcpEvent}
     property Events: TList<TcpEvent>read FEvents write FEvents;
+    {Список лиц, связанных каким-либо образом с контактом. Каждый элемент списка представляет собой объект TcpRelation}
     property Relations: TList<TcpRelation>read FRelations write FRelations;
+    {Список полей, содержащих дополнительную информацию о контакте. Каждый элемент списка представляет собой объект TcpUserDefinedField}
     property UserFields
       : TList<TcpUserDefinedField>read FUserFields write FUserFields;
+    {Список ресурсов в Сети, с которыми связан контакт. Каждый элемент списка представляет собой объект TcpWebsite}
     property WebSites: TList<TcpWebsite>read FWebSites write FWebSites;
+    {Список групп в которых находится контакт. Каждый элемент списка представляет собой объект TcpGroupMembershipInfo}
     property GroupMemberships
       : TList<TcpGroupMembershipInfo>read FGroupMemberships write
       FGroupMemberships;
+    {Список дополнительных средств связи с контактом. Каждый элемент списка представляет собой объект TgdIm}
     property IMs: TList<TgdIm>read FIMs write FIMs;
-
+    {Содержит адрес электронной почты, который является основным для контата.
+    Может содержать пустую строку, если ни один из адресов в списке Emails не помечен как Primary}
     property PrimaryEmail: string read GetPrimaryEmail write SetPrimaryEmail;
+    {Содержит строку которая представляет собой полное имя контакта.
+    Полоное имя контакта формируется на основании данных, содержащихся в свойстве TagName}
     property ContactName: string Read GetContactName;
-    property ToXMLText[XMLType: TFileType]: string read GenerateText;
+    {Содержит строку, представляющую собой XML-узел entry, в котором содержится вся информация о конакте}
+    property ToXMLText[XMLType: TFileType{тип формируемого узла (см. описание TFileType)}]: string read GenerateText;
   end;
 
   TContactGroup = class
