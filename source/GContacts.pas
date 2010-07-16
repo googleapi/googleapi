@@ -994,6 +994,10 @@ XML-узла <b>entry</b> XML-документа, содержащего све�
     property ToXMLText[XMLType: TFileType{тип формируемого узла (см. описание TFileType)}]: string read GenerateText;
   end;
 
+
+{Класс предоставляющий доступ к информации о группе контактов пользователя.
+Поля класса могут заполняться на основании XML-узла <b>entry</b> XML-документа,
+содержащего сведения о группах контактов пользователя}
   TContactGroup = class
   private
     FEtag: string;
@@ -1012,14 +1016,27 @@ XML-узла <b>entry</b> XML-документа, содержащего све�
     procedure SetSysGroupId(aSysGroupId: TcpSysGroupId);
     function GenerateXML(const WintExtended: boolean): TNativeXml;
   public
-    constructor Create(const byNode: TXmlNode);
-    procedure ParseXML(Node: TXmlNode);
+    {Конструктор создает экземпляр класса. Если определен входной параметр
+    <b>ByNode: TXMLNode</b>, то на основании этого узла заполняются поля класса}
+    constructor Create(const byNode: TXmlNode = nil{XML-узел на основании которого будет создан экземпляр класса});
+    {Разбирает узел XML <b>Node</b> и заполняет на основании полученных данных
+    поля класса }
+    procedure ParseXML(Node: TXmlNode {узел на основании которого будет проходить заполнение полей объекта});
+    {Уникальный идентификатор группы контактов}
     property Etag: string read FEtag write FEtag;
+    {Идентификатор группы, представляющий собой URL документа, содержащего всю информацию по группе.
+    Также этот идентификатор используется для использования в качестве аттрибута узла <b>gContact:groupMembershipInfo</b>
+    (см. иформацию по классу TcpgroupMembershipInfo)}
     property ID: string read FId write FId;
+
     property Links: TList<TEntryLink>read FLinks write FLinks;
+
     property Update: TDateTime read FUpdate write FUpdate;
+
     property Title: string read GetTitle write SetTitle;
+
     property Content: string read GetContent write SetContent;
+
     property SystemGroup: TcpSysGroupId read GetSysGroupId write SetSysGroupId;
   end;
 
