@@ -58,6 +58,16 @@
 			<DCCReference Include="uLog.pas">
 				<Form>fLog</Form>
 			</DCCReference>
+			<DCCReference Include="uQueryForm.pas">
+				<Form>fQuery</Form>
+			</DCCReference>
+			<DCCReference Include="uUpdate.pas">
+				<Form>fUpdateContact</Form>
+			</DCCReference>
+			<DCCReference Include="NewContact.pas">
+				<Form>fNewContact</Form>
+			</DCCReference>
+			<DCCReference Include="..\..\source\GConsts.pas"/>
 			<None Include="ModelSupport_contacts\default.txaPackage"/>
 			<None Include="ModelSupport_contacts\default.txvpck"/>
 			<None Include="ModelSupport_contacts\NativeXml\default.txvpck"/>
@@ -70,6 +80,7 @@
 			<None Include="ModelSupport_contacts\GDataCommon\default.txvpck"/>
 			<None Include="ModelSupport_contacts\main\default.txvpck"/>
 			<None Include="ModelSupport_contacts\GData\default.txvpck"/>
+			<None Include="ModelSupport_contacts\GDataCommon\default.txaPackage"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
@@ -124,7 +135,7 @@
 						<VersionInfoKeys Name="Comments"/>
 					</VersionInfoKeys>
 				</Delphi.Personality>
-				<ModelSupport>False</ModelSupport>
+				<ModelSupport>True</ModelSupport>
 			</BorlandProject>
 			<ProjectFileVersion>12</ProjectFileVersion>
 		</ProjectExtensions>

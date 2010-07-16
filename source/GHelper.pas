@@ -4,58 +4,7 @@ interface
 
 uses Graphics,strutils,Windows,DateUtils,SysUtils, Variants,
 Classes,StdCtrls,httpsend,Generics.Collections,xmlintf,xmldom,NativeXML,
-uLanguage;
-
-//{$I languages\lang_russian.inc}
-
-const
-  GoogleColors: array [1..21]of string = ('A32929','B1365F','7A367A','5229A3',
-                                          '29527A','2952A3','1B887A','28754E',
-                                          '0D7813','528800','88880E','AB8B00',
-                                          'BE6D00','B1440E','865A5A','705770',
-                                          '4E5D6C','5A6986','4A716C','6E6E41',
-                                          '8D6F47');
-
-  NodeValueAttr = 'value';
-  EntryNodeName = 'entry';
-  SchemaHref ='http://schemas.google.com/g/2005#';
-
-  gdRelValues: array [1..25,1..2] of string = (
-  ('http://schemas.google.com/g/2005#event',''),
-  ('http://schemas.google.com/g/2005#event.alternate',''),
-  ('http://schemas.google.com/g/2005#event.parking',''),
-  ('http://schemas.google.com/g/2005#message.bcc',''),
-  ('http://schemas.google.com/g/2005#message.cc',''),
-  ('http://schemas.google.com/g/2005#message.from',''),
-  ('http://schemas.google.com/g/2005#message.reply-to',''),
-  ('http://schemas.google.com/g/2005#message.to',''),
-  ('http://schemas.google.com/g/2005#regular',''),
-  ('http://schemas.google.com/g/2005#reviews',''),
-  ('http://schemas.google.com/g/2005#home',''),
-  ('http://schemas.google.com/g/2005#other',''),
-  ('http://schemas.google.com/g/2005#work',''),
-  ('http://schemas.google.com/g/2005#fax',''),
-  ('http://schemas.google.com/g/2005#home_fax',''),
-  ('http://schemas.google.com/g/2005#mobile',''),
-  ('http://schemas.google.com/g/2005#pager',''),
-  ('http://schemas.google.com/g/2005#work_fax',''),
-  ('http://schemas.google.com/g/2005#overall',''),
-  ('http://schemas.google.com/g/2005#price',''),
-  ('http://schemas.google.com/g/2005#quality',''),
-  ('http://schemas.google.com/g/2005#event.attendee',''),
-  ('http://schemas.google.com/g/2005#event.organizer',''),
-  ('http://schemas.google.com/g/2005#event.performer',''),
-  ('http://schemas.google.com/g/2005#event.speaker',''));
-
-//просранства имен для календарей
-clNameSpaces: array [0 .. 2, 0 .. 1] of string =
-    (('', 'http://www.w3.org/2005/Atom'), ('gd',
-      'http://schemas.google.com/g/2005'), ('gCal',
-      'http://schemas.google.com/gCal/2005'));
-//значения rel для узлов category календарея
-clCategories: array [0 .. 1, 0 .. 1] of string = (('scheme',
-      'http://schemas.google.com/g/2005#kind'), ('term',
-      'http://schemas.google.com/g/2005#event'));
+GConsts;
 
 type
  TTimeZone = packed record
@@ -75,65 +24,9 @@ type
     function GetRecord(index: Integer): PTimeZone;
   public
     constructor Create;
-    procedure Clear;
+    procedure Clear;override;
     destructor Destroy; override;
     property TimeZone[i: Integer]: PTimeZone read GetRecord write SetRecord;
-  end;
-
-
-type
-  TAttribute = packed record
-    Name: string;
-    Value: string;
-  end;
-
-type
-  TTextTag = class
-  private
-    FName: string;
-    FValue: string;
-    FAtributes: TList<TAttribute>;
-  public
-    Constructor Create(const ByNode: TXMLNode=nil);overload;
-    constructor Create(const NodeName: string; NodeValue:string='');overload;
-
-    function IsEmpty: boolean;
-    procedure Clear;
-    procedure ParseXML(Node: TXMLNode);
-    function AddToXML(Root: TXMLNode): TXMLNode;
-    property Value: string read FValue write FValue;
-    property Name: string read FName write FName;
-    property Attributes: TList<TAttribute>read FAtributes write FAtributes;
-  end;
-
-type
-  TEntryLink = class
-  private
-    Frel: string;
-    Ftype: string;
-    Fhref: string;
-    FEtag: string;
-  public
-    Constructor Create(const ByNode: TXMLNode=nil);
-    procedure ParseXML(Node: TXMLNode);
-    function AddToXML(Root: TXMLNode): TXMLNode;
-    property Rel:   string read Frel write Frel;
-    property Ltype: string read Ftype write Ftype;
-    property Href:  string read Fhref write Fhref;
-    property Etag:  string read FEtag write FEtag;
-  end;
-
-type
-  TAuthorTag = Class
-  private
-    FAuthor: string;
-    FEmail : string;
-    FUID   : string;
-  public
-    constructor Create(ByNode: IXMLNode=nil);
-    procedure ParseXML(Node: IXMLNode);
-    property Author: string read FAuthor write FAuthor;
-    property Email: string read FEmail write FEmail;
   end;
 
 
@@ -244,7 +137,7 @@ begin
 end;
 
 function ServerDateToDateTime(cServerDate:string):TDateTime;
-var Year, Mounth, Day, hours, Mins, Seconds,MSec: Word;
+var Year, Mounth, Day, hours, Mins, Seconds: Word;
 begin
   Year:=StrToInt(copy(cServerDate,1,4));
   Mounth:=StrToInt(copy(cServerDate,6,2));
@@ -300,21 +193,20 @@ begin
   inherited Clear;
 end;
 
-
 constructor TTimeZoneList.Create;
 var i:integer;
     Zone:PTimeZone;
 begin
   inherited Create;
-  for i:=0 to High(GoogleTimeZones) do
+  for i:=0 to High(sGoogleTimeZones) do
     begin
       New(Zone);
       with Zone^ do
        begin
-         gConst:=GoogleTimeZones[i,0];
-         Desc:=GoogleTimeZones[i,1];
-         GMT:=StrToFloat(GoogleTimeZones[i,2]);
-         rus:=GoogleTimeZones[i,2]='rus';
+         gConst:=sGoogleTimeZones[i,0];
+         Desc:=sGoogleTimeZones[i,1];
+         GMT:=StrToFloat(sGoogleTimeZones[i,2]);
+         rus:=sGoogleTimeZones[i,2]='rus';
        end;
        Add(Zone);
     end;
@@ -341,132 +233,6 @@ begin
     if p <> nil then
       Dispose(p);
     Items[index] := Ptr;
-  end;
-end;
-
-
-{ TTextTag }
-
-function TTextTag.AddToXML(Root: TXMLNode): TXMLNode;
-var
-  i: integer;
-begin
-  if (Root=nil)or IsEmpty then Exit;
-  Result:= Root.NodeNew(FName);
-  Result.ValueAsString:=AnsiToUtf8(FValue);
-  for i := 0 to FAtributes.Count - 1 do
-    Result.AttributeAdd(FAtributes[i].Name,FAtributes[i].Value);
-  //Root.ChildNodes.Add(Result);
-end;
-
-constructor TTextTag.Create(const ByNode: TXMLNode);
-begin
-  inherited Create;
-  FAtributes:=TList<TAttribute>.Create;
-  Clear;
-  if ByNode = nil then
-    Exit;
-  ParseXML(ByNode);
-end;
-
-procedure TTextTag.Clear;
-begin
-  FName:='';
-  FValue:='';
-  FAtributes.Clear;
-end;
-
-constructor TTextTag.Create(const NodeName: string; NodeValue: string);
-begin
-  inherited Create;
-  FName:=NodeName;
-  FValue:=NodeValue;
-  FAtributes:=TList<TAttribute>.Create;
-end;
-
-function TTextTag.IsEmpty: boolean;
-begin
-  Result:=(Length(Trim(FName))=0)or
-   ((Length(Trim(FValue))=0)and(FAtributes.Count=0));
-end;
-
-procedure TTextTag.ParseXML(Node: TXMLNode);
-var
-  i: integer;
-  Attr: TAttribute;
-begin
-  try
-    FValue := Node.ValueAsString;
-    FName := Node.Name;
-    for i := 0 to Node.AttributeCount - 1 do
-    begin
-      Attr.Name := Node.AttributeName[i];
-      Attr.Value := Node.AttributeValue[i];
-      FAtributes.Add(Attr)
-    end;
-  except
-    Exception.Create(Format(rcErrPrepareNode, [Node.Name]));
-  end;
-end;
-
-{ TAuthorTag }
-
-{ TAuthorTag }
-
-constructor TAuthorTag.Create(ByNode: IXMLNode);
-begin
-  inherited Create;
-  if ByNode = nil then
-    Exit;
-  ParseXML(ByNode);
-end;
-
-procedure TAuthorTag.ParseXML(Node: IXMLNode);
-var
-  i: integer;
-begin
-  try
-    for i := 0 to Node.ChildNodes.Count - 1 do
-    begin
-      if Node.ChildNodes[i].NodeName = 'name' then
-        FAuthor := Node.ChildNodes[i].Text
-      else
-        if Node.ChildNodes[i].NodeName = 'email' then
-          FEmail := Node.ChildNodes[i].Text
-        else
-          if Node.ChildNodes[i].NodeName = 'uid' then
-            FUID:=Node.ChildNodes[i].Text;
-    end;
-  except
-    Exception.Create(Format(rcErrPrepareNode, [Node.NodeName]));
-  end;
-end;
-
-
-{ TEntryLink }
-
-function TEntryLink.AddToXML(Root: TXMLNode): TXMLNode;
-begin
-
-end;
-
-constructor TEntryLink.Create(const ByNode: TXMLNode);
-begin
-  inherited Create;
-  if ByNode<>nil then
-    ParseXML(ByNode);
-end;
-
-procedure TEntryLink.ParseXML(Node: TXMLNode);
-begin
-  if Node=nil then Exit;
-  try
-    Frel:=Node.ReadAttributeString('rel');
-    Ftype:=Node.ReadAttributeString('type');
-    Fhref:=Node.ReadAttributeString('href');
-    FEtag:=Node.ReadAttributeString('gd:etag')
-  except
-    Exception.Create(Format(rcErrPrepareNode, ['link']));
   end;
 end;
 

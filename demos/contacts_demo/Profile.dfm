@@ -42,7 +42,6 @@ object ProfileForm: TProfileForm
     Width = 97
     Height = 21
     TabOrder = 0
-    Text = 'vlad383@mail.ru'
   end
   object Edit2: TEdit
     Left = 197
@@ -57,7 +56,6 @@ object ProfileForm: TProfileForm
     Width = 178
     Height = 21
     TabOrder = 2
-    Text = 'vlad383@gmail.com'
   end
   object Button1: TButton
     Left = 104

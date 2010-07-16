@@ -1,21 +1,42 @@
-﻿resourcestring
-  rcErrPrepareNode = 'Ошибка обработки узла %s';
-  rcErrCompNodes = 'Узел не является узлом %s';
-  rcErrWriteNode = 'Ошибка записи данных для узла %s';
-  rcErrReadNode = 'Ошибка чтения данных из узла %s';
-  rcErrMissValue = 'Недопустимое значение атрибута для узла %s';
-  rcErrMissAgrument = 'Недопустимый аргумент в вызове функции';
-  rcUnUsedTag = 'Неучтенный тэг ';
-  rcDuplicateLink = 'Такая ссылка уже есть в списке';
-  rcWrongAttr = 'Неверное значение атрибута %s';
-  rcRightAttrValues = 'Допустимые значения атрибута: %s';
-  rcErrCGroupCreate ='Пустой XML-документ. Чтение групп контактов прервано';
-  rcErrNullAuth = 'Параметр Auth не может быть пустым';
-  rcErrFileName = 'Файл %s отсутствует';
-  rcErrFileNull = 'Не задан файл по умолчанию';
+﻿unit GConsts;
+
+interface
+
+uses uLanguage, SysUtils, Windows;
 
 const
-  GoogleTimeZones: array [0..308,0..3]of string =
+  CpProtocolVer = '3.0'; //версия протокола для Google Contacts
+  CpNodeAlias = 'gContact:';//префикс XML-узлов, относящихся к Contacts
+  CpGroupLink='http://www.google.com/m8/feeds/groups/%s/full';//URL на получение сведения о группах
+  CpContactsLink='http://www.google.com/m8/feeds/contacts/default/full';//URL на получение сведений о контактах для пользователя по умолчанию
+  CpPhotoLink = 'http://schemas.google.com/contacts/2008/rel#photo';
+  CpDefaultCName = 'NoName Contact';
+
+  gdNodeAlias = 'gd:';//префикс узлов, относящихся к GData API
+
+  sEventRelSuffix = 'event.';
+  sImgRel = 'image/*'; //атрибут rel узла, содержащего изображения
+  sAtomAlias = 'atom:'; //префикс узлов для формирования документа в формате Атом
+  sXMLHeader = '<?xml version="1.0" encoding="UTF-8" ?>';//заголовок XML документа по умолчанию
+  sDefoultEncoding = 'utf-8';//кодировка документов по умолчанию
+  sRootNodeName= 'feed';//корневой элемент фида
+  sNodeValueAttr = 'value';//аттрибут узлов для хранения какого-либо значения
+  sEntryNodeName = 'entry';//имя узла, который необходимо разобрать
+  sNodeRelAttr = 'rel';//аттрибут rel узла
+  sNodeLabelAttr ='label';//аттрибут label узла
+  sNodeHrefAttr = 'href';//атрибут наличия ссылки в узле.
+  sSchemaHref ='http://schemas.google.com/g/2005#';
+
+  {цвета в HEX поддерживаемые Google API}
+  sGoogleColors: array [1..21]of string = ('A32929','B1365F','7A367A','5229A3',
+                                          '29527A','2952A3','1B887A','28754E',
+                                          '0D7813','528800','88880E','AB8B00',
+                                          'BE6D00','B1440E','865A5A','705770',
+                                          '4E5D6C','5A6986','4A716C','6E6E41',
+                                          '8D6F47');
+
+  {часовые пояса}
+  sGoogleTimeZones:  array [0..308,0..3]of string =
   (('Pacific/Apia','(GMT-11:00) Апия','-11,00',''),
    ('Pacific/Midway','(GMT-11:00) Мидуэй','-11,00',''),
    ('Pacific/Niue','(GMT-11:00) Ниуэ','-11,00',''),
@@ -325,3 +346,44 @@ const
    ('Pacific/Enderbury','(GMT+13:00) острова Эндербери','+13,00',''),
    ('Pacific/Tongatapu','(GMT+13:00) Тонгатапу','+13,00',''),
    ('Pacific/Kiritimati','(GMT+14:00) Киритимати','+14,00',''));
+
+var
+{Диалоги}
+  sc_ErrPrepareNode  :string;
+  sc_ErrCompNodes    :string;
+  sc_ErrWriteNode    :string;
+  sc_ErrReadNode     :string;
+  sc_ErrMissValue    :string;
+  sc_ErrMissAgrument :string;
+  sc_UnUsedTag       :string;
+  sc_DuplicateLink   :string;
+  sc_WrongAttr       :string;
+  sc_RightAttrValues :string;
+  sc_ErrCGroupCreate :string;
+  sc_ErrNullAuth     :string;
+  sc_ErrFileName     :string;
+  sc_ErrFileNull     :string;
+  sc_ErrSysGroup     :string;
+  sc_ErrGroupLink    :string;
+
+implementation
+
+initialization
+//загружаем строки из RES-файла, относящиеся к диалогам с пользователем
+  sc_ErrPrepareNode  :=LoadStr(c_ErrPrepareNode);
+  sc_ErrCompNodes    :=LoadStr(c_ErrCompNodes);
+  sc_ErrWriteNode    :=LoadStr(c_ErrWriteNode);
+  sc_ErrReadNode     :=LoadStr(c_ErrReadNode);
+  sc_ErrMissValue    :=LoadStr(c_ErrMissValue);
+  sc_ErrMissAgrument :=LoadStr(c_ErrMissAgrument);
+  sc_UnUsedTag       :=LoadStr(c_UnUsedTag);
+  sc_DuplicateLink   :=LoadStr(c_DuplicateLink);
+  sc_WrongAttr       :=LoadStr(c_WrongAttr);
+  sc_RightAttrValues :=LoadStr(c_RightAttrValues);
+  sc_ErrCGroupCreate :=LoadStr(c_ErrCGroupCreate);
+  sc_ErrNullAuth     :=LoadStr(c_ErrNullAuth);
+  sc_ErrFileName     :=LoadStr(c_ErrFileName);
+  sc_ErrFileNull     :=LoadStr(c_ErrFileNull);
+  sc_ErrSysGroup     :=LoadStr(c_ErrSysGroup);
+  sc_ErrGroupLink    :=LoadStr(c_ErrGroupLink);
+end.

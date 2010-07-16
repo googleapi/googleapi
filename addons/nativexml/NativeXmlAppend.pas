@@ -45,81 +45,17 @@
 
   Please visit http://www.simdesign.nl/xml.html for more information.
 }
-
-// Delphi and BCB versions
-
-// Delphi 3
-{$IFDEF VER110}
-  {$DEFINE D3UP}
-{$ENDIF}
-// Delphi 4
-{$IFDEF VER120}
-  {$DEFINE D3UP}
-  {$DEFINE D4UP}
-{$ENDIF}
-// BCB 4
-{$IFDEF VER125}
-  {$DEFINE D4UP}
-{$ENDIF}
-// Delphi 5
-{$IFDEF VER130}
-  {$DEFINE D3UP}
-  {$DEFINE D4UP}
-  {$DEFINE D5UP}
-{$ENDIF}
-//Delphi 6
-{$IFDEF VER140}
-  {$DEFINE D3UP}
-  {$DEFINE D4UP}
-  {$DEFINE D5UP}
-  {$DEFINE D6UP}
-{$ENDIF}
-//Delphi 7
-{$IFDEF VER150}
-  {$DEFINE D3UP}
-  {$DEFINE D4UP}
-  {$DEFINE D5UP}
-  {$DEFINE D6UP}
-  {$DEFINE D7UP}
-{$ENDIF}
-//Delphi 8
-{$IFDEF VER160}
-  {$DEFINE D3UP}
-  {$DEFINE D4UP}
-  {$DEFINE D5UP}
-  {$DEFINE D6UP}
-  {$DEFINE D7UP}
-  {$DEFINE D8UP}
-{$ENDIF}
-// Delphi 2005
-{$IFDEF VER170}
-  {$DEFINE D3UP}
-  {$DEFINE D4UP}
-  {$DEFINE D5UP}
-  {$DEFINE D6UP}
-  {$DEFINE D7UP}
-  {$DEFINE D8UP}
-  {$DEFINE D9UP}
-{$ENDIF}
-// above Delphi 2005
-{$IFDEF VER180}
-  {$DEFINE D3UP}
-  {$DEFINE D4UP}
-  {$DEFINE D5UP}
-  {$DEFINE D6UP}
-  {$DEFINE D7UP}
-  {$DEFINE D8UP}
-  {$DEFINE D9UP}
-  {$DEFINE D10UP}
-{$ENDIF}
-
-
 unit NativeXmlAppend;
 
 interface
 
+{$I NativeXml.inc}
+
 uses
   Classes, SysUtils, Dialogs, NativeXml;
+
+type
+  ustring = UTF8String;
 
 // With this routine we can add a single node (TXmlNode) to an existing XML file.
 // The file will NOT be read in completely, the data will simply be appended at the
@@ -286,7 +222,7 @@ procedure XmlAppendToExistingFile(const AFilename: string; ANode: TXmlNode;
 var
   S: TStream;
   APos: integer;
-  AInsert: UTF8String;
+  AInsert: ustring;
 begin
   // Open the file with Read/Write access
   S := TFileStream.Create(AFilename, fmOpenReadWrite or fmShareDenyWrite);

@@ -5,4 +5,5 @@
   <Option Name="namespaceFolder.NativeXml" Type="System.String" Value="NativeXml" Category="General" IsBrowsable="False" />
   <Option Name="namespaceFolder.contacts" Type="System.String" Value="contacts" Category="General" IsBrowsable="False" />
   <Option Name="namespaceFolder.GoogleLogin" Type="System.String" Value="GoogleLogin" Category="General" IsBrowsable="False" />
+  <Option Name="namespaceFolder.GDataCommon" Type="System.String" Value="GDataCommon" Category="General" IsBrowsable="False" />
 </TgConfig>
