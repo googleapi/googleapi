@@ -11,6 +11,7 @@ object fLog: TfLog
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  Position = poMainFormCenter
   OnShow = FormShow
   PixelsPerInch = 96
   TextHeight = 13
@@ -23,9 +24,5 @@ object fLog: TfLog
     Lines.Strings = (
       'Memo1')
     TabOrder = 0
-    ExplicitLeft = 72
-    ExplicitTop = 92
-    ExplicitWidth = 185
-    ExplicitHeight = 89
   end
 end

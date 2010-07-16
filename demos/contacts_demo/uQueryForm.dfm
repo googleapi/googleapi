@@ -11,6 +11,7 @@ object fQuery: TfQuery
   Font.Name = 'Tahoma'
   Font.Style = []
   OldCreateOrder = False
+  Position = poMainFormCenter
   OnHide = FormHide
   PixelsPerInch = 96
   TextHeight = 13

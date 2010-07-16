@@ -60,7 +60,6 @@ type
     OpenDialog1: TOpenDialog;
     Label16: TLabel;
     Label20: TLabel;
-    Button1: TButton;
     ToolButton10: TToolButton;
     ToolButton11: TToolButton;
     ToolButton12: TToolButton;
