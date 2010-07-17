@@ -1,13 +1,66 @@
+{unit GContacts
+
+  Модуль содержит класс для отправки писем через электронную посту GMail.com
+  с использованием класса бибилотеки Synapse - TSMTPSend.
+
+  ВАЖНО: для нормальной работы компонента Вам необходимо скачать и сохранить
+  в директории с программой две DLL:
+
+  1. libeay32.dll
+  2. ssleay32.dll
+
+  Скачать их можна на сайте разработчиков Synapse:
+  http://synapse.ararat.cz/files/crypt/
+
+  Если Вы планируете использовать компонент для других почтовых сервисов,
+  которые ни используют шифрованных подключений TLS, то следуетт закомментировать
+  вот эту строку:
+  <code>
+  function TGMailSMTP.SendMessage(const aSubject: string; aClear:boolean): boolean;
+  var
+    ...
+  begin
+    ...
+     SMTP.AutoTLS:=True;
+    ...
+  </code>
+
+  Основной компонент для работы с почтой - TGMailSMTP.
+
+  Автор: Vlad. (vlad383@gmail.com)
+  Дата: 17 Июля 2010
+  Версия: см. ниже
+  Copyright (c) 2009-2010 WebDelphi.ru
+
+  ДАННОЕ ПРОГРАММНОЕ ОБЕСПЕЧЕНИЕ ПРЕДОСТАВЛЯЕТСЯ «КАК ЕСТЬ», БЕЗ ЛЮБОГО ВИДА
+  ГАРАНТИЙ, ЯВНО ВЫРАЖЕННЫХ ИЛИ ПОДРАЗУМЕВАЕМЫХ, ВКЛЮЧАЯ, НО НЕ ОГРАНИЧИВАЯСЬ
+  ГАРАНТИЯМИ ТОВАРНОЙ ПРИГОДНОСТИ, СООТВЕТСТВИЯ ПО ЕГО КОНКРЕТНОМУ НАЗНАЧЕНИЮ И
+  НЕНАРУШЕНИЯ ПРАВ. НИ В КАКОМ СЛУЧАЕ АВТОРЫ ИЛИ ПРАВООБЛАДАТЕЛИ НЕ НЕСУТ
+  ОТВЕТСТВЕННОСТИ ПО ИСКАМ О ВОЗМЕЩЕНИИ УЩЕРБА, УБЫТКОВ ИЛИ ДРУГИХ ТРЕБОВАНИЙ ПО
+  ДЕЙСТВУЮЩИМ КОНТРАКТАМ, ДЕЛИКТАМ ИЛИ ИНОМУ, ВОЗНИКШИМ ИЗ, ИМЕЮЩИМ ПРИЧИНОЙ ИЛИ
+  СВЯЗАННЫМ С ПРОГРАММНЫМ ОБЕСПЕЧЕНИЕМ ИЛИ ИСПОЛЬЗОВАНИЕМ ПРОГРАММНОГО
+  ОБЕСПЕЧЕНИЯ ИЛИ ИНЫМИ ДЕЙСТВИЯМИ С ПРОГРАММНЫМ ОБЕСПЕЧЕНИЕМ.
+
+  This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF
+  ANY KIND, either express or implied.
+
+  Последние обновления модуля можно найти в репозитории по адресу:
+  http://github.com/googleapi
+}
+
+
 unit GMailSMTP;
 
 interface
 
-uses mimemess, mimepart, smtpsend, ssl_openssl,classes, sysutils,controls;
+uses mimemess, mimepart, smtpsend, classes, sysutils,
+     controls,ssl_openssl,synautil;
 
 const
   {$REGION 'Константы'}
+    GMailSMTPVersion = '0.1';
     GmailHost = 'smtp.gmail.com';
-     GmailPort = 587;
+    GmailPort = 587;
  {$ENDREGION}
 
 type
@@ -115,12 +168,15 @@ function TGMailSMTP.SendMessage(const aSubject: string; aClear:boolean): boolean
 var i:integer;
     MailTo: string;
     MailFrom: string;
+    SMTP: TSMTPSend;
+    s, t: string;
 begin
-try
-  if Length(Trim(FFromName))>0 then
-    MailFrom:='"'+FFromName+'" <'+FEmail+'>'
-  else
-    MailFrom:=FEmail;
+Result:=false;
+
+if Length(Trim(FFromName))>0 then
+  MailFrom:='"'+FFromName+'" <'+FEmail+'>'
+else
+  MailFrom:=FEmail;
   //добавляем заголовки
   FMsg.Header.Subject:=aSubject;
   FMsg.Header.From:=MailFrom;
@@ -129,21 +185,40 @@ try
   for i:=0 to FFiles.Count - 1 do
      FMsg.AddPartBinaryFromFile(FFiles[i],FMIMEPart);
   MailTo:='';
-  for I := 0 to FRecipients.Count-1 do
-    MailTo:=MailTo+FRecipients[i]+',';
-
+  FRecipients.Delimiter:=',';
+  MailTo:=FRecipients.DelimitedText;
   FMsg.EncodeMessage;
-  if FPort=0 then
-    smtpsend.SendToRaw(MailFrom, MailTo, FHost, FMsg.Lines, FLogin, FPassword)
-  else
-    smtpsend.SendToRaw(MailFrom, MailTo, FHost+':'+IntToStr(FPort), FMsg.Lines, FLogin, FPassword);
-  if aClear then
-    Clear;
-  Result:=true;
-except
-  Result:=false;
-  Exception.Create('Ошибка отправки письма');
-end;
+
+  SMTP := TSMTPSend.Create;
+  SMTP.AutoTLS:=True;
+  SMTP.TargetHost := Trim(FHost);
+  if FPort>0 then
+   SMTP.TargetPort:=IntToStr(FPort);
+  SMTP.Username := FLogin;
+  SMTP.Password := FPassword;
+try
+if SMTP.Login then
+    begin
+      if SMTP.MailFrom(GetEmailAddr(MailFrom), Length(FMsg.Lines.Text)) then
+      begin
+        s:=MailTo;
+        repeat
+          t := GetEmailAddr(Trim(FetchEx(s, ',', '"')));
+          if t <> '' then
+            Result := SMTP.MailTo(t);
+          if not Result then
+            Break;
+        until s = '';
+        if Result then
+          Result := SMTP.MailData(FMsg.Lines);
+      end;
+      SMTP.Logout;
+    end;
+  finally
+    SMTP.Free;
+    if aClear then
+      Clear;
+  end;
 end;
 
 procedure TGMailSMTP.SetFiles(Value: TStrings);

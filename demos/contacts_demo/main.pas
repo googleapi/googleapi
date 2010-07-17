@@ -4,8 +4,8 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, GoogleLogin, StdCtrls, GHelper,GContacts,Generics.Collections,NativeXml,GDataCommon,
-  ExtCtrls, ComCtrls, ToolWin, Menus, ImgList,JPEG, ExtDlgs,TypInfo,rtti,uLanguage;
+  Dialogs, GoogleLogin, StdCtrls, GHelper,GContacts,Generics.Collections,NativeXml,
+  ExtCtrls, ComCtrls, ToolWin, Menus, ImgList,JPEG, ExtDlgs,TypInfo;
 
 type
   TForm3 = class(TForm)
@@ -134,7 +134,7 @@ begin
             else
               ListBox1.Items.Add('NoName Contact')
           else
-            ListBox1.Items.Add(List[i].TagTitle.Value)
+            ListBox1.Items.Add(List[i].ContactName)
         end;
     end
  else
