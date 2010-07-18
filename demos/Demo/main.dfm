@@ -123,11 +123,25 @@ object Form11: TForm11
     Height = 21
     TabOrder = 5
   end
+  object Button2: TButton
+    Left = 232
+    Top = 84
+    Width = 75
+    Height = 21
+    Caption = 'Button2'
+    TabOrder = 6
+    OnClick = Button2Click
+  end
   object GoogleLogin1: TGoogleLogin
-    AccountType = atHOSTED_OR_GOOGLE
+    AppName = 
+      'Mozilla/5.0 (Windows; U; Windows NT 5.1; ru; rv:1.9.2.6) Gecko/2' +
+      '0100625 Firefox/3.6.6'
+    AccountType = atNone
     Service = tsNone
-    OnAfterLogin = GoogleLogin1AfterLogin
-    Left = 256
-    Top = 4
+    OnAutorization = GoogleLogin1Autorization
+    OnError = GoogleLogin1Error
+    OnDisconnect = GoogleLogin1Disconnect
+    Left = 192
+    Top = 48
   end
 end

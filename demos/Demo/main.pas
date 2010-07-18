@@ -14,16 +14,20 @@ type
     PassEdit: TEdit;
     Button1: TButton;
     Label4: TLabel;
-    GoogleLogin1: TGoogleLogin;
     Label3: TLabel;
     Label5: TLabel;
     ComboBox1: TComboBox;
     Label6: TLabel;
     AuthEdit: TEdit;
     ResultEdit: TEdit;
+    GoogleLogin1: TGoogleLogin;
+    Button2: TButton;
     procedure Button1Click(Sender: TObject);
-    procedure GoogleLogin1AfterLogin(const LoginResult: TLoginResult;
-      LoginStr: string);
+    procedure GoogleLogin1Autorization(const LoginResult: TLoginResult;
+      Result: TResultRec);
+    procedure GoogleLogin1Error(const ErrorStr: string);
+    procedure Button2Click(Sender: TObject);
+    procedure GoogleLogin1Disconnect(const ResultStr: string);
   private
     { Private declarations }
   public
@@ -46,11 +50,31 @@ GoogleLogin1.Service:=TServices(ComboBox1.ItemIndex);
 GoogleLogin1.Login();
 end;
 
-procedure TForm11.GoogleLogin1AfterLogin(const LoginResult: TLoginResult;
-  LoginStr: string);
+procedure TForm11.Button2Click(Sender: TObject);
 begin
-  ResultEdit.Text:=LoginStr;
-  AuthEdit.Text:=GoogleLogin1.Auth;
+  GoogleLogin1.Disconnect;
+end;
+
+procedure TForm11.GoogleLogin1Autorization(const LoginResult: TLoginResult;
+  Result: TResultRec);
+begin
+  ResultEdit.Text:=Result.LoginStr;
+  AuthEdit.Text:=Result.Auth;
+  if LoginResult =lrOk then
+    ShowMessage('Мы в гугле!!!!!!!!!')
+  else
+    ShowMessage('Мы НЕ в гугле!!!!!!!!!');
+
+end;
+
+procedure TForm11.GoogleLogin1Disconnect(const ResultStr: string);
+begin
+      ShowMessage('Disconnect');
+end;
+
+procedure TForm11.GoogleLogin1Error(const ErrorStr: string);
+begin
+  ShowMessage(ErrorStr);
 end;
 
 end.
