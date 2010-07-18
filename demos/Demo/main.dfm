@@ -61,6 +61,7 @@ object Form11: TForm11
     Width = 121
     Height = 21
     TabOrder = 0
+    Text = 'GoLabApi@gmail.com'
   end
   object PassEdit: TEdit
     Left = 213
@@ -68,6 +69,7 @@ object Form11: TForm11
     Width = 121
     Height = 21
     TabOrder = 1
+    Text = '123456789her'
   end
   object Button1: TButton
     Left = 120
@@ -137,10 +139,7 @@ object Form11: TForm11
       'Mozilla/5.0 (Windows; U; Windows NT 5.1; ru; rv:1.9.2.6) Gecko/2' +
       '0100625 Firefox/3.6.6'
     AccountType = atNone
-    Service = tsNone
     OnAutorization = GoogleLogin1Autorization
-    OnError = GoogleLogin1Error
-    OnDisconnect = GoogleLogin1Disconnect
     Left = 192
     Top = 48
   end

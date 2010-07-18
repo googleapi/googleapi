@@ -20,8 +20,8 @@ type
     Label6: TLabel;
     AuthEdit: TEdit;
     ResultEdit: TEdit;
-    GoogleLogin1: TGoogleLogin;
     Button2: TButton;
+    GoogleLogin1: TGoogleLogin;
     procedure Button1Click(Sender: TObject);
     procedure GoogleLogin1Autorization(const LoginResult: TLoginResult;
       Result: TResultRec);
