@@ -188,8 +188,19 @@ object Form11: TForm11
     Left = 8
     Top = 283
     Width = 339
-    Height = 233
+    Height = 70
     TabOrder = 10
+  end
+  object Animate1: TAnimate
+    Left = 8
+    Top = 359
+    Width = 80
+    Height = 50
+    CommonAVI = aviFindFolder
+    DoubleBuffered = False
+    ParentDoubleBuffered = False
+    StopFrame = 29
+    Timers = True
   end
   object GoogleLogin1: TGoogleLogin
     AppName = 

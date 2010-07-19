@@ -1,4 +1,4 @@
-unit main;
+﻿unit main;
 
 interface
 
@@ -30,6 +30,7 @@ type
     Memo1: TMemo;
     Label9: TLabel;
     Label10: TLabel;
+    Animate1: TAnimate;
     procedure Button1Click(Sender: TObject);
     procedure GoogleLogin1Autorization(const LoginResult: TLoginResult;
       Result: TResultRec);
@@ -56,8 +57,8 @@ begin
 GoogleLogin1.Email:=EmailEdit.Text;
 GoogleLogin1.Password:=PassEdit.Text;
 GoogleLogin1.Service:=TServices(ComboBox1.ItemIndex);
+Memo1.Clear;//очистка лога
 GoogleLogin1.Login();
-Memo1.Clear;//������� ����
 end;
 
 procedure TForm11.Button2Click(Sender: TObject);
@@ -74,9 +75,9 @@ begin
   temp:=GetEnumName(TypeInfo(TLoginResult),Integer(LoginResult));
   Edit1.Text:=temp;
   if LoginResult =lrOk then
-    ShowMessage('�� � �����!!!!!!!!!')
+    ShowMessage('Мы в гугле!!!!!!!!!')
   else
-    ShowMessage('�� �� � �����!!!!!!!!!');
+    ShowMessage('Мы НЕ в гугле!!!!!!!!!');
 
 end;
 
@@ -97,7 +98,11 @@ begin
   Memo1.Lines.Add('////////');
   Memo1.Lines.Add('Progress '+IntToStr(Progress));
   Memo1.Lines.Add('MaxProgress '+IntToStr(MaxProgress));
-
+  //слишком уж быстро качает я не увидел чтоб анимация работала
+  if (MaxProgress>Progress) then
+    Animate1.Active:=True
+  else
+    Animate1.Active:=False;
 end;
 
 end.
