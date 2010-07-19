@@ -2,7 +2,7 @@ object Form11: TForm11
   Left = 0
   Top = 0
   Caption = 'Google Login'
-  ClientHeight = 219
+  ClientHeight = 524
   ClientWidth = 355
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
@@ -68,6 +68,20 @@ object Form11: TForm11
     Width = 31
     Height = 13
     Caption = 'Label8'
+  end
+  object Label9: TLabel
+    Left = 8
+    Top = 264
+    Width = 162
+    Height = 13
+    Caption = #1051#1086#1075' '#1082#1086#1083'-'#1074#1072' '#1087#1086#1083#1091#1095#1077#1085#1085#1099#1093' '#1076#1072#1085#1085#1099#1093
+  end
+  object Label10: TLabel
+    Left = 8
+    Top = 222
+    Width = 114
+    Height = 13
+    Caption = #1055#1088#1086#1075#1088#1077#1089#1089' '#1072#1074#1090#1086#1088#1080#1079#1072#1094#1080#1080
   end
   object EmailEdit: TEdit
     Left = 38
@@ -163,12 +177,27 @@ object Form11: TForm11
     TabOrder = 8
     Text = 'Edit2'
   end
+  object ProgressBar1: TProgressBar
+    Left = 8
+    Top = 241
+    Width = 339
+    Height = 17
+    TabOrder = 9
+  end
+  object Memo1: TMemo
+    Left = 8
+    Top = 283
+    Width = 339
+    Height = 233
+    TabOrder = 10
+  end
   object GoogleLogin1: TGoogleLogin
     AppName = 
       'Mozilla/5.0 (Windows; U; Windows NT 5.1; ru; rv:1.9.2.6) Gecko/2' +
       '0100625 Firefox/3.6.6'
     AccountType = atNone
     OnAutorization = GoogleLogin1Autorization
+    OnProgressAutorization = GoogleLogin1ProgressAutorization
     Left = 176
     Top = 8
   end

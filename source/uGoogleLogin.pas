@@ -5,9 +5,9 @@
 { File: uGoogleLogin }
 { Copyright (c) WebDelphi.ru }
 { All Rights Reserved. }
-{ }
-{ }
-{ }
+{ не обижайтесь писал на большом мониторе}
+{ на счет комментариев, пишу много чтоб было понятно всем}
+{ NMD}
 { ******************************************************* }
 
 { ******************************************************* }
@@ -23,10 +23,8 @@ uses WinInet, StrUtils, SysUtils, Classes, Windows, TypInfo;
 resourcestring
   rcNone = 'Аутентификация не производилась или сброшена';
   rcOk = 'Аутентификация прошла успешно';
-  rcBadAuthentication =
-    'Не удалось распознать имя пользователя или пароль, использованные в запросе на вход';
-  rcNotVerified =
-    'Адрес электронной почты, связанный с аккаунтом, не был подтвержден';
+  rcBadAuthentication = 'Не удалось распознать имя пользователя или пароль, использованные в запросе на вход';
+  rcNotVerified = 'Адрес электронной почты, связанный с аккаунтом, не был подтвержден';
   rcTermsNotAgreed = 'Пользователь не принял условия использования службы';
   rcCaptchaRequired = 'Требуется ответ на тест CAPTCHA';
   rcUnknown = 'Неизвестная ошибка';
@@ -41,14 +39,17 @@ resourcestring
 
 const
   // дефолное название приложение через которое якобы происходит соединение с сервером гугла
-  DefaultAppName =
-    'Mozilla/5.0 (Windows; U; Windows NT 5.1; ru; rv:1.9.2.6) Gecko/20100625 Firefox/3.6.6';
+  DefaultAppName ='Mozilla/5.0 (Windows; U; Windows NT 5.1; ru; rv:1.9.2.6) Gecko/20100625 Firefox/3.6.6';
+
   // настройки wininet для работы с ssl
   Flags_Connection = INTERNET_DEFAULT_HTTPS_PORT;
-  Flags_Request =
-    INTERNET_FLAG_RELOAD or INTERNET_FLAG_IGNORE_CERT_CN_INVALID
-    or INTERNET_FLAG_NO_CACHE_WRITE or INTERNET_FLAG_SECURE or
-    INTERNET_FLAG_PRAGMA_NOCACHE or INTERNET_FLAG_KEEP_CONNECTION;
+
+  Flags_Request =INTERNET_FLAG_RELOAD or
+                 INTERNET_FLAG_IGNORE_CERT_CN_INVALID or
+                 INTERNET_FLAG_NO_CACHE_WRITE or
+                 INTERNET_FLAG_SECURE or
+                 INTERNET_FLAG_PRAGMA_NOCACHE or
+                 INTERNET_FLAG_KEEP_CONNECTION;
   // ошибки при авторизации
   Errors: array [0 .. 8] of string = ('BadAuthentication', 'NotVerified',
     'TermsNotAgreed', 'CaptchaRequired', 'Unknown', 'AccountDeleted',
@@ -80,6 +81,8 @@ type
 
 type
   TAutorization = procedure(const LoginResult: TLoginResult; Result: TResultRec) of object; // авторизировались
+  //Progress,MaxProgress переменные которые специально заведены для прогрессбара Progress-текущее состояние MaxProgress-максимальное значение
+  TProgressAutorization = procedure(const Progress,MaxProgress:Integer)of object;//показываем прогресс при авторизации
   TErrorAutorization = procedure(const ErrorStr: string) of object; // а это не авторизировались))
   TDisconnect = procedure(const ResultStr: string) of object;
 
@@ -88,7 +91,7 @@ type
   TGoogleLoginThread = class(TThread)
   private
     { private declarations }
-    FStatus:TStatusThread;//статус потока
+    //FStatus:TStatusThread;//статус потока
     FParamStr: string; // параметры запроса
     FLogintoken: string;
     // данные ответа/запроса
@@ -97,10 +100,12 @@ type
     FCaptchaURL: string;
 
     FLastResult: TLoginResult; // результаты авторизации
-
-    // События
+    //для прогресса
+    FProgress,FMaxProgress:Integer;
+    //переменные для событий
     FAutorization: TAutorization; // авторизация
-    FErrorAutorization: TErrorAutorization;
+    FProgressAutorization:TProgressAutorization;//прогресс при авторизации для показа часиков и подобных вещей
+    FErrorAutorization: TErrorAutorization;//ошибка при авторизации
 
     function ExpertLoginResult(const LoginResult: string): TLoginResult; // анализ результата авторизации
     function GetLoginError(const str: string): TLoginResult;// получаем тип ошибки
@@ -114,6 +119,7 @@ type
     // получаем текст ошибки
 
     procedure SynAutoriz; // передача значения авторизации в главную форму как положено в потоке
+    procedure SynProgressAutoriz;// передача текушего прогресса авторизации в главную форму как положено в потоке
     procedure SynErrAutoriz; // передача значения ошибки в главную форму как положено в потоке
   protected
     { protected declarations }
@@ -125,6 +131,7 @@ type
     { published declarations }
     // события
     property OnAutorization:TAutorization read FAutorization write FAutorization;    // авторизировались
+    property OnProgressAutorization: TProgressAutorization read FProgressAutorization write FProgressAutorization;//прогресс авторизации
     property OnError: TErrorAutorization read FErrorAutorization write FErrorAutorization; // возникла ошибка ((
   end;
 
@@ -145,7 +152,9 @@ type
     FLogincaptcha: string;
     // параметры Captcha
     FCaptchaURL: string;
+    //переменные для событий
     FAfterLogin: TAutorization;
+    FProgressAutorization:TProgressAutorization;//прогресс при авторизации для показа часиков и подобных вещей
     FErrorAutorization: TErrorAutorization;
     FDisconnect: TDisconnect;
     function SendRequest(const ParamStr: string): AnsiString;
@@ -179,7 +188,8 @@ type
     property Email: string read FEmail write SetEmail;
     property Password: string read FPassword write SetPassword;
     property Service: TServices read FService write SetService default xapi;
-    property OnAutorization: TAutorization read FAfterLogin write FAfterLogin;
+    property OnAutorization: TAutorization read FAfterLogin write FAfterLogin;// авторизировались
+    property OnProgressAutorization:TProgressAutorization  read FProgressAutorization write FProgressAutorization;//прогресс авторизации
     property OnError: TErrorAutorization read FErrorAutorization write FErrorAutorization; // возникла ошибка ((
     property OnDisconnect: TDisconnect read FDisconnect write FDisconnect;
   end;
@@ -266,6 +276,7 @@ begin
   // отправляем запрос на сервер в отдельном потоке
   FThread := TGoogleLoginThread.Create(true, ParamStr);
   FThread.OnAutorization := Self.OnAutorization;
+  FThread.OnProgressAutorization:=Self.OnProgressAutorization;//прогресс авторизации
   FThread.OnError := Self.OnError;
   FThread.FreeOnTerminate := true; // чтобы сам себя грухнул после окончания операции
   FThread.Resume; // запуск
@@ -430,6 +441,9 @@ begin
   FResultRec.SID := '';
   FResultRec.LSID := '';
   FResultRec.Auth := '';
+  //переменные для прогресса
+  FProgress:=0;
+  FMaxProgress:=0;
 end;
 
 procedure TGoogleLoginThread.Execute;
@@ -478,6 +492,10 @@ begin
                 InternetCloseHandle(hInternet);
                 Exit;
               end;
+              FProgress:=i;//текущее значение прогресса авторизации
+              if FMaxProgress=0 then//зачем постоянно забивать максимальное значение
+                FMaxProgress:=L+1;
+              Synchronize(SynProgressAutoriz);//синхронизация прогресса
             until dwBytesRead = 0;
             sTemp[i] := #0;
           end;
@@ -639,6 +657,13 @@ procedure TGoogleLoginThread.SynErrAutoriz;
 begin
   if Assigned(FErrorAutorization) then
     OnError(GetErrorText(true)); // получаем текст ошибки
+end;
+
+
+procedure TGoogleLoginThread.SynProgressAutoriz;
+begin
+  if Assigned(FProgressAutorization) then
+    OnProgressAutorization(FProgress,FMaxProgress); // передаем прогресс авторизации
 end;
 
 end.
