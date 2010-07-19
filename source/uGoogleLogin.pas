@@ -59,14 +59,16 @@ type
 
 type
   TLoginResult = (lrNone, lrOk, lrBadAuthentication, lrNotVerified,
-    lrTermsNotAgreed, lrCaptchaRequired, lrUnknown, lrAccountDeleted,
-    lrAccountDisabled, lrServiceDisabled, lrServiceUnavailable);
+                  lrTermsNotAgreed, lrCaptchaRequired, lrUnknown, lrAccountDeleted,
+                  lrAccountDisabled, lrServiceDisabled, lrServiceUnavailable);
 
 type
   // xapi - это универсальное имя - когда юзер не знает какой сервис ему нужен, то втыкает xapi и просто коннектится к Гуглу
   TServices = (xapi, analytics, apps, gbase, jotspot, blogger, print, cl,
-    codesearch, cp, writely, finance, mail, health, local, lh2, annotateweb,
-    wise, sitemaps, youtube);
+               codesearch, cp, writely, finance, mail, health, local, lh2, annotateweb,
+               wise, sitemaps, youtube);
+type
+  TStatusThread = (sttActive,sttNoActive);//статус потока
 
 type
   TResultRec = packed record
@@ -77,10 +79,8 @@ type
   end;
 
 type
-  TAutorization = procedure(const LoginResult: TLoginResult;
-    Result: TResultRec) of object; // авторизировались
-  TErrorAutorization = procedure(const ErrorStr: string) of object;
-  // а это не авторизировались))
+  TAutorization = procedure(const LoginResult: TLoginResult; Result: TResultRec) of object; // авторизировались
+  TErrorAutorization = procedure(const ErrorStr: string) of object; // а это не авторизировались))
   TDisconnect = procedure(const ResultStr: string) of object;
 
 type
@@ -88,6 +88,7 @@ type
   TGoogleLoginThread = class(TThread)
   private
     { private declarations }
+    FStatus:TStatusThread;//статус потока
     FParamStr: string; // параметры запроса
     FLogintoken: string;
     // данные ответа/запроса
@@ -101,10 +102,8 @@ type
     FAutorization: TAutorization; // авторизация
     FErrorAutorization: TErrorAutorization;
 
-    function ExpertLoginResult(const LoginResult: string): TLoginResult;
-    // анализ результата авторизации
-    function GetLoginError(const str: string): TLoginResult;
-    // получаем тип ошибки
+    function ExpertLoginResult(const LoginResult: string): TLoginResult; // анализ результата авторизации
+    function GetLoginError(const str: string): TLoginResult;// получаем тип ошибки
 
     function GetCaptchaURL(const cList: TStringList): string; // ссылка на капчу
     function GetCaptchaToken(const cList: TStringList): String;
@@ -120,17 +119,13 @@ type
     { protected declarations }
   public
     { public declarations }
-    constructor Create(CreateSuspennded: BOOLEAN; aParamStr: string);
-    // используем для передачи логина и пароля и подобного
+    constructor Create(CreateSuspennded: BOOLEAN; aParamStr: string); // используем для передачи логина и пароля и подобного
     procedure Execute; override; // выполняем непосредственно авторизацию на сайте
   published
     { published declarations }
     // события
-    property OnAutorization
-      : TAutorization read FAutorization write FAutorization;
-    // авторизировались
-    property OnError: TErrorAutorization read FErrorAutorization write
-      FErrorAutorization; // возникла ошибка ((
+    property OnAutorization:TAutorization read FAutorization write FAutorization;    // авторизировались
+    property OnError: TErrorAutorization read FErrorAutorization write FErrorAutorization; // возникла ошибка ((
   end;
 
   // "шкурка" компонента
@@ -171,7 +166,7 @@ type
     procedure Login(aLoginToken: string = ''; aLoginCaptcha: string = '');
     // формируем запрос
     procedure Disconnect; // удаляет все данные по авторизации
-    property LastResult: TLoginResult read FLastResult;
+    //property LastResult: TLoginResult read FLastResult;//убрал за ненадобностью по причине того что все передается в SynAutoriz
     // property Auth: string read FAuth;
     // property SID: string read FSID;
     // property LSID: string read FLSID;
@@ -185,8 +180,7 @@ type
     property Password: string read FPassword write SetPassword;
     property Service: TServices read FService write SetService default xapi;
     property OnAutorization: TAutorization read FAfterLogin write FAfterLogin;
-    property OnError: TErrorAutorization read FErrorAutorization write
-      FErrorAutorization; // возникла ошибка ((
+    property OnError: TErrorAutorization read FErrorAutorization write FErrorAutorization; // возникла ошибка ((
     property OnDisconnect: TDisconnect read FDisconnect write FDisconnect;
   end;
 
@@ -252,10 +246,7 @@ begin
   end;
   cBody.WriteString('Email=' + FEmail + '&');
   cBody.WriteString('Passwd=' + URLEncode(FPassword) + '&');
-  cBody.WriteString('service=' + GetEnumName(TypeInfo(TServices),
-      Ord(FAccountType)) + '&');
-  // cBody.WriteString('service='+ServiceIDs[ord(FService)]+'&');
-  ResponseText := GetEnumName(TypeInfo(TServices), Integer(FService));
+  cBody.WriteString('service=' + GetEnumName(TypeInfo(TServices),Integer(FService)) + '&');
 
   if Length(Trim(FAppname)) > 0 then
     cBody.WriteString('source=' + FAppname)
@@ -477,8 +468,7 @@ begin
               if L = 0 then
                 break;
               SetLength(sTemp, L + i);
-              if not InternetReadFile(hRequest, @sTemp[i], sizeof(L),
-                dwBytesRead) then
+              if not InternetReadFile(hRequest, @sTemp[i], sizeof(L),dwBytesRead) then
                 break; // Получаем данные с сервера
               inc(i, dwBytesRead);
               if Terminated then // проверка для экстренного закрытия потока

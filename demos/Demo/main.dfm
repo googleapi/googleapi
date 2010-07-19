@@ -2,8 +2,8 @@ object Form11: TForm11
   Left = 0
   Top = 0
   Caption = 'Google Login'
-  ClientHeight = 167
-  ClientWidth = 340
+  ClientHeight = 219
+  ClientWidth = 355
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -54,6 +54,20 @@ object Form11: TForm11
     Width = 27
     Height = 13
     Caption = 'AUTH'
+  end
+  object Label7: TLabel
+    Left = 8
+    Top = 168
+    Width = 61
+    Height = 13
+    Caption = 'TLoginResult'
+  end
+  object Label8: TLabel
+    Left = 8
+    Top = 195
+    Width = 31
+    Height = 13
+    Caption = 'Label8'
   end
   object EmailEdit: TEdit
     Left = 38
@@ -112,14 +126,14 @@ object Form11: TForm11
       'YouTube Data API')
   end
   object AuthEdit: TEdit
-    Left = 68
+    Left = 84
     Top = 138
     Width = 264
     Height = 21
     TabOrder = 4
   end
   object ResultEdit: TEdit
-    Left = 68
+    Left = 84
     Top = 111
     Width = 264
     Height = 21
@@ -134,13 +148,28 @@ object Form11: TForm11
     TabOrder = 6
     OnClick = Button2Click
   end
+  object Edit1: TEdit
+    Left = 84
+    Top = 165
+    Width = 264
+    Height = 21
+    TabOrder = 7
+  end
+  object Edit2: TEdit
+    Left = 84
+    Top = 192
+    Width = 264
+    Height = 21
+    TabOrder = 8
+    Text = 'Edit2'
+  end
   object GoogleLogin1: TGoogleLogin
     AppName = 
       'Mozilla/5.0 (Windows; U; Windows NT 5.1; ru; rv:1.9.2.6) Gecko/2' +
       '0100625 Firefox/3.6.6'
     AccountType = atNone
     OnAutorization = GoogleLogin1Autorization
-    Left = 192
-    Top = 48
+    Left = 176
+    Top = 8
   end
 end

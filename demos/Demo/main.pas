@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, uGoogleLogin;
+  Dialogs, StdCtrls, uGoogleLogin,TypInfo;
 
 type
   TForm11 = class(TForm)
@@ -22,6 +22,10 @@ type
     ResultEdit: TEdit;
     Button2: TButton;
     GoogleLogin1: TGoogleLogin;
+    Edit1: TEdit;
+    Label7: TLabel;
+    Edit2: TEdit;
+    Label8: TLabel;
     procedure Button1Click(Sender: TObject);
     procedure GoogleLogin1Autorization(const LoginResult: TLoginResult;
       Result: TResultRec);
@@ -55,11 +59,14 @@ begin
   GoogleLogin1.Disconnect;
 end;
 
-procedure TForm11.GoogleLogin1Autorization(const LoginResult: TLoginResult;
-  Result: TResultRec);
+procedure TForm11.GoogleLogin1Autorization(const LoginResult: TLoginResult;Result: TResultRec);
+var
+  temp:string;
 begin
   ResultEdit.Text:=Result.LoginStr;
   AuthEdit.Text:=Result.Auth;
+  temp:=GetEnumName(TypeInfo(TLoginResult),Integer(LoginResult));
+  Edit1.Text:=temp;
   if LoginResult =lrOk then
     ShowMessage('Мы в гугле!!!!!!!!!')
   else
