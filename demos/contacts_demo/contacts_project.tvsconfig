@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<TgConfig Version="3" SubLevelDisabled="False">
+  <Option Name="namespaceFolder.Common" Type="System.String" Value="Common" Category="General" IsBrowsable="False" />
+  <Option Name="namespaceFolder.GContacts" Type="System.String" Value="GContacts" Category="General" IsBrowsable="False" />
+  <Option Name="namespaceFolder.NativeXml" Type="System.String" Value="NativeXml" Category="General" IsBrowsable="False" />
+  <Option Name="namespaceFolder.contacts" Type="System.String" Value="contacts" Category="General" IsBrowsable="False" />
+  <Option Name="namespaceFolder.GoogleLogin" Type="System.String" Value="GoogleLogin" Category="General" IsBrowsable="False" />
+</TgConfig>
