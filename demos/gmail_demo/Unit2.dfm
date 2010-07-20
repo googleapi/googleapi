@@ -189,7 +189,7 @@ object Form2: TForm2
     Port = 587
     Recipients.Strings = (
       '')
-    Left = 88
+    Left = 120
     Top = 128
   end
 end

@@ -19,7 +19,7 @@ type
   private
     { Private declarations }
   public
-    { Public declarations }
+   procedure Authorize (const LoginResult: TLoginResult; Result: TResultRec);
   end;
 
 var
@@ -31,21 +31,32 @@ uses main;
 
 {$R *.dfm}
 
-procedure TProfileForm.Button1Click(Sender: TObject);
+procedure TProfileForm.Authorize(const LoginResult: TLoginResult;
+  Result: TResultRec);
 begin
-  Loginer:=TGoogleLogin.Create(Edit1.Text,Edit2.Text);
-  Loginer.Service:=tsContacts;
-  GmailContact:=Edit3.Text;
-
-  Form3.ToolButton2.Enabled:=(Loginer.LastResult=lrOk);
-  
-
-  if Loginer.LastResult=lrOk then
+  if LoginResult=lrOk then
     begin
       Contact:=TGoogleContact.Create(self);
-      Contact.Auth:=Loginer.Auth;
       Contact.Gmail:=GmailContact;
+      Contact.Auth:=Result.Auth;
     end;
+  Form3.ToolButton2.Enabled:=LoginResult=lrOk;
+end;
+
+procedure TProfileForm.Button1Click(Sender: TObject);
+begin
+  Loginer:=TGoogleLogin.Create(self);
+  Loginer.Email:=Edit1.Text;
+  Loginer.Password:=Edit2.Text;
+  Loginer.Service:=cp;
+  Loginer.OnAutorization:=Authorize;
+  GmailContact:=Edit3.Text;
+
+  Loginer.Login();
+
+
+
+
 
   Hide;
 end;

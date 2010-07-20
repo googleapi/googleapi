@@ -81,6 +81,8 @@
 			<None Include="ModelSupport_contacts\main\default.txvpck"/>
 			<None Include="ModelSupport_contacts\GData\default.txvpck"/>
 			<None Include="ModelSupport_contacts\GDataCommon\default.txaPackage"/>
+			<None Include="ModelSupport_contacts\GConsts\default.txvpck"/>
+			<None Include="ModelSupport_contacts\GConsts\default.txaPackage"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

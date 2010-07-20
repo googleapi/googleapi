@@ -13,7 +13,7 @@ const
   CpDefaultCName = 'NoName Contact';
 
   gdNodeAlias = 'gd:';//префикс узлов, относящихся к GData API
-
+  sDefoultMimeType = 'application/atom+xml';
   sEventRelSuffix = 'event.';
   sImgRel = 'image/*'; //атрибут rel узла, содержащего изображения
   sAtomAlias = 'atom:'; //префикс узлов для формирования документа в формате Атом
@@ -21,6 +21,10 @@ const
   sDefoultEncoding = 'utf-8';//кодировка документов по умолчанию
   sRootNodeName= 'feed';//корневой элемент фида
   sNodeValueAttr = 'value';//аттрибут узлов для хранения какого-либо значения
+  sNodePrimaryAttr = 'primary';
+  sNodeDeletedAttr = 'deleted';
+  sNodeCodeAttr = 'code';
+  sNodeKeyAttr = 'key';
   sEntryNodeName = 'entry';//имя узла, который необходимо разобрать
   sNodeRelAttr = 'rel';//аттрибут rel узла
   sNodeLabelAttr ='label';//аттрибут label узла

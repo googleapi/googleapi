@@ -295,8 +295,8 @@ procedure TForm3.RetriveMyContacts;
 var  iCounterPerSec: TLargeInteger;
      T1, T2: TLargeInteger; //значение счётчика ДО и ПОСЛЕ операции
 begin
-  if Loginer.Login()=lrOk then
-    begin
+//  if Loginer.LastResult=lrOk then
+//    begin
       //затачиваем события
       Contact.OnRetriveXML:=RetriveXML;
       Contact.OnBeginParse:=BeginParse;
@@ -331,7 +331,7 @@ begin
       Form3.ToolButton10.Enabled:=true;
       Form3.ToolButton11.Enabled:=true;
       Form3.ToolButton12.Enabled:=true;
-    end;
+ //   end;
 end;
 
 procedure TForm3.RetriveXML(const FromURL: string);
@@ -419,12 +419,12 @@ end;
 
 procedure TForm3.ToolButton7Click(Sender: TObject);
 begin
-fUpdateContact.Edit1.Text:=Selected.TagName.FamilyName.Value;
-fUpdateContact.Edit2.Text:=Selected.TagName.GivenName.Value;
-fUpdateContact.Edit3.Text:=Selected.TagName.AdditionalName.Value;
-fUpdateContact.Edit4.Text:=Selected.PrimaryEmail;
-fUpdateContact.DateTimePicker1.Date:=Selected.TagBirthDay.Date;
-fUpdateContact.ShowModal;
+  fUpdateContact.Edit1.Text:=Selected.TagName.FamilyName.Value;
+  fUpdateContact.Edit2.Text:=Selected.TagName.GivenName.Value;
+  fUpdateContact.Edit3.Text:=Selected.TagName.AdditionalName.Value;
+  fUpdateContact.Edit4.Text:=Selected.PrimaryEmail;
+  fUpdateContact.DateTimePicker1.Date:=Selected.TagBirthDay.Date;
+  fUpdateContact.ShowModal;
 end;
 
 procedure TForm3.ToolButton8Click(Sender: TObject);
