@@ -151,7 +151,7 @@ type
     FLogincaptcha: string;
     // параметры Captcha
     FCaptchaURL: string;
-    FStatus:TStatusThread;//статус потока
+    //FStatus:TStatusThread;//статус потока
     //переменные для событий
     FAfterLogin: TAutorization;
     FProgressAutorization:TProgressAutorization;//прогресс при авторизации для показа часиков и подобных вещей
@@ -189,7 +189,7 @@ type
     property Email: string read FEmail write SetEmail;
     property Password: string read FPassword write SetPassword;
     property Service: TServices read FService write SetService default xapi;
-    property Status:TStatusThread  read FStatus default sttNoActive;//статус потока
+    //property Status:TStatusThread  read FStatus default sttNoActive;//статус потока
     property OnAutorization: TAutorization read FAfterLogin write FAfterLogin;// авторизировались
     property OnProgressAutorization:TProgressAutorization  read FProgressAutorization write FProgressAutorization;//прогресс авторизации
     property OnError: TErrorAutorization read FErrorAutorization write FErrorAutorization; // возникла ошибка ((
@@ -240,7 +240,7 @@ constructor TGoogleLogin.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   FAppname := DefaultAppName; // дефолтное значение
-  FStatus:=sttNoActive;//неактивен ни один поток
+  //FStatus:=sttNoActive;//неактивен ни один поток
 end;
 
 procedure TGoogleLogin.Login(aLoginToken, aLoginCaptcha: string);
@@ -277,21 +277,12 @@ end;
 // отправляем запрос на сервер в отдельном потоке
 function TGoogleLogin.SendRequest(const ParamStr: string): AnsiString;
 begin
-  if not Assigned(FThread) then
-  begin
-    FThread := TGoogleLoginThread.Create(true, ParamStr);
-    FThread.OnAutorization := Self.OnAutorization;
-    FThread.OnProgressAutorization:=Self.OnProgressAutorization;//прогресс авторизации
-    FThread.OnError := Self.OnError;
-    FThread.FreeOnTerminate := true; // чтобы сам себя грухнул после окончания операции
-    FStatus:=sttActive;
-    FThread.Resume; // запуск
-  end
-  else
-  begin
-    FThread.Suspend;
-    FThread.Free;
-  end;
+  FThread := TGoogleLoginThread.Create(true, ParamStr);
+  FThread.OnAutorization := Self.OnAutorization;
+  FThread.OnProgressAutorization:=Self.OnProgressAutorization;//прогресс авторизации
+  FThread.OnError := Self.OnError;
+  FThread.FreeOnTerminate := true; // чтобы сам себя грухнул после окончания операции
+  FThread.Resume; // запуск
   // тут делать смысла что то нет так как данные еще не получены(они ведь будут получены в другом потоке)
 end;
 
