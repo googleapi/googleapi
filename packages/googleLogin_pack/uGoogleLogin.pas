@@ -35,7 +35,7 @@ resourcestring
  rcDisconnect ='Соединение с сервером разорвано';
 
 const
-  DefoultAppName = 'Noname-MyCompany-1.0';
+  DefaultAppName = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; ru; rv:1.9.2.6) Gecko/20100625 Firefox/3.6.6';
 
   Flags_Connection = INTERNET_DEFAULT_HTTPS_PORT;
 
@@ -47,8 +47,8 @@ const
                   INTERNET_FLAG_KEEP_CONNECTION;
 
   Errors : array [0..8] of string = ('BadAuthentication','NotVerified',
-  'TermsNotAgreed','CaptchaRequired','Unknown','AccountDeleted','AccountDisabled',
-  'ServiceDisabled','ServiceUnavailable');
+                                      'TermsNotAgreed','CaptchaRequired','Unknown','AccountDeleted',
+                                      'AccountDisabled', 'ServiceDisabled','ServiceUnavailable');
 
 type
   TAccountType = (atNone ,atGOOGLE, atHOSTED, atHOSTED_OR_GOOGLE);
@@ -67,8 +67,8 @@ type
 
 const
   ServiceIDs: array[0..19]of string=('xapi','analytics','apps','gbase',
-  'jotspot','blogger','print','cl','codesearch','cp','writely','finance',
-  'mail','health','local','lh2','annotateweb','wise','sitemaps','youtube');
+                                    'jotspot','blogger','print','cl','codesearch','cp','writely','finance',
+                                    'mail','health','local','lh2','annotateweb','wise','sitemaps','youtube');
 
 type
   TAfterLogin = procedure (const LoginResult: TLoginResult; LoginStr:string)of object;
@@ -78,6 +78,7 @@ type
   TGoogleLogin = class(TComponent)
   private
     //регистрационные данные
+    FAppname      : string; //строка символов, которая передается серверу и идентифицирует программное обеспечение, пославшее запрос.
     FAccountType  : TAccountType;
     FLastResult   : TLoginResult;
     FEmail        : string;
@@ -105,6 +106,13 @@ type
     procedure SetService(cService:TServices);
     procedure SetSource(cSource: string);
     procedure SetCaptcha(cCaptcha:string);
+    procedure SetAppName(value:string);
+    ////////////////вспомогательные функции//////////////////////////
+    function DigitToHex(Digit: Integer): Char;
+    //кодирование url
+    function URLEncode(const S: string): string;
+    //декодирование url
+    function URLDecode(const S: string): string;
   public
     constructor Create(AOwner: TComponent);override;
     function Login(aLoginToken:string='';aLoginCaptcha:string=''):TLoginResult;overload;
@@ -118,6 +126,7 @@ type
     property LoginToken: string read FLogintoken;
     property LoginCaptcha: string read FLogincaptcha write FLogincaptcha;
   published
+    property AppName:string  read FAppname write SetAppName;
     property AccountType: TAccountType read FAccountType write FAccountType;
     property Email: string read FEmail write SetEmail;
     property Password:string read FPassword write SetPassword;
@@ -138,24 +147,35 @@ end;
 
 { TGoogleLogin }
 
+function TGoogleLogin.DigitToHex(Digit: Integer): Char;
+begin
+  case Digit of
+    0..9: Result := Chr(Digit + Ord('0'));
+    10..15: Result := Chr(Digit - 10 + Ord('A'));
+  else
+    Result := '0';
+  end;
+end;
+
 procedure TGoogleLogin.Disconnect;
 begin
- FAccountType:=atNone;
- FLastResult:=lrNone;
- FSID:='';
- FLSID:='';
- FAuth:='';
- FLogintoken:='';
- FLogincaptcha:='';
- FCaptchaURL:='';
- FLogintoken:='';
- if Assigned(FDisconnect) then
-   OnDisconnect(rcDisconnect)
+  FAccountType:=atNone;
+  FLastResult:=lrNone;
+  FSID:='';
+  FLSID:='';
+  FAuth:='';
+  FLogintoken:='';
+  FLogincaptcha:='';
+  FCaptchaURL:='';
+  FLogintoken:='';
+  if Assigned(FDisconnect) then
+    OnDisconnect(rcDisconnect)
 end;
 
 constructor TGoogleLogin.Create(AOwner: TComponent);
 begin
-inherited Create(AOwner);
+  inherited Create(AOwner);
+  FAppname:=DefaultAppName;//дефолтное значение
 end;
 
 function TGoogleLogin.ExpertLoginResult(const LoginResult: string): TLoginResult;
@@ -263,13 +283,13 @@ begin
    atHOSTED:cBody.WriteString('accountType=HOSTED&');
  end;
  cBody.WriteString('Email='+FEmail+'&');
- cBody.WriteString('Passwd='+FPassword+'&');
+ cBody.WriteString('Passwd='+URLEncode(FPassword)+'&');
  cBody.WriteString('service='+ServiceIDs[ord(FService)]+'&');
 
  if Length(Trim(FSource))>0 then
    cBody.WriteString('source='+FSource)
  else
-   cBody.WriteString('source='+DefoultAppName);
+   cBody.WriteString('source='+DefaultAppName);
  if Length(Trim(aLoginToken))>0 then
    begin
      cBody.WriteString('&logintoken='+aLoginToken);
@@ -291,7 +311,9 @@ function TGoogleLogin.SendRequest(const ParamStr: string): AnsiString;
   end;
 var hInternet,hConnect,hRequest : Pointer;
     dwBytesRead,I,L : Cardinal;
+    a:string;
 begin
+  a:=ParamStr;
 try
 hInternet := InternetOpen(PChar('GoogleLogin'),INTERNET_OPEN_TYPE_PRECONFIG,Nil,Nil,0);
  if Assigned(hInternet) then
@@ -309,12 +331,11 @@ hInternet := InternetOpen(PChar('GoogleLogin'),INTERNET_OPEN_TYPE_PRECONFIG,Nil,
               if HttpSendRequest(hRequest,nil,0,nil,0) then
                 begin
                   repeat
-                  DataAvailable(hRequest, L);//Получаем кол-во принимаемых данных
-                  if L = 0 then break;
-                  SetLength(Result,L + I);
-                  if InternetReadFile(hRequest,@Result[I],sizeof(L),dwBytesRead) then//Получаем данные с сервера
-                  else break;
-                  inc(I,dwBytesRead);
+                    DataAvailable(hRequest, L);//Получаем кол-во принимаемых данных
+                    if L = 0 then break;
+                    SetLength(Result,L + I);
+                    if not InternetReadFile(hRequest,@Result[I],sizeof(L),dwBytesRead) then break;//Получаем данные с сервера
+                    inc(I,dwBytesRead);
                   until dwBytesRead = 0;
                   Result[I] := #0;
                 end;
@@ -326,6 +347,16 @@ finally
   InternetCloseHandle(hConnect);
   InternetCloseHandle(hInternet);
 end;
+end;
+
+//устанавливаем значение строки символов, которая передается серверу
+// идентифицирует программное обеспечение, пославшее запрос.
+procedure TGoogleLogin.SetAppName(value: string);
+begin
+  if not (value ='') then
+    FAppname:=value
+  else
+    FAppname:=DefaultAppName;
 end;
 
 procedure TGoogleLogin.SetCaptcha(cCaptcha: string);
@@ -363,6 +394,114 @@ begin
 FSource:=cSource;
 if FLastResult=lrOk then
   Disconnect;//обнуляем результаты
+end;
+
+function TGoogleLogin.URLDecode(const S: string): string;
+var
+  i, idx, len, n_coded: Integer;
+  function WebHexToInt(HexChar: Char): Integer;
+  begin
+    if HexChar < '0' then
+      Result := Ord(HexChar) + 256 - Ord('0')
+    else if HexChar <= Chr(Ord('A') - 1) then
+      Result := Ord(HexChar) - Ord('0')
+    else if HexChar <= Chr(Ord('a') - 1) then
+      Result := Ord(HexChar) - Ord('A') + 10
+    else
+      Result := Ord(HexChar) - Ord('a') + 10;
+  end;
+begin
+  len := 0;
+  n_coded := 0;
+  for i := 1 to Length(S) do
+    if n_coded >= 1 then
+    begin
+      n_coded := n_coded + 1;
+      if n_coded >= 3 then
+      n_coded := 0;
+    end
+    else
+    begin
+      len := len + 1;
+      if S[i] = '%' then
+      n_coded := 1;
+    end;
+  SetLength(Result, len);
+  idx := 0;
+  n_coded := 0;
+  for i := 1 to Length(S) do
+    if n_coded >= 1 then
+    begin
+      n_coded := n_coded + 1;
+      if n_coded >= 3 then
+      begin
+        Result[idx] := Chr((WebHexToInt(S[i - 1]) * 16 +
+        WebHexToInt(S[i])) mod 256);
+        n_coded := 0;
+      end;
+    end
+    else
+    begin
+      idx := idx + 1;
+      if S[i] = '%' then
+       n_coded := 1;
+      if S[i] = '+' then
+       Result[idx] := ' '
+      else
+       Result[idx] := S[i];
+    end;
+
+end;
+
+{
+RUS
+кодирование URL исправило проблему с тем, что если в пароле пользователя есть
+спец символ то теперь, он проходит авторизацию корректно
+просто при отправке запроса серверу спец символ просто отбрасывался
+на счет логина не проверял!
+US google translator
+URL encoding correct a problem with the fact that if a user password is
+special character but now he goes through the authorization correctly
+just when you query the server special character is simply discarded
+the account login is not checked!
+}
+
+function TGoogleLogin.URLEncode(const S: string): string;
+var
+  i, idx, len: Integer;
+begin
+  len := 0;
+  for i := 1 to Length(S) do
+    if ((S[i] >= '0') and (S[i] <= '9')) or
+        ((S[i] >= 'A') and (S[i] <= 'Z')) or
+        ((S[i] >= 'a') and (S[i] <= 'z')) or (S[i] = ' ') or
+        (S[i] = '_') or (S[i] = '*') or (S[i] = '-') or (S[i] = '.') then
+            len := len + 1
+    else
+      len := len + 3;
+  SetLength(Result, len);
+  idx := 1;
+  for i := 1 to Length(S) do
+    if S[i] = ' ' then
+    begin
+      Result[idx] := '+';
+      idx := idx + 1;
+    end
+    else if ((S[i] >= '0') and (S[i] <= '9')) or
+            ((S[i] >= 'A') and (S[i] <= 'Z')) or
+            ((S[i] >= 'a') and (S[i] <= 'z')) or
+            (S[i] = '_') or (S[i] = '*') or (S[i] = '-') or (S[i] = '.') then
+    begin
+      Result[idx] := S[i];
+      idx := idx + 1;
+    end
+    else
+    begin
+      Result[idx] := '%';
+      Result[idx + 1] := DigitToHex(Ord(S[i]) div 16);
+      Result[idx + 2] := DigitToHex(Ord(S[i]) mod 16);
+      idx := idx + 3;
+    end;
 end;
 
 end.
