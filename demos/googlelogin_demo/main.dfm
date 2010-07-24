@@ -2,8 +2,8 @@ object Form11: TForm11
   Left = 0
   Top = 0
   Caption = 'Google Login'
-  ClientHeight = 167
-  ClientWidth = 340
+  ClientHeight = 524
+  ClientWidth = 355
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -55,12 +55,41 @@ object Form11: TForm11
     Height = 13
     Caption = 'AUTH'
   end
+  object Label7: TLabel
+    Left = 8
+    Top = 168
+    Width = 61
+    Height = 13
+    Caption = 'TLoginResult'
+  end
+  object Label8: TLabel
+    Left = 8
+    Top = 195
+    Width = 31
+    Height = 13
+    Caption = 'Label8'
+  end
+  object Label9: TLabel
+    Left = 8
+    Top = 264
+    Width = 162
+    Height = 13
+    Caption = #1051#1086#1075' '#1082#1086#1083'-'#1074#1072' '#1087#1086#1083#1091#1095#1077#1085#1085#1099#1093' '#1076#1072#1085#1085#1099#1093
+  end
+  object Label10: TLabel
+    Left = 8
+    Top = 222
+    Width = 114
+    Height = 13
+    Caption = #1055#1088#1086#1075#1088#1077#1089#1089' '#1072#1074#1090#1086#1088#1080#1079#1072#1094#1080#1080
+  end
   object EmailEdit: TEdit
     Left = 38
     Top = 27
     Width = 121
     Height = 21
     TabOrder = 0
+    Text = 'GoLabApi@gmail.com'
   end
   object PassEdit: TEdit
     Left = 213
@@ -68,6 +97,7 @@ object Form11: TForm11
     Width = 121
     Height = 21
     TabOrder = 1
+    Text = '123456789her'
   end
   object Button1: TButton
     Left = 120
@@ -110,24 +140,76 @@ object Form11: TForm11
       'YouTube Data API')
   end
   object AuthEdit: TEdit
-    Left = 68
+    Left = 84
     Top = 138
     Width = 264
     Height = 21
     TabOrder = 4
   end
   object ResultEdit: TEdit
-    Left = 68
+    Left = 84
     Top = 111
     Width = 264
     Height = 21
     TabOrder = 5
   end
+  object Button2: TButton
+    Left = 232
+    Top = 84
+    Width = 75
+    Height = 21
+    Caption = 'Button2'
+    TabOrder = 6
+    OnClick = Button2Click
+  end
+  object Edit1: TEdit
+    Left = 84
+    Top = 165
+    Width = 264
+    Height = 21
+    TabOrder = 7
+  end
+  object Edit2: TEdit
+    Left = 84
+    Top = 192
+    Width = 264
+    Height = 21
+    TabOrder = 8
+    Text = 'Edit2'
+  end
+  object ProgressBar1: TProgressBar
+    Left = 8
+    Top = 241
+    Width = 339
+    Height = 17
+    TabOrder = 9
+  end
+  object Memo1: TMemo
+    Left = 8
+    Top = 283
+    Width = 339
+    Height = 70
+    TabOrder = 10
+  end
+  object Animate1: TAnimate
+    Left = 8
+    Top = 359
+    Width = 80
+    Height = 50
+    CommonAVI = aviFindFolder
+    DoubleBuffered = False
+    ParentDoubleBuffered = False
+    StopFrame = 29
+    Timers = True
+  end
   object GoogleLogin1: TGoogleLogin
-    AccountType = atHOSTED_OR_GOOGLE
-    Service = tsNone
-    OnAfterLogin = GoogleLogin1AfterLogin
-    Left = 256
-    Top = 4
+    AppName = 
+      'Mozilla/5.0 (Windows; U; Windows NT 5.1; ru; rv:1.9.2.6) Gecko/2' +
+      '0100625 Firefox/3.6.6'
+    AccountType = atNone
+    OnAutorization = GoogleLogin1Autorization
+    OnProgressAutorization = GoogleLogin1ProgressAutorization
+    Left = 176
+    Top = 8
   end
 end
