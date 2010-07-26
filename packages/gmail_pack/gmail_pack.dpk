@@ -29,10 +29,12 @@ requires
   vcl;
 
 contains
-  mimemess in '..\..\Utils\synapse\mimemess.pas',
-  mimepart in '..\..\Utils\synapse\mimepart.pas',
-  smtpsend in '..\..\Utils\synapse\smtpsend.pas',
-  ssl_openssl in '..\..\Utils\synapse\ssl_openssl.pas',
-  GMailSMTP in 'GMailSMTP.pas';
+  GMailSMTP in 'GMailSMTP.pas',
+  mimemess in '..\..\addons\synapse\mimemess.pas',
+  mimepart in '..\..\addons\synapse\mimepart.pas',
+  smtpsend in '..\..\addons\synapse\smtpsend.pas',
+  synachar in '..\..\addons\synapse\synachar.pas',
+  blcksock in '..\..\addons\synapse\blcksock.pas',
+  synsock in '..\..\addons\synapse\synsock.pas';
 
 end.

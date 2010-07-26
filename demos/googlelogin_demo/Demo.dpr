@@ -2,7 +2,8 @@ program Demo;
 
 uses
   Forms,
-  main in 'main.pas' {Form11};
+  main in 'main.pas' {Form11},
+  uGoogleLogin in '..\..\packages\googleLogin_pack\uGoogleLogin.pas';
 
 {$R *.res}
 

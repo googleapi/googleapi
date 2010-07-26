@@ -54,7 +54,7 @@ unit GMailSMTP;
 interface
 
 uses mimemess, mimepart, smtpsend, classes, sysutils,
-     controls,ssl_openssl,synautil;
+     controls,ssl_openssl,synautil,synachar;
 
 const
   {$REGION 'Константы'}
@@ -78,6 +78,8 @@ type
     FMIMEPart  : TMimePart;
     procedure SetFiles(Value: TStrings);
     procedure SetRecepients(Value: TStrings);
+    procedure SetHeaderCodePage(Value:TMimeChar);
+    function  GetHeaderCodePage:TMimeChar;
   public
     constructor Create(AOwner: TComponent);override;
     destructor Destroy;override;
@@ -97,6 +99,7 @@ type
     property Port: integer read FPort write FPort;
     property AttachFiles: TStrings read FFiles write SetFiles;
     property Recipients: TStrings read FRecipients write SetRecepients;
+    property HeaderCodePage: TMimeChar read GetHeaderCodePage write SetHeaderCodePage;
 end;
 
 procedure Register;
@@ -112,30 +115,44 @@ end;
 
 function TGMailSMTP.AddHTML(const aHTML: string): boolean;
 var s:TStringList;
+    Part:TMimePart;
 begin
-Result:=false;
-try
-  S:=TStringList.Create;
-  S.Text:=aHTML;
-  FMsg.AddPartHTML(S, FMIMEPart);
-  Result:=true;
-finally
-  S.Free;
-end;
+ Part:= FMsg.AddPart(FMIMEPart);
+  with Part do
+  begin
+    S:=TStringList.Create;
+    S.Text:=aHTML;
+    S.SaveToStream(DecodedLines);
+    Primary := 'text';
+    Secondary := 'html';
+    Description := 'HTML text';
+    Disposition := 'inline';
+    CharsetCode := TargetCharset;
+    EncodingCode := ME_QUOTED_PRINTABLE;
+    EncodePart;
+    EncodePartHeader;
+  end;
 end;
 
 function TGMailSMTP.AddText(const aText: string): boolean;
 var s:TStringList;
+    Part:TMimePart;
 begin
-Result:=false;
-try
-  S:=TStringList.Create;
-  S.Text:=aText;
-  FMsg.AddPartText(S, FMIMEPart);
-  Result:=true;
-finally
-  S.Free;
-end;
+Part:= FMsg.AddPart(FMIMEPart);
+  with Part do
+  begin
+    S:=TStringList.Create;
+    S.Text:=aText;
+    S.SaveToStream(DecodedLines);
+    Primary := 'text';
+    Secondary := 'plain';
+    Description := 'Message text';
+    Disposition := 'inline';
+    CharsetCode :=TargetCharset;
+    EncodingCode := ME_QUOTED_PRINTABLE;
+    EncodePart;
+    EncodePartHeader;
+  end;
 end;
 
 procedure TGMailSMTP.Clear;
@@ -162,6 +179,11 @@ begin
   FFiles.Free;
   FRecipients.Free;
   inherited;
+end;
+
+function TGMailSMTP.GetHeaderCodePage: TMimeChar;
+begin
+  Result:=FMsg.Header.CharsetCode
 end;
 
 function TGMailSMTP.SendMessage(const aSubject: string; aClear:boolean): boolean;
@@ -224,6 +246,11 @@ end;
 procedure TGMailSMTP.SetFiles(Value: TStrings);
 begin
   FFiles.Assign(Value)
+end;
+
+procedure TGMailSMTP.SetHeaderCodePage(Value: TMimeChar);
+begin
+  FMsg.Header.CharsetCode:=Value;
 end;
 
 procedure TGMailSMTP.SetRecepients(Value: TStrings);

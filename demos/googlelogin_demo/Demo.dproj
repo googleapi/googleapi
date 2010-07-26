@@ -41,6 +41,7 @@
 			<DCCReference Include="main.pas">
 				<Form>Form11</Form>
 			</DCCReference>
+			<DCCReference Include="..\..\packages\googleLogin_pack\uGoogleLogin.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

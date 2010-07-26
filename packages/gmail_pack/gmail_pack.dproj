@@ -1,6 +1,6 @@
 ﻿	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 		<PropertyGroup>
-			<ProjectGuid>{8A4BD781-C701-40D7-84FF-01B2DF1F27D8}</ProjectGuid>
+			<ProjectGuid>{C7003DCA-7B41-4412-BA8B-09DB78A1BDA0}</ProjectGuid>
 			<MainSource>gmail_pack.dpk</MainSource>
 			<ProjectVersion>12.0</ProjectVersion>
 			<Config Condition="'$(Config)'==''">Debug</Config>
@@ -48,11 +48,13 @@
 			</DelphiCompile>
 			<DCCReference Include="rtl.dcp"/>
 			<DCCReference Include="vcl.dcp"/>
-			<DCCReference Include="..\..\Utils\synapse\mimemess.pas"/>
-			<DCCReference Include="..\..\Utils\synapse\mimepart.pas"/>
-			<DCCReference Include="..\..\Utils\synapse\smtpsend.pas"/>
-			<DCCReference Include="..\..\Utils\synapse\ssl_openssl.pas"/>
 			<DCCReference Include="GMailSMTP.pas"/>
+			<DCCReference Include="..\..\addons\synapse\mimemess.pas"/>
+			<DCCReference Include="..\..\addons\synapse\mimepart.pas"/>
+			<DCCReference Include="..\..\addons\synapse\smtpsend.pas"/>
+			<DCCReference Include="..\..\addons\synapse\synachar.pas"/>
+			<DCCReference Include="..\..\addons\synapse\blcksock.pas"/>
+			<DCCReference Include="..\..\addons\synapse\synsock.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>
