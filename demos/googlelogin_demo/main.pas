@@ -63,7 +63,7 @@ end;
 
 procedure TForm11.Button2Click(Sender: TObject);
 begin
-  GoogleLogin1.Disconnect;
+  GoogleLogin1.Destroy;
 end;
 
 procedure TForm11.GoogleLogin1Autorization(const LoginResult: TLoginResult;Result: TResultRec);

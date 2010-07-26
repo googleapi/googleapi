@@ -173,6 +173,7 @@ type
     function URLDecode(const S: string): string; // не используется
   public
     constructor Create(AOwner: TComponent); override;
+    destructor Destroy;//глушим все
     procedure Login(aLoginToken: string = ''; aLoginCaptcha: string = '');
     // формируем запрос
     procedure Disconnect; // удаляет все данные по авторизации
@@ -236,6 +237,13 @@ begin
     OnDisconnect(rcDisconnect)
 end;
 
+destructor TGoogleLogin.Destroy;
+begin
+  if Assigned(FThread) then
+    FThread.Terminate;
+  inherited Destroy;
+end;
+
 constructor TGoogleLogin.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
@@ -281,7 +289,7 @@ begin
   FThread.OnAutorization := Self.OnAutorization;
   FThread.OnProgressAutorization:=Self.OnProgressAutorization;//прогресс авторизации
   FThread.OnError := Self.OnError;
-  FThread.FreeOnTerminate := true; // чтобы сам себя грухнул после окончания операции
+  FThread.FreeOnTerminate := True; // чтобы сам себя грухнул после окончания операции
   FThread.Resume; // запуск
   // тут делать смысла что то нет так как данные еще не получены(они ведь будут получены в другом потоке)
 end;

@@ -100,11 +100,11 @@ object Form11: TForm11
     Text = '123456789her'
   end
   object Button1: TButton
-    Left = 120
+    Left = 8
     Top = 84
-    Width = 75
+    Width = 170
     Height = 21
-    Caption = 'Connect'
+    Caption = #1051#1086#1075#1080#1085#1080#1084#1089#1103
     TabOrder = 2
     OnClick = Button1Click
   end
@@ -154,11 +154,11 @@ object Form11: TForm11
     TabOrder = 5
   end
   object Button2: TButton
-    Left = 232
+    Left = 184
     Top = 84
-    Width = 75
+    Width = 163
     Height = 21
-    Caption = 'Button2'
+    Caption = #1069#1082#1089#1090#1088#1077#1085#1085#1086#1077' '#1090#1086#1088#1084#1086#1078#1077#1085#1080#1077' '#1087#1086#1090#1086#1082#1072
     TabOrder = 6
     OnClick = Button2Click
   end
