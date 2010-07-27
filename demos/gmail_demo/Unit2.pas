@@ -38,8 +38,6 @@ type
     procedure Button3Click(Sender: TObject);
     procedure btn1Click(Sender: TObject);
     procedure btn2Click(Sender: TObject);
-    procedure FormCreate(Sender: TObject);
-    procedure ComboBox1Change(Sender: TObject);
     procedure GMailSMTP1Status(Sender: TObject; Reason: THookSocketReason;
       const Value: string);
   private
@@ -101,14 +99,6 @@ if GMailSMTP1.SendMessage(Edit3.Text, chk1.Checked) then
   ShowMessage('Письмо отправлено')
 else
   ShowMessage('Отправка не удалась')
-end;
-
-procedure TForm2.ComboBox1Change(Sender: TObject);
-begin
-end;
-
-procedure TForm2.FormCreate(Sender: TObject);
-begin
 end;
 
 procedure TForm2.GMailSMTP1Status(Sender: TObject; Reason: THookSocketReason;
