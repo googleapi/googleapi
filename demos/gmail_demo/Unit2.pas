@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, Menus, GMailSMTP, synachar,TypInfo;
+  Dialogs, StdCtrls, Menus, GMailSMTP, synachar,TypInfo, ComCtrls,blcksock;
 
 type
   TForm2 = class(TForm)
@@ -31,9 +31,8 @@ type
     lbl6: TLabel;
     Edit5: TEdit;
     chk1: TCheckBox;
-    Label2: TLabel;
-    ComboBox1: TComboBox;
     GMailSMTP1: TGMailSMTP;
+    StatusBar1: TStatusBar;
     procedure Button1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
     procedure Button3Click(Sender: TObject);
@@ -41,6 +40,8 @@ type
     procedure btn2Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure ComboBox1Change(Sender: TObject);
+    procedure GMailSMTP1Status(Sender: TObject; Reason: THookSocketReason;
+      const Value: string);
   private
     { Private declarations }
   public
@@ -75,6 +76,7 @@ if ListBox2.ItemIndex>0 then
 end;
 
 procedure TForm2.Button1Click(Sender: TObject);
+var i:integer;
 begin
   GMailSMTP1.AddText(Memo1.Text);
   Memo1.Lines.Clear;
@@ -103,18 +105,18 @@ end;
 
 procedure TForm2.ComboBox1Change(Sender: TObject);
 begin
-  GMailSMTP1.HeaderCodePage:=TMimeChar(GetEnumValue(TypeInfo(TMimeChar),ComboBox1.Items[ComboBox1.ItemIndex]));
 end;
 
 procedure TForm2.FormCreate(Sender: TObject);
-var Charset: TMimeChar;
-    All:set of TMimeChar;
-
 begin
-ComboBox1.Items.Clear;
-  for Charset:=ISO_8859_1 to CP1125 do
-    ComboBox1.Items.Add(GetEnumName(TypeInfo(TMimeChar),ord(Charset)));
-ComboBox1.ItemIndex:=ComboBox1.Items.IndexOf(GetEnumName(TypeInfo(TMimeChar),ord(GMailSMTP1.HeaderCodePage)))
+end;
+
+procedure TForm2.GMailSMTP1Status(Sender: TObject; Reason: THookSocketReason;
+  const Value: string);
+begin
+  Application.ProcessMessages;
+  StatusBar1.Panels[0].Text:=GetEnumName(TypeInfo(THookSocketReason),ord(Reason))+
+   ' '+Value;
 end;
 
 end.

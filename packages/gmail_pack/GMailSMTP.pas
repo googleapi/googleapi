@@ -54,7 +54,7 @@ unit GMailSMTP;
 interface
 
 uses mimemess, mimepart, smtpsend, classes, sysutils,
-     controls,ssl_openssl,synautil,synachar;
+     controls,ssl_openssl,synautil,synachar, dialogs,blcksock;
 
 const
   {$REGION 'Константы'}
@@ -76,15 +76,16 @@ type
     FRecipients: TStrings;//получатели
     FMsg       : TMimeMess;
     FMIMEPart  : TMimePart;
+    FOnStatus  : THookSocketStatus;
     procedure SetFiles(Value: TStrings);
     procedure SetRecepients(Value: TStrings);
-    procedure SetHeaderCodePage(Value:TMimeChar);
-    function  GetHeaderCodePage:TMimeChar;
+    function GetMailer: string;
+    procedure SetMailer(const Value: string);
   public
     constructor Create(AOwner: TComponent);override;
     destructor Destroy;override;
-    function AddText(const aText: string):boolean;
-    function AddHTML(const aHTML: string):boolean;
+    function AddText(const aText: AnsiString):boolean;
+    function AddHTML(const aHTML: AnsiString):boolean;
     function SendMessage(const aSubject:string; aClear:boolean=true):boolean;
     procedure Clear;
     //для работы c объектами Synapse
@@ -99,7 +100,8 @@ type
     property Port: integer read FPort write FPort;
     property AttachFiles: TStrings read FFiles write SetFiles;
     property Recipients: TStrings read FRecipients write SetRecepients;
-    property HeaderCodePage: TMimeChar read GetHeaderCodePage write SetHeaderCodePage;
+    property Mailer: string read GetMailer write SetMailer;
+    property OnStatus: THookSocketStatus read FOnStatus write FOnStatus;
 end;
 
 procedure Register;
@@ -113,16 +115,15 @@ end;
 
 { TGMailSMTP }
 
-function TGMailSMTP.AddHTML(const aHTML: string): boolean;
-var s:TStringList;
-    Part:TMimePart;
+function TGMailSMTP.AddHTML(const aHTML: AnsiString): boolean;
+var Part:TMimePart;
 begin
+  Result:=false;
+try
  Part:= FMsg.AddPart(FMIMEPart);
   with Part do
   begin
-    S:=TStringList.Create;
-    S.Text:=aHTML;
-    S.SaveToStream(DecodedLines);
+    DecodedLines.Write(Pointer(aHTML)^, Length(aHTML) * SizeOf(AnsiChar));
     Primary := 'text';
     Secondary := 'html';
     Description := 'HTML text';
@@ -131,19 +132,22 @@ begin
     EncodingCode := ME_QUOTED_PRINTABLE;
     EncodePart;
     EncodePartHeader;
+    Result:=true;
   end;
+except
+  Result:=false;
+end;
 end;
 
-function TGMailSMTP.AddText(const aText: string): boolean;
-var s:TStringList;
-    Part:TMimePart;
+function TGMailSMTP.AddText(const aText: AnsiString): boolean;
+var Part:TMimePart;
 begin
-Part:= FMsg.AddPart(FMIMEPart);
+Result:=false;
+try
+  Part:= FMsg.AddPart(FMIMEPart);
   with Part do
   begin
-    S:=TStringList.Create;
-    S.Text:=aText;
-    S.SaveToStream(DecodedLines);
+    DecodedLines.Write(Pointer(aText)^, Length(aText) * SizeOf(AnsiChar));
     Primary := 'text';
     Secondary := 'plain';
     Description := 'Message text';
@@ -152,7 +156,11 @@ Part:= FMsg.AddPart(FMIMEPart);
     EncodingCode := ME_QUOTED_PRINTABLE;
     EncodePart;
     EncodePartHeader;
+    Result:=true;
   end;
+except
+  Result:=false;
+end;
 end;
 
 procedure TGMailSMTP.Clear;
@@ -181,9 +189,9 @@ begin
   inherited;
 end;
 
-function TGMailSMTP.GetHeaderCodePage: TMimeChar;
+function TGMailSMTP.GetMailer: string;
 begin
-  Result:=FMsg.Header.CharsetCode
+  Result:=FMsg.Header.XMailer;
 end;
 
 function TGMailSMTP.SendMessage(const aSubject: string; aClear:boolean): boolean;
@@ -209,11 +217,13 @@ else
   MailTo:='';
   FRecipients.Delimiter:=',';
   MailTo:=FRecipients.DelimitedText;
+
   FMsg.EncodeMessage;
 
   SMTP := TSMTPSend.Create;
   SMTP.AutoTLS:=True;
   SMTP.TargetHost := Trim(FHost);
+  SMTP.Sock.OnStatus:=FOnStatus;
   if FPort>0 then
    SMTP.TargetPort:=IntToStr(FPort);
   SMTP.Username := FLogin;
@@ -248,9 +258,9 @@ begin
   FFiles.Assign(Value)
 end;
 
-procedure TGMailSMTP.SetHeaderCodePage(Value: TMimeChar);
+procedure TGMailSMTP.SetMailer(const Value: string);
 begin
-  FMsg.Header.CharsetCode:=Value;
+  FMsg.Header.XMailer:=Value;
 end;
 
 procedure TGMailSMTP.SetRecepients(Value: TStrings);
