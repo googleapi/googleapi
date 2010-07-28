@@ -26,7 +26,8 @@ package GoogleLogin;
 
 requires
   rtl,
-  vcl;
+  vcl,
+  vclimg;
 
 contains
   uGoogleLogin in 'uGoogleLogin.pas';

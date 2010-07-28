@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, uGoogleLogin,TypInfo, ComCtrls;
+  Dialogs, StdCtrls, uGoogleLogin,TypInfo, ComCtrls, ExtCtrls;
 
 type
   TForm11 = class(TForm)
@@ -31,6 +31,9 @@ type
     Label9: TLabel;
     Label10: TLabel;
     Animate1: TAnimate;
+    Image1: TImage;
+    Edit3: TEdit;
+    Button3: TButton;
     procedure Button1Click(Sender: TObject);
     procedure GoogleLogin1Autorization(const LoginResult: TLoginResult;
       Result: TResultRec);
@@ -38,6 +41,8 @@ type
     procedure Button2Click(Sender: TObject);
     procedure GoogleLogin1Disconnect(const ResultStr: string);
     procedure GoogleLogin1ProgressAutorization(const Progress, MaxProgress: Integer);
+    procedure GoogleLogin1AutorizCaptcha(PicCaptcha: TPicture);
+    procedure Button3Click(Sender: TObject);
   private
     { Private declarations }
   public
@@ -66,6 +71,11 @@ begin
   GoogleLogin1.Destroy;
 end;
 
+procedure TForm11.Button3Click(Sender: TObject);
+begin
+  GoogleLogin1.Captcha:=Edit3.Text;
+end;
+
 procedure TForm11.GoogleLogin1Autorization(const LoginResult: TLoginResult;Result: TResultRec);
 var
   temp:string;
@@ -74,11 +84,17 @@ begin
   AuthEdit.Text:=Result.Auth;
   temp:=GetEnumName(TypeInfo(TLoginResult),Integer(LoginResult));
   Edit1.Text:=temp;
+  Edit2.Text:=Result.SID;
   if LoginResult =lrOk then
     ShowMessage('Мы в гугле!!!!!!!!!')
   else
     ShowMessage('Мы НЕ в гугле!!!!!!!!!');
 
+end;
+
+procedure TForm11.GoogleLogin1AutorizCaptcha(PicCaptcha: TPicture);
+begin
+  Image1.Picture:=PicCaptcha;
 end;
 
 procedure TForm11.GoogleLogin1Disconnect(const ResultStr: string);

@@ -83,6 +83,13 @@ object Form11: TForm11
     Height = 13
     Caption = #1055#1088#1086#1075#1088#1077#1089#1089' '#1072#1074#1090#1086#1088#1080#1079#1072#1094#1080#1080
   end
+  object Image1: TImage
+    Left = 8
+    Top = 359
+    Width = 241
+    Height = 74
+    AutoSize = True
+  end
   object EmailEdit: TEdit
     Left = 38
     Top = 27
@@ -193,7 +200,7 @@ object Form11: TForm11
   end
   object Animate1: TAnimate
     Left = 8
-    Top = 359
+    Top = 466
     Width = 80
     Height = 50
     CommonAVI = aviFindFolder
@@ -202,12 +209,30 @@ object Form11: TForm11
     StopFrame = 29
     Timers = True
   end
+  object Edit3: TEdit
+    Left = 208
+    Top = 456
+    Width = 121
+    Height = 21
+    TabOrder = 12
+    Text = 'Edit3'
+  end
+  object Button3: TButton
+    Left = 216
+    Top = 488
+    Width = 75
+    Height = 25
+    Caption = 'Button3'
+    TabOrder = 13
+    OnClick = Button3Click
+  end
   object GoogleLogin1: TGoogleLogin
     AppName = 
       'Mozilla/5.0 (Windows; U; Windows NT 5.1; ru; rv:1.9.2.6) Gecko/2' +
       '0100625 Firefox/3.6.6'
     AccountType = atNone
     OnAutorization = GoogleLogin1Autorization
+    OnAutorizCaptcha = GoogleLogin1AutorizCaptcha
     OnProgressAutorization = GoogleLogin1ProgressAutorization
     Left = 176
     Top = 8

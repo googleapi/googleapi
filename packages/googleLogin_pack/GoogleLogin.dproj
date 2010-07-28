@@ -43,6 +43,7 @@
 			</DelphiCompile>
 			<DCCReference Include="rtl.dcp"/>
 			<DCCReference Include="vcl.dcp"/>
+			<DCCReference Include="vclimg.dcp"/>
 			<DCCReference Include="uGoogleLogin.pas"/>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>

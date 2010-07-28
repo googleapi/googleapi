@@ -18,7 +18,9 @@ unit uGoogleLogin;
 
 interface
 
-uses WinInet, StrUtils, SysUtils, Classes, Windows, TypInfo;
+uses WinInet, StrUtils,Graphics, SysUtils, Classes, Windows, TypInfo,jpeg;
+//jpeg для поддержки формата jpeg
+//Graphics для поддержки формата TPicture
 
 resourcestring
   rcNone = 'Аутентификация не производилась или сброшена';
@@ -81,6 +83,9 @@ type
 
 type
   TAutorization = procedure(const LoginResult: TLoginResult; Result: TResultRec) of object; // авторизировались
+  //непосредственно само изображение капчи
+  TAutorizCaptcha = procedure(PicCaptcha:TPicture) of object; // не авторизировались нужно ввести капчу
+
   //Progress,MaxProgress переменные которые специально заведены для прогрессбара Progress-текущее состояние MaxProgress-максимальное значение
   TProgressAutorization = procedure(const Progress,MaxProgress:Integer)of object;//показываем прогресс при авторизации
   TErrorAutorization = procedure(const ErrorStr: string) of object; // а это не авторизировались))
@@ -93,17 +98,19 @@ type
   private
     { private declarations }
     FParamStr: string; // параметры запроса
-    FLogintoken: string;
+
     // данные ответа/запроса
     FResultRec: TResultRec; // структура для передачи результатов
-
-    FCaptchaURL: string;
-
     FLastResult: TLoginResult; // результаты авторизации
+
+    FCaptchaPic:TPicture;//изображение капчи
+    FCaptchaURL: string;
+    FCapthaToken: string;
     //для прогресса
     FProgress,FMaxProgress:Integer;
     //переменные для событий
     FAutorization: TAutorization; // авторизация
+    FAutorizCaptcha:TAutorizCaptcha;//не авторизировались необходимо ввести капчу
     FProgressAutorization:TProgressAutorization;//прогресс при авторизации для показа часиков и подобных вещей
     FErrorAutorization: TErrorAutorization;//ошибка при авторизации
 
@@ -116,8 +123,10 @@ type
     function GetResultText: string;
 
     function GetErrorText(const FromServer: BOOLEAN): string;// получаем текст ошибки
+    function LoadCaptcha(aCaptchaURL:string):Boolean;//загрузка капчи
 
     procedure SynAutoriz; // передача значения авторизации в главную форму как положено в потоке
+    procedure SynCaptcha; //передача значения авторизации в главную форму как положено в потоке о том что необходимо ввести капчу
     procedure SynProgressAutoriz;// передача текушего прогресса авторизации в главную форму как положено в потоке
     procedure SynErrAutoriz; // передача значения ошибки в главную форму как положено в потоке
   protected
@@ -130,6 +139,7 @@ type
     { published declarations }
     // события
     property OnAutorization:TAutorization read FAutorization write FAutorization;    // авторизировались
+    property OnAutorizCaptcha:TAutorizCaptcha  read FAutorizCaptcha write FAutorizCaptcha; //не авторизировались необходимо ввести капчу
     property OnProgressAutorization: TProgressAutorization read FProgressAutorization write FProgressAutorization;//прогресс авторизации
     property OnError: TErrorAutorization read FErrorAutorization write FErrorAutorization; // возникла ошибка ((
   end;
@@ -147,13 +157,14 @@ type
     FPassword: string;
     // данные ответа/запроса
     FService: TServices; // сервис к которому необходимо получить доступ
-    FLogintoken: string;
-    FLogincaptcha: string;
     // параметры Captcha
-    FCaptchaURL: string;
+//    FCaptchaURL: string;//ссылка на капчу
+    FCaptcha: string; //Captcha
+    FCapchaToken: string;
     //FStatus:TStatusThread;//статус потока
     //переменные для событий
-    FAfterLogin: TAutorization;
+    FAfterLogin: TAutorization;//авторизировались
+    FAutorizCaptcha:TAutorizCaptcha;//не авторизировались необходимо ввести капчу
     FProgressAutorization:TProgressAutorization;//прогресс при авторизации для показа часиков и подобных вещей
     FErrorAutorization: TErrorAutorization;
     FDisconnect: TDisconnect;
@@ -182,16 +193,17 @@ type
     // property SID: string read FSID;
     // property LSID: string read FLSID;
     // property CaptchaURL: string read FCaptchaURL;
-    // property LoginToken: string read FLogintoken;
-    // property LoginCaptcha: string read FLogincaptcha write FLogincaptcha;
+    // property CapchaToken: string read FCapchaToken;
   published
     property AppName: string read FAppname write SetAppName;
     property AccountType: TAccountType read FAccountType write FAccountType;
     property Email: string read FEmail write SetEmail;
     property Password: string read FPassword write SetPassword;
+    property Captcha: string read FCaptcha write SetCaptcha;
     property Service: TServices read FService write SetService default xapi;
     //property Status:TStatusThread  read FStatus default sttNoActive;//статус потока
     property OnAutorization: TAutorization read FAfterLogin write FAfterLogin;// авторизировались
+    property OnAutorizCaptcha:TAutorizCaptcha  read FAutorizCaptcha write FAutorizCaptcha; //не авторизировались необходимо ввести капчу
     property OnProgressAutorization:TProgressAutorization  read FProgressAutorization write FProgressAutorization;//прогресс авторизации
     property OnError: TErrorAutorization read FErrorAutorization write FErrorAutorization; // возникла ошибка ((
     property OnDisconnect: TDisconnect read FDisconnect write FDisconnect;
@@ -225,12 +237,11 @@ begin
   FAccountType := atNone;
   FLastResult := lrNone;
   // FSID:='';
-  // FLSID:='';
-  // FAuth:='';
-  FLogintoken := '';
-  FLogincaptcha := '';
-  FCaptchaURL := '';
-  FLogintoken := '';
+  //FLSID:='';
+  //FAuth:='';
+  FCapchaToken := '';
+  FCaptcha := '';
+  //FCaptchaURL := '';
   if Assigned(FThread) then
     FThread.Terminate;
   if Assigned(FDisconnect) then
@@ -273,7 +284,7 @@ begin
     cBody.WriteString('source=' + FAppname)
   else
     cBody.WriteString('source=' + DefaultAppName);
-  if Length(Trim(aLoginToken)) > 0 then
+  if (Length(Trim(aLoginToken)) > 0) or (Length(Trim(aLoginCaptcha))>0) then
   begin
     cBody.WriteString('&logintoken=' + aLoginToken);
     cBody.WriteString('&logincaptcha=' + aLoginCaptcha);
@@ -287,6 +298,7 @@ function TGoogleLogin.SendRequest(const ParamStr: string): AnsiString;
 begin
   FThread := TGoogleLoginThread.Create(true, ParamStr);
   FThread.OnAutorization := Self.OnAutorization;
+  FThread.OnAutorizCaptcha:=Self.OnAutorizCaptcha;//не авторизировались необходимо ввести капчу
   FThread.OnProgressAutorization:=Self.OnProgressAutorization;//прогресс авторизации
   FThread.OnError := Self.OnError;
   FThread.FreeOnTerminate := True; // чтобы сам себя грухнул после окончания операции
@@ -306,8 +318,8 @@ end;
 
 procedure TGoogleLogin.SetCaptcha(cCaptcha: string);
 begin
-  FLogincaptcha := cCaptcha;
-  Login(FLogintoken, FLogincaptcha); // перелогиниваемся с каптчей
+  FCaptcha := cCaptcha;
+  Login(FCapchaToken, FCaptcha); // перелогиниваемся с каптчей
 end;
 
 procedure TGoogleLogin.SetEmail(cEmail: string);
@@ -443,8 +455,7 @@ end;
 
 { TGoogleLoginThread }
 
-constructor TGoogleLoginThread.Create(CreateSuspennded: BOOLEAN;
-  aParamStr: string);
+constructor TGoogleLoginThread.Create(CreateSuspennded: BOOLEAN; aParamStr: string);
 begin
   inherited Create(CreateSuspennded);
   FParamStr := aParamStr;
@@ -455,6 +466,9 @@ begin
   //переменные для прогресса
   FProgress:=0;
   FMaxProgress:=0;
+  //изображение капчи
+  FCaptchaPic:=TPicture.Create;
+
 end;
 
 procedure TGoogleLoginThread.Execute;
@@ -522,8 +536,21 @@ begin
   InternetCloseHandle(hInternet);
   // получаем результаты авторизации
   FLastResult := ExpertLoginResult(sTemp);
+  // текстовый результат авторизации
   FResultRec.LoginStr := GetResultText;
-  Synchronize(SynAutoriz);
+
+  //требует ввести капчу
+  if FLastResult=lrCaptchaRequired then
+  begin
+    LoadCaptcha(FCaptchaURL);
+    Synchronize(SynCaptcha);
+  end;
+  FLastResult:=FLastResult;
+  //если все хорошо, авторизировались
+  if FLastResult= lrOk then
+  begin
+    Synchronize(SynAutoriz);
+  end;
 end;
 
 function TGoogleLoginThread.ExpertLoginResult(const LoginResult: string)
@@ -549,7 +576,7 @@ begin
     if Result = lrCaptchaRequired then // требуется ввод каптчи
     begin
       FCaptchaURL := GetCaptchaURL(List);
-      FLogintoken := GetCaptchaToken(List);
+      FCapthaToken := GetCaptchaToken(List);
     end;
   end
   else
@@ -581,7 +608,7 @@ begin
     begin
       Result := Trim(copy(cList[i], pos('=', cList[i]) + 1,
           Length(cList[i]) - pos('=', cList[i])));
-      break;
+       break;
     end;
   end;
 end;
@@ -658,11 +685,71 @@ begin
   end;
 end;
 
+//загрузка капчи
+function TGoogleLoginThread.LoadCaptcha(aCaptchaURL: string): Boolean;
+  function DataAvailable(hRequest: pointer; out Size: cardinal): BOOLEAN;
+  begin
+    Result := WinInet.InternetQueryDataAvailable(hRequest, Size, 0, 0);
+  end;
+var
+  hInternet, hConnect,hRequest: pointer;
+  dwBytesRead, i, L: cardinal;
+  sTemp: AnsiString; // текст страницы
+  memStream: TMemoryStream;
+  jpegimg: TJPEGImage;
+  url:string;
+begin
+  Result:=False;;
+  url:='http://www.google.com/accounts/'+aCaptchaURL;
+  hInternet := InternetOpen('MyApp', INTERNET_OPEN_TYPE_PRECONFIG, nil, nil, 0);
+  try
+    if Assigned(hInternet) then
+    begin
+      hConnect := InternetOpenUrl(hInternet, PChar(url), nil, 0, 0, 0);
+      if Assigned(hConnect) then
+        try
+          i := 1;
+          repeat
+            SetLength(sTemp, L + i);
+            if not InternetReadFile(hConnect, @sTemp[i], sizeof(L),dwBytesRead) then
+              break; // Получаем данные с сервера
+            inc(i, dwBytesRead);
+            until dwBytesRead = 0;
+            //sTemp[i] := #0;
+        finally
+          InternetCloseHandle(hConnect);
+        end;
+    end;
+  finally
+    InternetCloseHandle(hInternet);
+  end;
+  memStream := TMemoryStream.Create;
+  jpegimg   := TJPEGImage.Create;
+  try
+    memStream.Write(sTemp[1], Length(sTemp));
+    memStream.Position := 0;
+    //загрузка изображения из потока
+    jpegimg.LoadFromStream(memStream);
+    FCaptchaPic.Assign(jpegimg);
+  finally
+    //очистка
+    memStream.Free;
+    jpegimg.Free;
+  end;
+  Result:=True;
+end;
 
 procedure TGoogleLoginThread.SynAutoriz;
 begin
   if Assigned(FAutorization) then
     OnAutorization(FLastResult, FResultRec);
+end;
+
+//необходимо ввести капчу
+procedure TGoogleLoginThread.SynCaptcha;
+begin
+  if Assigned(FAutorizCaptcha) then
+    OnAutorizCaptcha(FCaptchaPic);
 end;
 
 procedure TGoogleLoginThread.SynErrAutoriz;
