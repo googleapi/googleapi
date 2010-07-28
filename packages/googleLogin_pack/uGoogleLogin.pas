@@ -96,6 +96,7 @@ type
   // поток используется только для получения HTML страницы
   TGoogleLoginThread = class(TThread)
   private
+    FParentComp:TComponent;
     { private declarations }
     FParamStr: string; // параметры запроса
 
@@ -125,15 +126,17 @@ type
     function GetErrorText(const FromServer: BOOLEAN): string;// получаем текст ошибки
     function LoadCaptcha(aCaptchaURL:string):Boolean;//загрузка капчи
 
+
     procedure SynAutoriz; // передача значения авторизации в главную форму как положено в потоке
     procedure SynCaptcha; //передача значения авторизации в главную форму как положено в потоке о том что необходимо ввести капчу
+    procedure SynCapchaToken;//передача значения в свойство шкурки
     procedure SynProgressAutoriz;// передача текушего прогресса авторизации в главную форму как положено в потоке
     procedure SynErrAutoriz; // передача значения ошибки в главную форму как положено в потоке
   protected
     { protected declarations }
   public
     { public declarations }
-    constructor Create(CreateSuspennded: BOOLEAN; aParamStr: string); // используем для передачи логина и пароля и подобного
+    constructor Create(CreateSuspennded: BOOLEAN; aParamStr: string;aParentComp:TComponent); // используем для передачи логина и пароля и подобного
     procedure Execute; override; // выполняем непосредственно авторизацию на сайте
   published
     { published declarations }
@@ -193,7 +196,7 @@ type
     // property SID: string read FSID;
     // property LSID: string read FLSID;
     // property CaptchaURL: string read FCaptchaURL;
-    // property CapchaToken: string read FCapchaToken;
+    property CapchaToken: string read FCapchaToken;
   published
     property AppName: string read FAppname write SetAppName;
     property AccountType: TAccountType read FAccountType write FAccountType;
@@ -296,7 +299,7 @@ end;
 // отправляем запрос на сервер в отдельном потоке
 function TGoogleLogin.SendRequest(const ParamStr: string): AnsiString;
 begin
-  FThread := TGoogleLoginThread.Create(true, ParamStr);
+  FThread := TGoogleLoginThread.Create(true, ParamStr,Self);
   FThread.OnAutorization := Self.OnAutorization;
   FThread.OnAutorizCaptcha:=Self.OnAutorizCaptcha;//не авторизировались необходимо ввести капчу
   FThread.OnProgressAutorization:=Self.OnProgressAutorization;//прогресс авторизации
@@ -455,9 +458,11 @@ end;
 
 { TGoogleLoginThread }
 
-constructor TGoogleLoginThread.Create(CreateSuspennded: BOOLEAN; aParamStr: string);
+constructor TGoogleLoginThread.Create(CreateSuspennded: BOOLEAN; aParamStr: string;aParentComp:TComponent);
 begin
   inherited Create(CreateSuspennded);
+  FParentComp:=TComponent.Create(nil);
+  FParentComp:=aParentComp;
   FParamStr := aParamStr;
   FResultRec.LoginStr := '';
   FResultRec.SID := '';
@@ -538,7 +543,6 @@ begin
   FLastResult := ExpertLoginResult(sTemp);
   // текстовый результат авторизации
   FResultRec.LoginStr := GetResultText;
-
   //требует ввести капчу
   if FLastResult=lrCaptchaRequired then
   begin
@@ -551,6 +555,7 @@ begin
   begin
     Synchronize(SynAutoriz);
   end;
+  Synchronize(SynCapchaToken);
 end;
 
 function TGoogleLoginThread.ExpertLoginResult(const LoginResult: string)
@@ -746,6 +751,12 @@ begin
 end;
 
 //необходимо ввести капчу
+procedure TGoogleLoginThread.SynCapchaToken;
+begin
+  if Assigned(FParentComp) then
+    TGoogleLogin(FParentComp).FCapchaToken:=Self.FCapthaToken;
+end;
+
 procedure TGoogleLoginThread.SynCaptcha;
 begin
   if Assigned(FAutorizCaptcha) then

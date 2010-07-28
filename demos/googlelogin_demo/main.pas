@@ -73,7 +73,9 @@ end;
 
 procedure TForm11.Button3Click(Sender: TObject);
 begin
+  //Memo1.Lines.Add(GoogleLogin1.CapchaToken);
   GoogleLogin1.Captcha:=Edit3.Text;
+
 end;
 
 procedure TForm11.GoogleLogin1Autorization(const LoginResult: TLoginResult;Result: TResultRec);
