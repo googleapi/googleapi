@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 unit uLanguage;
 
 interface
@@ -137,6 +138,9 @@ implementation
 
 end.
 =======
+=======
+<<<<<<< HEAD
+>>>>>>> remotes/origin/NMD
 unit uLanguage;
 
 {$DEFINE RUSSIAN}
@@ -149,5 +153,24 @@ const
 
 
 begin
+<<<<<<< HEAD
+end.
+>>>>>>> remotes/origin/NMD
+=======
+=======
+unit uLanguage;
+
+{$DEFINE RUSSIAN}
+
+interface
+
+{$IFDEF RUSSIAN}
+{$I languages\lang_russian.inc}
+{$ENDIF}
+
+implementation
+
+begin
+>>>>>>> remotes/origin/Vlad55
 end.
 >>>>>>> remotes/origin/NMD
