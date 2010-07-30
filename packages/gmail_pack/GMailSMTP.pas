@@ -91,7 +91,6 @@ type
     FFiles     : TStrings; //прикрепленные файлы
     FRecipients: TStrings;//получатели
     FMsg       : TMimeMess;
-    FMIMEPart  : TMimePart;
     FOnStatus  : THookSocketStatus;
     procedure SetFiles(Value: TStrings);
     procedure SetRecepients(Value: TStrings);
@@ -106,7 +105,6 @@ type
     procedure Clear;
     //для работы c объектами Synapse
     property GMessage:TMimeMess read FMsg write FMsg;
-    property MIMEPart:TMimePart read FMIMEPart write FMIMEPart;
   published
     property Login: string read FLogin write FLogin;
     property Password: string read FPassword write FPassword;
@@ -136,7 +134,7 @@ var Part:TMimePart;
 begin
   Result:=false;
 try
- Part:= FMsg.AddPart(FMIMEPart);
+ Part:= FMsg.AddPart(FMsg.MessagePart);
   with Part do
   begin
     DecodedLines.Write(Pointer(aHTML)^, Length(aHTML) * SizeOf(AnsiChar));
@@ -160,7 +158,7 @@ var Part:TMimePart;
 begin
 Result:=false;
 try
-  Part:= FMsg.AddPart(FMIMEPart);
+  Part:= FMsg.AddPart(FMsg.MessagePart);
   with Part do
   begin
     DecodedLines.Write(Pointer(aText)^, Length(aText) * SizeOf(AnsiChar));
@@ -182,7 +180,6 @@ end;
 procedure TGMailSMTP.Clear;
 begin
   FMsg.Clear;
-  FMIMEPart.Clear;
   FFiles.Clear;
   FRecipients.Clear;
 end;
@@ -193,7 +190,7 @@ begin
   FFiles:=TStringList.Create;
   FRecipients:=TStringList.Create;
   FMsg:=TMimeMess.Create;
-  FMIMEPart:=FMsg.AddPartMultipart('alternate',nil);
+  FMsg.AddPartMultipart('alternate',nil);
   FHost:=GmailHost;
   FPort:=GmailPort;
 end;
@@ -229,13 +226,12 @@ else
   FMsg.Header.ToList.Assign(FRecipients);
   //добавляем файлы
   for i:=0 to FFiles.Count - 1 do
-     FMsg.AddPartBinaryFromFile(FFiles[i],FMIMEPart);
+     FMsg.AddPartBinaryFromFile(FFiles[i],FMsg.MessagePart);
   MailTo:='';
   FRecipients.Delimiter:=',';
   MailTo:=FRecipients.DelimitedText;
 
   FMsg.EncodeMessage;
-
   SMTP := TSMTPSend.Create;
   SMTP.AutoTLS:=True;
   SMTP.TargetHost := Trim(FHost);

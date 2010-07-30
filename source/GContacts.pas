@@ -1201,8 +1201,6 @@ XML-узла <b>entry</b> XML-документа, содержащего све�
     procedure LoadContactsFromFile(const FileName: string);
 
 
-    property Auth: string read FAuth write SetAuth;//Ключ Auth для авторизации в сервисе. Может быть получен с использованием компонента TClientLogin
-    property Gmail: string read FEmail write SetGmail;//адрес почтового ящика на GMail. Используется для работы с группами и контактами
     property Groups: TList<TContactGroup>read FGroups write FGroups;//список все групп контактов пользователя
     property Contacts: TList<TContact>read FContacts write FContacts;//список всех контактов пользователя
     property ContactByGroupIndex[Group: string; I: integer]
@@ -1210,14 +1208,19 @@ XML-узла <b>entry</b> XML-документа, содержащего све�
       //<b>Group</b> и имеющий в этой группе индекс <b>i</b>
     property ContactsByGroup[GroupName: string]
       : TList<TContact>read GetContactsByGroup;//список всех контактов, находящихся в группе с именем <b>GroupName</b>
-    property MaximumResults
-      : integer read FMaximumResults write SetMaximumResults;// максимальное количество записей контактов возвращаемое в одном фиде
+    property ContactsNames: TStrings read GetContactNames;// список имен контактов
+    property GroupsNames: TStrings read GetGropsNames;// список имен групп контактов
+
+  published
+    property Auth: string read FAuth write SetAuth;//Ключ Auth для авторизации в сервисе. Может быть получен с использованием компонента TClientLogin
+    property Gmail: string read FEmail write SetGmail;//адрес почтового ящика на GMail. Используется для работы с группами и контактами
+
+    property MaximumResults: integer read FMaximumResults write SetMaximumResults;// максимальное количество записей контактов возвращаемое в одном фиде
     property StartIndex: integer read FStartIndex write SetStartIndex;// начальный номер контакта с которого начинать принятие данных
     property UpdatesMin: TDateTime read FUpdatesMin write SetUpdatesMin;// нижняя граница обновления контактов
     property ShowDeleted: boolean read FShowDeleted write SetShowDeleted;// определяет будут ли показываться в списке удаленные контакты
     property SortOrder: TSortOrder read FSortOrder write SetSortOrder;// сортировка контактов
-    property ContactsNames: TStrings read GetContactNames;// список имен контактов
-    property GroupsNames: TStrings read GetGropsNames;// список имен групп контактов
+
 
     property OnRetriveXML: TOnRetriveXML read FOnRetriveXML write FOnRetriveXML;// начало загрузки XML-документа с сервера
     property OnBeginParse: TOnBeginParse read FOnBeginParse write FOnBeginParse;// старт парсинга XML
@@ -1230,7 +1233,14 @@ function GetContactNodeType(const NodeName: string): TcpTagEnum; inline;
 // получение имени узла по его типу
 function GetContactNodeName(const NodeType: TcpTagEnum): string; inline;
 
+procedure Register;
+
 implementation
+
+procedure Register;
+begin
+  RegisterComponents('webdelphi.ru',[TGoogleContact]);
+end;
 
 function GetContactNodeName(const NodeType: TcpTagEnum): string; inline;
 begin
