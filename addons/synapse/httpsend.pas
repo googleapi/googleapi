@@ -275,7 +275,7 @@ begin
   FCookies := TStringList.Create;
   FDocument := TMemoryStream.Create;
   FSock := TTCPBlockSocket.Create;
-  FSock.Owner := self;
+//  FSock.Owner := self;
   FSock.ConvertLineEnd := True;
   FSock.SizeRecvBuffer := c64k;
   FSock.SizeSendBuffer := c64k;

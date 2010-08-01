@@ -12,6 +12,7 @@ const
   CpPhotoLink = 'http://schemas.google.com/contacts/2008/rel#photo';
   CpDefaultCName = 'NoName Contact';
 
+  gttNodeAlias ='gtt:';
   gdNodeAlias = 'gd:';//префикс узлов, относящихся к GData API
   sDefoultMimeType = 'application/atom+xml';
   sEventRelSuffix = 'event.';

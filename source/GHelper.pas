@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 unit GHelper;
 
 interface

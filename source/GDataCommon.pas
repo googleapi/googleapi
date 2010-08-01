@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 ﻿{ Модуль содержит наиболее общие классы для работы с Google API, а также
   классы и методы для работы с основой всех API - GData API.
   Этот содуль должен подключаться в раздел uses всех прочих модулей, реализующих работу
@@ -160,6 +159,8 @@ type
     Constructor Create(const ByNode: TXMLNode = nil);
     procedure ParseXML(Node: TXMLNode);
     function AddToXML(Root: TXMLNode): TXMLNode;
+    function IsEmpty:boolean;
+    procedure Clear;
     property Rel: string read Frel write Frel;
     property Ltype: string read Ftype write Ftype;
     property Href: string read Fhref write Fhref;
@@ -2183,11 +2184,24 @@ begin
   Result := nil;
 end;
 
+procedure TEntryLink.Clear;
+begin
+  Frel:='';
+  Ftype:='';
+  Fhref:='';
+  FEtag:='';
+end;
+
 constructor TEntryLink.Create(const ByNode: TXMLNode);
 begin
   inherited Create;
   if ByNode <> nil then
     ParseXML(ByNode);
+end;
+
+function TEntryLink.IsEmpty: boolean;
+begin
+  Result:=Length(Fhref)=0
 end;
 
 procedure TEntryLink.ParseXML(Node: TXMLNode);

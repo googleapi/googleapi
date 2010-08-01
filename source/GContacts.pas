@@ -26,7 +26,6 @@
 
   Последние обновления модуля можно найти в репозитории по адресу:
   http://github.com/googleapi
-
 }
 
 unit GContacts;
@@ -1554,8 +1553,7 @@ end;
 
 procedure TcpExternalId.ParseXML(const Node: TXmlNode);
 begin
-  if Node = nil then
-    Exit;
+  if Node = nil then Exit;
   if GetContactNodeType(Node.NameUnicode) <> cp_externalId then
     raise ECPException.CreateFmt(sc_ErrCompNodes, [GetContactNodeName
           (cp_externalId)]);
