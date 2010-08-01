@@ -69,7 +69,7 @@ type
   // xapi - это универсальное имя - когда юзер не знает какой сервис ему нужен, то втыкает xapi и просто коннектится к Гуглу
   TServices = (xapi, analytics, apps, gbase, jotspot, blogger, print, cl,
                codesearch, cp, writely, finance, mail, health, local, lh2, annotateweb,
-               wise, sitemaps, youtube);
+               wise, sitemaps, youtube,gtrans);
 type
   TStatusThread = (sttActive,sttNoActive);//статус потока
 
