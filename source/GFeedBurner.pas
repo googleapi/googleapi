@@ -48,6 +48,8 @@ resourcestring
   rsErrDate =      'Дата %s не может использоваться, так как она позднее текущей.';
   rsErrDateRange = 'Начальная дата не может быть больше конечной.';
   rsErrEntry = 'Недопустимое имя XML-узла. Имя узла должно ыть <entry>';
+  rsUnknownError = 'Неопознанная ошибка';
+  rsFeedAPIError ='Ошибка доступа к API. Код: %d; Описание: %s';
 
 const
   {версия модуля}
@@ -58,19 +60,52 @@ const
   APIVersion='1.0';
 
 type
+  TFeedBurner = class;
+  TFeedData = class;
+  TFeedItemData = class;
+  TItemChangeEvent = procedure(Item: TCollectionItem) of object;
+
+
+  EFeedBurner = class(Exception)
+  private
+    class var FAPILatErrCode: integer;
+    class var FAPILastErrText: string;
+  public
+    class procedure ParseError(XMLNode: TXMLNode);overload;
+    class procedure ParseError(XMLDoc: TNativeXML);overload;
+    constructor CreateByXML(XMLDoc: TNativeXML);
+  end;
+
+//type
+  TSender = class(TObject)
+  public
+    constructor Create;
+    function SendRequest(const Method {метод отправки запроса GET или POST},
+                               ParamsStr: string {строка параметров}): AnsiString;
+  end;
+
+ TRangeType = (rtContinuous,rtDescrete);
+
+ TDateRange = class(TStringList)
+  public
+    procedure Add(Date:TDate);overload;
+    procedure AddRange(StartDate,EndDate: TDate;RangeType:TRangeType=rtContinuous);
+end;
+
+
 {Содержимое узла Entry при запросе GetFeedData}
  TBasicEntry = class(TCollectionItem)
   private
-   Fdate: TDate;
-   Fcirculation: integer;
-   Fhits: integer;
-   Freach: integer;
-   Fdownloads: integer;
-   FNode: TXMLNode;
+    Fdate: TDate;
+    Fcirculation: integer;
+    Fhits: integer;
+    Freach: integer;
+    Fdownloads: integer;
+    FNode: TXMLNode;
   procedure SetNode(const Value: TXMLNode);
+  procedure ParseXML(Node:TXMLNode);override;
   public
    constructor Create(Collection: TCollection);override;
-   procedure ParseXML(Node:TXMLNode);
    property Date: TDate read FDate;//дата за которую получены данные
    property Circulation: integer read FCirculation;//приблизительно количество людей, подписаых на фид
    property Hits: integer read FHits;//количество запросов данных из фида
@@ -79,8 +114,77 @@ type
    property Node: TXMLNode read FNode write SetNode;//узел XML для разбора
  end;
 
-  TFeedBurner = class;
-  TItemChangeEvent = procedure(Item: TCollectionItem) of object;
+
+ TItemData = class(TCollectionItem)
+   private
+     FTitle: string;
+     FURL: string;
+     FItemViews: integer;
+     FClickThroughs: integer;
+     FNode: TXMLNode;
+     procedure ParseXML(Node: TXMLNode);
+     procedure SetNode(aNode:TXmlNode);override;
+   public
+     constructor Create(Collection: TCollection);override;
+     property Title: string read FTitle;
+     property URL: string read FURL;
+     property ItemViews: integer read FItemViews;
+     property ClickThroughs: integer read FClickThroughs;
+     property Node: TXMLNode read FNode write SetNode;
+ end;
+
+
+  TItemsCollection = class(TCollection)
+  private
+    FFeedItemData: TFeedItemData;
+    FOnItemChange: TItemChangeEvent;
+    function GetItem(Index: Integer): TItemData;
+    procedure SetItem(Index: Integer; const Value: TItemData);
+  protected
+    function GetOwner: TPersistent; override;
+    procedure Update(Item: TCollectionItem); override;
+    procedure DoItemChange(Item: TCollectionItem); dynamic;
+  public
+    constructor Create(FeedItemData: TFeedItemData);
+    function Add: TItemData;
+    property Items[Index: Integer]: TItemData read GetItem write SetItem; default;
+  published
+    property OnItemChange: TItemChangeEvent read FOnItemChange write FOnItemChange;
+ end;
+
+
+  TFeedItemData = class(TBasicEntry)
+  private
+    FItems: TItemsCollection;
+    procedure ParseXML(Node:TXMLNode);override;
+  public
+    constructor Create(Collection: TCollection);override;
+    property Date;
+    property Circulation;
+    property Hits;
+    property Reach;
+    property Downloads;
+    property Node;
+    property Items: TItemsCollection read FItems;
+  end;
+
+  TItemDataCollection = class(TCollection)
+  private
+    FFeedBurner: TFeedBurner;
+    FOnItemChange: TItemChangeEvent;
+    function GetItem(Index: Integer): TFeedItemData;
+    procedure SetItem(Index: Integer; const Value: TFeedItemData);
+  protected
+    function GetOwner: TPersistent; override;
+    procedure Update(Item: TCollectionItem); override;
+    procedure DoItemChange(Item: TCollectionItem); dynamic;
+  public
+    constructor Create(FeedBurner: TFeedBurner);
+    function Add: TFeedItemData;
+    property Items[Index: Integer]: TFeedItemData read GetItem write SetItem; default;
+  published
+    property OnItemChange: TItemChangeEvent read FOnItemChange write FOnItemChange;
+ end;
 
   TFeedData = class(TCollection)
   private
@@ -101,49 +205,37 @@ type
 end;
 
 
-  EFeedBurner = class(Exception)
-  public
+  TOnAPIRequestError = procedure (const Code:integer; Error: string) of object;
 
-  end;
-
-//type
-  TSender = class(TObject)
-  public
-    constructor Create;
-    function SendRequest(const Method {метод отправки запроса GET или POST},
-                               ParamsStr: string {строка параметров}): AnsiString;
-end;
-
-//type
-  TRangeType = (rtContinuous,rtDescrete);
-
-//type
-  TDateRange = class(TStringList)
-  public
-    procedure Add(Date:TDate);overload;
-    procedure AddRange(StartDate,EndDate: TDate;RangeType:TRangeType=rtContinuous);
-end;
-
-//type
   TFeedBurner = class(TComponent)
   private
-     FFeedURL: string;//URL фида, например, http://feeds.feedburner.com/myDelphi
-     Furi: string;
-     FDates: TDateRange;
+     FFeedURL: string;   //URL фида, например, http://feeds.feedburner.com/myDelphi
+     Furi: string;       //URI фида, например, myDelphi
+     FDates: TDateRange; //список дат за которые необходимо получить статистику
      FFeedData:TFeedData;//данные по фиду
+     FItemData:TItemDataCollection;//данные по элементам фида
+     FSilent: boolean;   //тихая обработка исключений API - все исключения API обрабатываются в событии
+     FOnAPIRequestError:TOnAPIRequestError;//событие при возникновении исключения API
      function GetServerDate(aDate: TDate):string;
-    procedure SetFeedData(const Value: TFeedData);
-    procedure SetRange(const Value: TDateRange);
-    procedure SetFeedURL(const Value: string);
+     procedure SetFeedData(const Value: TFeedData);
+     procedure SetRange(const Value: TDateRange);
+     procedure SetFeedURL(const Value: string);
+     function XMLWithError(XMLDoc:TNativeXml):boolean;
+     procedure DoSilentError(XMLDoc:TNativeXml);
     //получаем из списка дат определенный элемент для использования в запросе
-    function GetDateRangeParam(index:integer):string;
+     function GetDateRangeParam(index:integer):string;
   public
      constructor Create(AOwner: TComponent);override;
-     procedure GetFeedData();
+     procedure  GetFeedData();
+     procedure  GetItemData();
      destructor Destroy;override;
      property   FeedData:TFeedData read FFeedData write SetFeedData;
      property   DateRange:TDateRange read FDates write SetRange;
      property   FeedURL: string read FFeedURL write SetFeedURL;
+     property   Silent: boolean read FSilent write FSilent;
+     property   OnAPIRequestError:TOnAPIRequestError read FOnAPIRequestError
+                write FOnAPIRequestError;
+     property  ItemData:TItemDataCollection read FItemData;
 end;
 
 implementation
@@ -154,6 +246,7 @@ constructor TFeedBurner.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   FFeedData:=TFeedData.Create(self);
+  FItemData:=TItemDataCollection.Create(self);
   FDates:=TDateRange.Create;
 end;
 
@@ -163,22 +256,26 @@ begin
   inherited;
 end;
 
+procedure TFeedBurner.DoSilentError(XMLDoc: TNativeXml);
+begin
+EFeedBurner.ParseError(XMLDoc);
+if Assigned(FOnAPIRequestError) then
+  FOnAPIRequestError(EFeedBurner.FAPILatErrCode,EFeedBurner.FAPILastErrText);
+end;
+
 function TFeedBurner.GetDateRangeParam(index: integer): string;
 begin
   if (index>FDates.Count-1)or(index<0) then Exit;
   Result:='dates='+FDates[index];
 end;
 
-procedure TFeedBurner.GetFeedData;
-const APIMethod = 'GetFeedData';
+procedure TFeedBurner.GetFeedData();
 var   XMLDoc:TNativeXML;
-      Params: string;
       i,j:integer;
       List:TXMLNodeList;
 begin
   XMLDoc:=TNativeXml.Create;
-
-
+  FFeedData.Clear;
   with TSender.Create do
     begin
       if FDates.Count>0 then
@@ -186,22 +283,42 @@ begin
           List:=TXmlNodeList.Create;
           for i:= 0 to FDates.Count - 1 do
             begin
-              XMLDoc.ReadFromString(SendRequest('GET',Format(AwaAPIParamURL,[APIVersion,APIMethod+'?uri='+FURI+'&'+GetDateRangeParam(i)])));
-              List.Clear;
-              XMLDoc.Root.NodeByName('feed').NodesByName('entry',List);
-              for j:=0 to List.Count - 1 do
-                FFeedData.Add.Node:=List[j]
+              XMLDoc.ReadFromString(SendRequest('GET',Format(AwaAPIParamURL,[APIVersion,'GetFeedData?uri='+FURI+'&'+GetDateRangeParam(i)])));
+              if XMLWithError(XMLDoc) then
+                begin
+                  if Silent then DoSilentError(XMLDoc)
+                  else raise EFeedBurner.CreateByXML(XMLDoc);
+                end
+              else
+                begin
+                  List.Clear;
+                  XMLDoc.Root.NodeByName('feed').NodesByName('entry',List);
+                  for j:=0 to List.Count - 1 do
+                    FFeedData.Add.Node:=List[j]
+                end;
             end;
           FreeAndNil(List);
         end
       else
         begin
-          XMLDoc.ReadFromString(SendRequest('GET',Format(AwaAPIParamURL,[APIVersion,APIMethod+'?uri='+FURI])));
-          FFeedData.Add.Node:=XMLDoc.Root.NodeByName('feed').NodeByName('entry');
+          XMLDoc.ReadFromString(SendRequest('GET',Format(AwaAPIParamURL,[APIVersion,'GetFeedData?uri='+FURI])));
+          if XMLWithError(XMLDoc) then
+            begin
+              if Silent then DoSilentError(XMLDoc)
+              else raise EFeedBurner.CreateByXML(XMLDoc);
+            end
+          else
+            FFeedData.Add.Node:=XMLDoc.Root.NodeByName('feed').NodeByName('entry');
         end;
     end;
-
   FreeAndNil(XMLDoc)
+end;
+
+procedure TFeedBurner.GetItemData;
+begin
+//получение данных по элементам фида
+{TODO -oVlad -cStop : сделать обработку элементов}
+
 end;
 
 function TFeedBurner.GetServerDate(aDate: TDate): string;
@@ -225,6 +342,13 @@ end;
 procedure TFeedBurner.SetRange(const Value: TDateRange);
 begin
   FDates.Assign(Value);
+end;
+
+function TFeedBurner.XMLWithError(XMLDoc: TNativeXml): boolean;
+begin
+  result:=true;
+  if XMLDoc=nil then exit;
+  Result:=XMLDoc.Root.ReadAttributeString('stat')='fail';
 end;
 
 { TSender }
@@ -406,6 +530,159 @@ procedure TFeedData.Update(Item: TCollectionItem);
 begin
   inherited Update(Item);
   DoItemChange(Item)
+end;
+
+{ EFeedBurner }
+
+constructor EFeedBurner.CreateByXML(XMLDoc: TNativeXML);
+begin
+  ParseError(XMLDoc);
+  CreateFmt(rsFeedAPIError,[FAPILatErrCode,FAPILastErrText]);
+end;
+
+class procedure EFeedBurner.ParseError(XMLNode: TXMLNode);
+begin
+  FAPILatErrCode:=XMLNode.ReadAttributeInteger('code');
+  FAPILastErrText:=XMLNode.ReadAttributeString('msg')
+end;
+
+class procedure EFeedBurner.ParseError(XMLDoc: TNativeXML);
+var Node:TXMLNode;
+begin
+  if XMLDoc=nil then
+    raise Exception.Create(rsUnknownError);
+  Node:=XMLDoc.Root.NodeByName('err');
+  if Node=nil then
+    raise Exception.Create(rsUnknownError);
+  ParseError(Node);
+end;
+
+{ TItemData }
+
+constructor TItemData.Create(Collection: TCollection);
+begin
+  inherited Create(Collection);
+end;
+
+procedure TItemData.ParseXML(Node: TXMLNode);
+begin
+  if Node=nil then Exit;
+  if LowerCase(Node.Name)<>'item' then
+    raise EFeedBurner.Create(rsErrEntry);
+  FTitle:=Node.ReadAttributeString('title');
+  FURL:=Node.ReadAttributeString('url');
+  FItemViews:=Node.ReadAttributeInteger('itemviews');
+  FClickThroughs:=Node.ReadAttributeInteger('clickthroughs');
+end;
+
+procedure TItemData.SetNode(aNode: TXmlNode);
+begin
+  if Node=nil then Exit;
+  if aNode<>FNode then
+    begin
+      FNode.Assign(FNode);
+      ParseXML(FNode);
+    end;
+end;
+
+{ TItemsCollection }
+
+function TItemsCollection.Add: TItemData;
+begin
+   Result := TItemData(inherited Add)
+end;
+
+constructor TItemsCollection.Create(FeedItemData: TFeedItemData);
+begin
+  inherited Create(TItemData);
+  FFeedItemData := FeedItemData;
+end;
+
+procedure TItemsCollection.DoItemChange(Item: TCollectionItem);
+begin
+ if Assigned(FOnItemChange) then
+    FOnItemChange(Item)
+end;
+
+function TItemsCollection.GetItem(Index: Integer): TItemData;
+begin
+ Result := TItemData(inherited GetItem(Index))
+end;
+
+function TItemsCollection.GetOwner: TPersistent;
+begin
+ Result := FFeedItemData
+end;
+
+procedure TItemsCollection.SetItem(Index: Integer; const Value: TItemData);
+begin
+ inherited SetItem(Index, Value)
+end;
+
+procedure TItemsCollection.Update(Item: TCollectionItem);
+begin
+  inherited Update(Item);
+  DoItemChange(Item)
+end;
+
+{ TFeedItemData }
+
+constructor TFeedItemData.Create(Collection: TCollection);
+begin
+  inherited Create(Collection);
+  FItems:=TItemsCollection.Create(Self);
+end;
+
+procedure TFeedItemData.ParseXML(Node: TXMLNode);
+var i:integer;
+    List: TXMLNodeList;
+begin
+  inherited ParseXML(Node);//заполнили свойства до Items
+  Node.NodesByName('item',List);
+  //парсим дочерние узлы items
+  for I := 0 to List.Count - 1 do
+     FItems.Add.Node:=List[i];
+end;
+
+{ TItemDataCollection }
+
+function TItemDataCollection.Add: TFeedItemData;
+begin
+  Result := TFeedItemData(inherited Add)
+end;
+
+constructor TItemDataCollection.Create(FeedBurner: TFeedBurner);
+begin
+  inherited Create(TFeedItemData);
+  FFeedBurner := FeedBurner;
+end;
+
+procedure TItemDataCollection.DoItemChange(Item: TCollectionItem);
+begin
+  if Assigned(FOnItemChange) then
+    FOnItemChange(Item)
+end;
+
+function TItemDataCollection.GetItem(Index: Integer): TFeedItemData;
+begin
+ Result := TFeedItemData(inherited GetItem(Index))
+end;
+
+function TItemDataCollection.GetOwner: TPersistent;
+begin
+  Result := FFeedBurner
+end;
+
+procedure TItemDataCollection.SetItem(Index: Integer;
+  const Value: TFeedItemData);
+begin
+  inherited SetItem(Index, Value)
+end;
+
+procedure TItemDataCollection.Update(Item: TCollectionItem);
+begin
+   inherited Update(Item);
+   DoItemChange(Item)
 end;
 
 end.

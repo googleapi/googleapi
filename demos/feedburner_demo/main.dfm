@@ -14,8 +14,8 @@ object Form6: TForm6
   PixelsPerInch = 96
   TextHeight = 13
   object Button1: TButton
-    Left = 282
-    Top = 259
+    Left = 302
+    Top = 251
     Width = 75
     Height = 25
     Caption = 'Button1'
@@ -23,20 +23,14 @@ object Form6: TForm6
     OnClick = Button1Click
   end
   object Memo1: TMemo
-    Left = 6
-    Top = 8
-    Width = 707
+    Left = 0
+    Top = 0
+    Width = 721
     Height = 245
+    Align = alTop
     Lines.Strings = (
       'Memo1')
     TabOrder = 1
-  end
-  object GoogleLogin1: TGoogleLogin
-    AppName = 
-      'Mozilla/5.0 (Windows; U; Windows NT 5.1; ru; rv:1.9.2.6) Gecko/2' +
-      '0100625 Firefox/3.6.6'
-    AccountType = atNone
-    Left = 116
-    Top = 270
+    ExplicitTop = 211
   end
 end

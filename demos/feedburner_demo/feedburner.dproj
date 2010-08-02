@@ -101,6 +101,7 @@
 						<Excluded_Packages Name="$(BDS)\bin\dcloffice2k140.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
 					</Excluded_Packages>
 				</Delphi.Personality>
+				<ModelSupport>False</ModelSupport>
 			</BorlandProject>
 			<ProjectFileVersion>12</ProjectFileVersion>
 		</ProjectExtensions>
