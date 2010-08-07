@@ -43,6 +43,9 @@
 			</DCCReference>
 			<DCCReference Include="..\..\addons\nativexml\NativeXml.pas"/>
 			<DCCReference Include="..\..\source\GFeedBurner.pas"/>
+			<DCCReference Include="uTimeLine.pas">
+				<Form>fTimeLine</Form>
+			</DCCReference>
 			<BuildConfiguration Include="Base">
 				<Key>Base</Key>
 			</BuildConfiguration>

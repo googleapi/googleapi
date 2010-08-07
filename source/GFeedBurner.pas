@@ -326,12 +326,13 @@ type
      procedure  Start;
      destructor Destroy;override;
      property   FeedData:TEntryCollection read FFeedData;
-     property   DateList:TDateList read FDates;
+     property   Dates: TDateList read FDates;
    published
      property   APIMethod: TOperation read FAPIMethod write FAPIMethod;
      property   FeedURL: string read FFeedURL write SetFeedURL;
      property   SilentAPI: boolean read FSilent write FSilent;
      property   MaxThreads: byte read FMaxThreads write SetMaxThreads;
+     property   TimeLine  : TTimeLine read FTimeLine write SetTimeLIme;
      property   OnAPIRequestError:TOnAPIRequestError read FOnAPIRequestError
                 write FOnAPIRequestError;
      property   OnProgress:TOnProgress read FOnProgress write FOnProgress;
@@ -339,7 +340,7 @@ type
      property   OnThreadStart: TOnThreadStart read FOnThreadStart write FOnThreadStart;
      property   OnThreadEnd:TOnThreadEnd read FOnThreadEnd write FOnThreadEnd;
      property   OnDone : TOnDownload read FOnDone write FOnDone;
-     property   TimeLine  : TTimeLine read FTimeLine write SetTimeLIme;
+
 end;
 
 function Comparator(Item1, Item2: pointer): integer;inline;
@@ -488,8 +489,14 @@ var i:integer;
 begin
 try
   for I:=0 to Length(FThread) - 1 do
-    FThread[i].Terminate;
+    begin
+      if TerminateThread(FThread[i].Handle,0) then
+        if Assigned(FOnThreadEnd)then
+          FOnThreadEnd(i,FAllThreads);
+    end;
   FAllThreads:=0;
+  if Assigned(FOnDone) then
+    FOnDone(self);
 finally
   FThread:=nil
 end;
@@ -576,7 +583,7 @@ begin
 Result:=-1;
   for I := 0 to Self.Count - 1 do
     begin
-      if GetItem(i).Fdate=Date then
+      if Trunc(GetItem(i).Fdate)=Trunc(Date) then
         begin
           Result:=i;
           break;
