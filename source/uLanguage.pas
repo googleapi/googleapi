@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 unit uLanguage;
 
+=======
+unit uLanguage;
+
+>>>>>>> remotes/origin/master
 interface
 
 const
@@ -136,6 +141,7 @@ implementation
 {$R GStrings.res}
 
 end.
+<<<<<<< HEAD
 =======
 =======
 <<<<<<< HEAD
@@ -173,3 +179,5 @@ begin
 >>>>>>> remotes/origin/Vlad55
 end.
 >>>>>>> remotes/origin/NMD
+=======
+>>>>>>> remotes/origin/master

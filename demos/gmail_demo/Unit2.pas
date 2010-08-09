@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 unit Unit2;
+=======
+unit Unit2;
+>>>>>>> remotes/origin/master
 
 interface
 
@@ -110,4 +114,7 @@ begin
 end;
 
 end.
+<<<<<<< HEAD
 
+=======
+>>>>>>> remotes/origin/master

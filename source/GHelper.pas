@@ -1,5 +1,10 @@
+<<<<<<< HEAD
 unit GHelper;
 
+=======
+unit GHelper;
+
+>>>>>>> remotes/origin/master
 interface
 
 uses Graphics,strutils,Windows,DateUtils,SysUtils, Variants,
@@ -237,6 +242,7 @@ begin
 end;
 
 end.
+<<<<<<< HEAD
 =======
 =======
 <<<<<<< HEAD
@@ -1515,3 +1521,5 @@ end;
 end.
 >>>>>>> remotes/origin/Vlad55
 >>>>>>> remotes/origin/NMD
+=======
+>>>>>>> remotes/origin/master
