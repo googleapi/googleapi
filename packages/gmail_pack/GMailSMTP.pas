@@ -57,7 +57,8 @@
 |==============================================================================|
 |                             История версий                                   |
 |==============================================================================|
-|                                                                              |
+|09.08.2010. Версия 0.21                                                       |
+|  + Немного подправлен Destructor компонента                                  |
 |27.07.2010. Версия 0.2                                                        |
 |  + исправлена проблема с кодировками писем в Outlook                         |
 |  + добавлено свойство Mailer для идентификацмм почтового клиента             |
@@ -74,7 +75,7 @@ uses mimemess, mimepart, smtpsend, classes, sysutils,
 
 const
   {$REGION 'Константы'}
-    GMailSMTPVersion = '0.2';
+    GMailSMTPVersion = '0.21';
     GmailHost = 'smtp.gmail.com';
     GmailPort = 587;
  {$ENDREGION}
@@ -199,6 +200,7 @@ destructor TGMailSMTP.Destroy;
 begin
   FFiles.Free;
   FRecipients.Free;
+  FMsg.Free;
   inherited;
 end;
 

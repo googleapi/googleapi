@@ -90,7 +90,7 @@ object Form6: TForm6
     DestLang = lng_ru
     OnTranslate = Translator1Translate
     OnTranslateError = Translator1TranslateError
-    Left = 362
-    Top = 120
+    Left = 192
+    Top = 132
   end
 end
