@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, httpsend,synautil,synacode,SuperObject;
+  Dialogs, StdCtrls,GTranslate,typinfo, ExtCtrls,  Clipbrd;
 
 type
   TForm6 = class(TForm)
@@ -13,9 +13,19 @@ type
     Label2: TLabel;
     Memo1: TMemo;
     Button1: TButton;
+    ComboBox1: TComboBox;
+    Translator1: TTranslator;
+    Label3: TLabel;
+    Label4: TLabel;
+    ComboBox2: TComboBox;
     procedure Button1Click(Sender: TObject);
+    procedure Translator1Translate(const SourceStr, TranslateStr: string;
+      LangDetected: TLanguageEnum);
+    procedure Translator1TranslateError(const Code: Integer; Status: string);
+    procedure FormShow(Sender: TObject);
+    procedure ComboBox1Change(Sender: TObject);
+    procedure ComboBox2Change(Sender: TObject);
   private
-    { Private declarations }
   public
 
   end;
@@ -25,52 +35,41 @@ var
 
 implementation
 
-uses msxml;
-
 {$R *.dfm}
 
-procedure SuperMethod(const This, Params: ISuperObject;
-  var Result: ISuperObject);
-var
-  obj: ISuperObject;
-begin
-  with Form6.Memo1.Lines do
-  begin
-    BeginUpdate;
-    try
-      Clear;
-      case Params.I['responseStatus'] of
-        200:
-          for obj in Params['responseData'] do
-            Add(obj.Format('%translatedText% - (%detectedSourceLanguage%)'));
-        else
-          Add(Params.S['responseDetails']);
-      end;
-    finally
-      EndUpdate;
-    end;
-  end;
-end;
-
-
 procedure TForm6.Button1Click(Sender: TObject);
-var obj: ISuperObject;
-    req: IXMLHttpRequest;
-    s: PSOChar;
 begin
-  req:=CoXMLHTTP.Create;
-
-req.open('GET',
-'http://ajax.googleapis.com/ajax/services/language/translate?v=1.0&q='+UTF8Encode(Edit1.Text)+'&langpair=|ru',
-false, EmptyParam, EmptyParam);
-req.send(EmptyParam);
-s:=PwideChar(req.responseText);
-obj:=TSuperObject.ParseString(s,true);
-ShowMessage(IntToStr(obj.I['responseStatus']));
-ShowMessage(obj.S['responseData.translatedText']);//
-ShowMessage(obj.S['responseData.detectedSourceLanguage']);
-//Memo1.Lines.Add(o.AsObject.S['responseData'])
+  Translator1.Translate(Edit1.Text)
 end;
 
+
+procedure TForm6.ComboBox1Change(Sender: TObject);
+begin
+  Translator1.SourceLang:=Translator1.GetLangByName(ComboBox1.Items[ComboBox1.ItemIndex]);
+end;
+
+procedure TForm6.ComboBox2Change(Sender: TObject);
+begin
+  Translator1.DestLang:=Translator1.GetLangByName(ComboBox2.Items[ComboBox2.ItemIndex]);
+end;
+
+procedure TForm6.FormShow(Sender: TObject);
+begin
+  ComboBox1.Items.Assign(Translator1.GetLanguagesNames);
+  ComboBox2.Items.Assign(Translator1.GetLanguagesNames);
+end;
+
+procedure TForm6.Translator1Translate(const SourceStr, TranslateStr: string;
+  LangDetected: TLanguageEnum);
+begin
+  Memo1.Lines.Clear;
+  Memo1.Lines.Add('Исходный текст '+SourceStr);
+  Memo1.Lines.Add('Перевод '+TranslateStr);
+end;
+
+procedure TForm6.Translator1TranslateError(const Code: Integer; Status: string);
+begin
+  Memo1.Lines.Add('Ошибка '+IntToStr(Code)+' '+Status)
+end;
 
 end.
