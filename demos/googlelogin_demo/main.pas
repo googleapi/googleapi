@@ -24,16 +24,15 @@ type
     GoogleLogin1: TGoogleLogin;
     Edit1: TEdit;
     Label7: TLabel;
-    Edit2: TEdit;
-    Label8: TLabel;
     ProgressBar1: TProgressBar;
     Memo1: TMemo;
     Label9: TLabel;
     Label10: TLabel;
-    Animate1: TAnimate;
-    Image1: TImage;
-    Edit3: TEdit;
+    imgCaptcha: TImage;
+    edtCaptcha: TEdit;
     Button3: TButton;
+    Label11: TLabel;
+    Label12: TLabel;
     procedure Button1Click(Sender: TObject);
     procedure GoogleLogin1Autorization(const LoginResult: TLoginResult;
       Result: TResultRec);
@@ -59,6 +58,12 @@ implementation
 
 procedure TForm11.Button1Click(Sender: TObject);
 begin
+if not Assigned(GoogleLogin1) then
+begin
+  ShowMessage('Уже убили');
+  Exit;
+end;
+
 GoogleLogin1.Email:=EmailEdit.Text;
 GoogleLogin1.Password:=PassEdit.Text;
 GoogleLogin1.Service:=TServices(ComboBox1.ItemIndex);
@@ -73,9 +78,13 @@ end;
 
 procedure TForm11.Button3Click(Sender: TObject);
 begin
-  //Memo1.Lines.Add(GoogleLogin1.CapchaToken);
-  GoogleLogin1.Captcha:=Edit3.Text;
-
+  if edtCaptcha.Text<>'' then
+  begin
+    imgCaptcha.Picture:=nil;
+    GoogleLogin1.Email:=EmailEdit.Text;
+    GoogleLogin1.Password:=PassEdit.Text;
+    GoogleLogin1.Captcha:=edtCaptcha.Text;
+  end;
 end;
 
 procedure TForm11.GoogleLogin1Autorization(const LoginResult: TLoginResult;Result: TResultRec);
@@ -86,7 +95,6 @@ begin
   AuthEdit.Text:=Result.Auth;
   temp:=GetEnumName(TypeInfo(TLoginResult),Integer(LoginResult));
   Edit1.Text:=temp;
-  Edit2.Text:=Result.SID;
   if LoginResult =lrOk then
     ShowMessage('Мы в гугле!!!!!!!!!')
   else
@@ -96,12 +104,12 @@ end;
 
 procedure TForm11.GoogleLogin1AutorizCaptcha(PicCaptcha: TPicture);
 begin
-  Image1.Picture:=PicCaptcha;
+  imgCaptcha .Picture:=PicCaptcha;
 end;
 
 procedure TForm11.GoogleLogin1Disconnect(const ResultStr: string);
 begin
-      ShowMessage('Disconnect');
+  ShowMessage('Disconnect');
 end;
 
 procedure TForm11.GoogleLogin1Error(const ErrorStr: string);
@@ -116,11 +124,6 @@ begin
   Memo1.Lines.Add('////////');
   Memo1.Lines.Add('Progress '+IntToStr(Progress));
   Memo1.Lines.Add('MaxProgress '+IntToStr(MaxProgress));
-  //слишком уж быстро качает я не увидел чтоб анимация работала
-  if (MaxProgress>Progress) then
-    Animate1.Active:=True
-  else
-    Animate1.Active:=False;
 end;
 
 end.
