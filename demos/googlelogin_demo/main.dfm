@@ -220,14 +220,9 @@ object Form11: TForm11
     OnClick = Button3Click
   end
   object GoogleLogin1: TGoogleLogin
-    AppName = 
-      'Mozilla/5.0 (Windows; U; Windows NT 5.1; ru; rv:1.9.2.6) Gecko/2' +
-      '0100625 Firefox/3.6.6'
+    AppName = 'My-Application'
     AccountType = atNone
-    OnAutorization = GoogleLogin1Autorization
-    OnAutorizCaptcha = GoogleLogin1AutorizCaptcha
-    OnProgressAutorization = GoogleLogin1ProgressAutorization
-    Left = 193
-    Top = 75
+    Left = 172
+    Top = 184
   end
 end

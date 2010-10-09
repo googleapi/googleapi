@@ -21,7 +21,6 @@ type
     AuthEdit: TEdit;
     ResultEdit: TEdit;
     Button2: TButton;
-    GoogleLogin1: TGoogleLogin;
     Edit1: TEdit;
     Label7: TLabel;
     ProgressBar1: TProgressBar;
@@ -33,6 +32,7 @@ type
     Button3: TButton;
     Label11: TLabel;
     Label12: TLabel;
+    GoogleLogin1: TGoogleLogin;
     procedure Button1Click(Sender: TObject);
     procedure GoogleLogin1Autorization(const LoginResult: TLoginResult;
       Result: TResultRec);
