@@ -132,6 +132,8 @@ object Form1: TForm1
       'Mozilla/5.0 (Windows; U; Windows NT 5.1; ru; rv:1.9.2.6) Gecko/2' +
       '0100625 Firefox/3.6.6'
     AccountType = atGOOGLE
+    Email = 'nmdsoft@gmail.com'
+    Password = 'dima1234programmer4321'
     Service = blogger
     OnAutorization = GoogleLogin1Autorization
     Left = 584
