@@ -13,6 +13,13 @@ object Form1: TForm1
   OldCreateOrder = False
   PixelsPerInch = 96
   TextHeight = 13
+  object Image1: TImage
+    Left = 278
+    Top = 287
+    Width = 227
+    Height = 146
+    Stretch = True
+  end
   object Button1: TButton
     Left = 8
     Top = 217
@@ -25,7 +32,7 @@ object Form1: TForm1
   object Memo1: TMemo
     Left = 8
     Top = 8
-    Width = 530
+    Width = 825
     Height = 81
     Lines.Strings = (
       'Memo1')
@@ -60,10 +67,10 @@ object Form1: TForm1
     TabOrder = 4
   end
   object Memo3: TMemo
-    Left = 199
+    Left = 230
     Top = 95
-    Width = 696
-    Height = 314
+    Width = 618
+    Height = 174
     Lines.Strings = (
       '<p>Memo2</p>')
     TabOrder = 5
@@ -97,11 +104,10 @@ object Form1: TForm1
   end
   object Edit1: TEdit
     Left = 390
-    Top = 131
+    Top = 198
     Width = 185
     Height = 21
     TabOrder = 9
-    Text = 'Edit1'
   end
   object Button6: TButton
     Left = 8
@@ -129,8 +135,8 @@ object Form1: TForm1
     OnClick = Button7Click
   end
   object Edit2: TEdit
-    Left = 215
-    Top = 219
+    Left = 390
+    Top = 171
     Width = 161
     Height = 21
     TabOrder = 13
@@ -152,6 +158,8 @@ object Form1: TForm1
     Email = 'nmdsoft@gmail.com'
     Service = blogger
     OnAutorization = GoogleLogin1Autorization
+    OnAutorizCaptcha = GoogleLogin1AutorizCaptcha
+    OnError = GoogleLogin1Error
     Left = 584
     Top = 56
   end

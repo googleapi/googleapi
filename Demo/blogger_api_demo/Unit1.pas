@@ -4,7 +4,7 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, StdCtrls, BloggerApi, uGoogleLogin, ComCtrls;
+  Dialogs, StdCtrls, BloggerApi, uGoogleLogin, ComCtrls, ExtCtrls;
 
 type
   TForm1 = class(TForm)
@@ -24,6 +24,7 @@ type
     ProgressBar1: TProgressBar;
     Button7: TButton;
     Edit2: TEdit;
+    Image1: TImage;
     procedure Button1Click(Sender: TObject);
     procedure GoogleLogin1Autorization(const LoginResult: TLoginResult; Result: TResultRec);
     procedure Button2Click(Sender: TObject);
@@ -35,6 +36,8 @@ type
     procedure ComboBox1Change(Sender: TObject);
     procedure Blogger1Progress(aCurrentProgress, aMaxProgress: Integer);
     procedure Button7Click(Sender: TObject);
+    procedure GoogleLogin1Error(const ErrorStr: string);
+    procedure GoogleLogin1AutorizCaptcha(PicCaptcha: TPicture);
   private
     { Private declarations }
   public
@@ -63,6 +66,8 @@ procedure TForm1.Button1Click(Sender: TObject);
 begin
   GoogleLogin1.Password:=Edit2.Text;
   GoogleLogin1.Login;
+  if Edit1.Text<>'' then
+    GoogleLogin1.Captcha:=Edit1.Text;
 end;
 
 procedure TForm1.Button2Click(Sender: TObject);
@@ -165,12 +170,26 @@ procedure TForm1.GoogleLogin1Autorization(const LoginResult: TLoginResult; Resul
 var
   i:Integer;
 begin
-  Blogger1.Auth:=Result.Auth;
-  Blogger1.RetrievAllBlogs;
-  Memo1.Lines:=Blogger1.Blogs.Items[1].ÑategoryBlog;
+  if LoginResult=lrOk then
+  begin
+    Blogger1.Auth:=Result.Auth;
+    Blogger1.RetrievAllBlogs;
+    if Blogger1.Blogs.Count=0 then
+      Exit;
+    Memo1.Lines:=Blogger1.Blogs.Items[1].ÑategoryBlog;
+    for I := 0 to Blogger1.Blogs.Count - 1 do
+      ComboBox1.Items.Add(Blogger1.Blogs.Items[i].Title);
+  end;
+end;
 
-  for I := 0 to Blogger1.Blogs.Count - 1 do
-    ComboBox1.Items.Add(Blogger1.Blogs.Items[i].Title);
+procedure TForm1.GoogleLogin1AutorizCaptcha(PicCaptcha: TPicture);
+begin
+  Image1.Picture:=PicCaptcha;
+end;
+
+procedure TForm1.GoogleLogin1Error(const ErrorStr: string);
+begin
+  ShowMessage(ErrorStr);
 end;
 
 end.

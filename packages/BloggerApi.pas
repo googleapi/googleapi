@@ -20,6 +20,7 @@ rsErrorXmlTag='Нет закрывающего тега. HTHL должен быть валидным';
 rsErrorNotTolken='Нет толкена google для работы с сервисом';
 rsErrorNotSelectBlog='Блог не выбран! Смотри property CurrentBlog';
 rsErrorIdPost='Не указан Id сообщения в блоге';
+rsErrorIsEmpty='Данные от сервера не были получены';
 
 rsErrorGet='Произошла сетевая ошибка при получении данных c сервера';
 rsErrorDelete='Произошла сетевая ошибка при выполнении запроса Delete';
@@ -478,6 +479,12 @@ begin
   FBlogs.Clear;//очистка блогов перед получением нового списка
   FXMLDoc.Clear;
   FXMLDoc.ReadFromString(GetUrl(cnsBlogDefault,'','get',FAuth,''));
+  //проверка на наличие данных
+  if FXMLDoc.IsEmpty then
+  begin
+    ToError(rsErrorIsEmpty);
+    Exit;
+  end;
   //проверка на существование коллекции
   if not Assigned(FBlogs) then Exit;
   try
@@ -524,9 +531,14 @@ begin
     ToError(rsErrorNotTolken);
     Exit;////////ИСПРАВИТЬ!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   end;
+  //проверка на наличие данных
+  if FXMLDoc.IsEmpty then
+  begin
+    ToError(rsErrorIsEmpty);
+    Exit;
+  end;
 
   Nodes:=TXmlNodeList.Create;
-
   FXMLDoc.Root.FindNodes(cnsEntry,Nodes);//<entry gd:etag='W/"CUYCQX47eSp7ImA9WB9UFkU."'>
   for i := 0 to Nodes.Count-1 do
   begin
@@ -572,10 +584,22 @@ begin
     if FCurrentBlog>-1 then
       FXMLDoc.ReadFromString(GetUrl(cnsPostBlogStart+Blogs.Items[FCurrentBlog].FBlogId+cnsPostBlogEnd,'','get',FAuth,''))
     else
+    begin
       ToError(rsErrorNotSelectBlog);
+      Exit;
+    end;
   end
   else
+  begin
     ToError(rsErrorNotTolken);
+    Exit;
+  end;
+  //проверка на наличие данных
+  if FXMLDoc.IsEmpty then
+  begin
+    ToError(rsErrorIsEmpty);
+    Exit;
+  end;
 
   Nodes:=TXmlNodeList.Create;
   FXMLDoc.Root.FindNodes(cnsEntry,Nodes);
@@ -620,10 +644,22 @@ begin
     if FCurrentBlog>-1 then
       FXMLDoc.ReadFromString(GetUrl(cnsPostBlogStart+Blogs.Items[FCurrentBlog].FBlogId+cnsPostBlogEnd+parametrs,'','get',FAuth,''))
     else
+    begin
       ToError(rsErrorNotSelectBlog);
+      Exit;
+    end;
   end
   else
+  begin
     ToError(rsErrorNotTolken);
+    Exit;
+  end;
+  //проверка на наличие данных
+  if FXMLDoc.IsEmpty then
+  begin
+    ToError(rsErrorIsEmpty);
+    Exit;
+  end;
 
   Nodes:=TXmlNodeList.Create;
   FXMLDoc.Root.FindNodes(cnsEntry,Nodes);
