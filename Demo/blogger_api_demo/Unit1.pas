@@ -142,7 +142,17 @@ begin
     Exit;
   end;
   for I := 0 to a.Count - 1 do
-    Memo3.Lines.Add(a.Items[i].CommentAutorName);
+  begin
+    Memo3.Lines.Add('Имя автора: '+a.Items[i].CommentAutorName);
+    Memo3.Lines.Add('URL: '+a.Items[i].CommentAutorURL);
+    Memo3.Lines.Add('Email: '+a.Items[i].CommentAutorEmail);
+    Memo3.Lines.Add('ID Комментария: '+a.Items[i].CommentId);
+    Memo3.Lines.Add('Заголовок комментария: '+a.Items[i].CommentTitle);
+    Memo3.Lines.Add('Текст комментария: '+a.Items[i].CommentSourse.Text);
+    Memo3.Lines.Add('Дата публикации: '+DateToStr( a.Items[i].CommentPublished ));
+    Memo3.Lines.Add('Дата обновления: '+DateToStr( a.Items[i].CommentPublished ));
+
+  end;
   a.Free;
 end;
 

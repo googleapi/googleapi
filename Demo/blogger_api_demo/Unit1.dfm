@@ -3,7 +3,7 @@ object Form1: TForm1
   Top = 0
   Caption = 'Form1'
   ClientHeight = 455
-  ClientWidth = 622
+  ClientWidth = 903
   Color = clBtnFace
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
@@ -62,8 +62,8 @@ object Form1: TForm1
   object Memo3: TMemo
     Left = 199
     Top = 95
-    Width = 185
-    Height = 89
+    Width = 696
+    Height = 314
     Lines.Strings = (
       '<p>Memo2</p>')
     TabOrder = 5
@@ -130,7 +130,7 @@ object Form1: TForm1
   end
   object Edit2: TEdit
     Left = 215
-    Top = 217
+    Top = 219
     Width = 161
     Height = 21
     TabOrder = 13

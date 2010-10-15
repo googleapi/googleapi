@@ -61,6 +61,7 @@ const
   cnsURl='uri';
   cnsEmail='email';
   cnsCommentsEnd='/comments/default';
+  cnsAnonymous='Anonymous';//анонимный комментатор
 type
   //событие для ошибки
   TErrorEvent = procedure(aE: string) of object;
@@ -278,8 +279,13 @@ end;
 
 //получение id комментария
 function TBlogger.GetCommentId(aSourse: string): string;
+var
+  i:Integer;
 begin
-//
+  Result:='';
+  i:=AnsiPos('.blog-',aSourse);
+  Delete(aSourse,1,i+5);
+  Result:=aSourse;
 end;
 
 function TBlogger.GetHostName(url : string) : string;
@@ -520,6 +526,7 @@ begin
   end;
 
   Nodes:=TXmlNodeList.Create;
+
   FXMLDoc.Root.FindNodes(cnsEntry,Nodes);//<entry gd:etag='W/"CUYCQX47eSp7ImA9WB9UFkU."'>
   for i := 0 to Nodes.Count-1 do
   begin
@@ -535,11 +542,14 @@ begin
     for i2 := 0 to NodesChild.Count - 1 do
     begin
       Result.Items[i].CommentAutorName:=NodesChild.Items[i2].NodeByName(cnsName).ValueAsString;//имя автора
-      Result.Items[i].CommentAutorURL:=NodesChild.Items[i2].NodeByName(cnsURl).ValueAsString;//профиль автора
+     if NodesChild.Items[i2].NodeByName(cnsName).ValueAsString<>cnsAnonymous then//у анонимных людей нет профиля))
+      Result.Items[i].CommentAutorURL:=NodesChild.Items[i2].NodeByName(cnsURl).ValueAsString //профиль автора
+     else
+      Result.Items[i].CommentAutorURL:=cnsAnonymous;
       Result.Items[i].CommentAutorEmail:=NodesChild.Items[i2].NodeByName(cnsEmail).ValueAsString;//адрес электронной почты автора
     end;
+    FreeAndNil(NodesChild);
   end;
-//  FreeAndNil(NodesChild);
 end;
 
 {-------------------------------------------------------------------------------
