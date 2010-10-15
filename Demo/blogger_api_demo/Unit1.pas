@@ -22,6 +22,8 @@ type
     Edit1: TEdit;
     Button6: TButton;
     ProgressBar1: TProgressBar;
+    Button7: TButton;
+    Edit2: TEdit;
     procedure Button1Click(Sender: TObject);
     procedure GoogleLogin1Autorization(const LoginResult: TLoginResult; Result: TResultRec);
     procedure Button2Click(Sender: TObject);
@@ -32,6 +34,7 @@ type
     procedure Blogger1Error(E: string);
     procedure ComboBox1Change(Sender: TObject);
     procedure Blogger1Progress(aCurrentProgress, aMaxProgress: Integer);
+    procedure Button7Click(Sender: TObject);
   private
     { Private declarations }
   public
@@ -58,6 +61,7 @@ end;
 
 procedure TForm1.Button1Click(Sender: TObject);
 begin
+  GoogleLogin1.Password:=Edit2.Text;
   GoogleLogin1.Login;
 end;
 
@@ -123,6 +127,23 @@ end;
 procedure TForm1.Button6Click(Sender: TObject);
 begin
   Blogger1.PostDelete(Edit1.Text);
+end;
+
+procedure TForm1.Button7Click(Sender: TObject);
+var
+  a:TCommentCollection;
+  i:Integer;
+begin
+  a:=TCommentCollection.Create(nil);
+  a:=Blogger1.RetrievAllComments;
+  if a.Count<=0 then
+  begin
+    a.Free;
+    Exit;
+  end;
+  for I := 0 to a.Count - 1 do
+    Memo3.Lines.Add(a.Items[i].CommentSourse.Text);
+  a.Free;
 end;
 
 procedure TForm1.ComboBox1Change(Sender: TObject);

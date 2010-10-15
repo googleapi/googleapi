@@ -56,7 +56,11 @@ const
   cnsYes='yes';
   cnsVop='/?';
 //  cnsPostIdUrl='http://www.blogger.com/feeds/blogID/posts/default/postID';
-
+  cnsAuthor='author';//автор для комментариев
+  //cnsName имя автора комментария
+  cnsURl='uri';
+  cnsEmail='email';
+  cnsCommentsEnd='/comments/default';
 type
   //событие для ошибки
   TErrorEvent = procedure(aE: string) of object;
@@ -105,7 +109,7 @@ type
     constructor Create(AOwner:TComponent);
     function Add: TCommentItem;
     property Items[Index: Integer]: TCommentItem read GetItemComment write SetItemComment;
-    function AddEx(aPostTitle,aPostId:string; aPostSourse:TStringList;aPostPublished,aPostUpdate:TDateTime): TCommentItem;
+    function AddEx(aCommentTitle,aCommentId:string; aCommentSourse:TStringList;aCommentPublished,aCommentUpdate:TDateTime;aAutorName,aAutorEmail,aAutorURL:string): TCommentItem;
   end;
 
   //для сообщений
@@ -206,6 +210,8 @@ type
 
     function GetIdBlog(aSourse:string):string;//получение id блога
     function GetPostId(aSourse:string):string;//получение id поста
+    function GetCommentId(aSourse:string):string;//получение id комментария
+
 
     procedure ToError(aError:string);//обработка ошибок
     //для пропертей
@@ -216,7 +222,11 @@ type
 
   protected
   public
+    constructor Create(AOwner: TComponent);override;//инициализация класса
+    destructor Destroy; override;//уничтожение
+
     procedure RetrievAllBlogs;//получение списка блогов пользователя
+
     function PostCreat(aTitle,aContent:string; aCategory:TStringList;aComment:Boolean):UTF8String;//создание сообщения и отправка в блог
     function PostModify(id,aTitle,aContent:string; aCategory:TStringList;aComment:Boolean):UTF8String;//Изменение сообщения и отправка его в блог
     function PostDelete(id:string):Boolean;//удаление поста из блога
@@ -228,8 +238,10 @@ type
                                   aStartIndex:Integer=0; aMaxResults:Integer=0; aAlt : string =''):TPostCollection;
     //Возвращает посты из блога по заданным параметрам созданым в ручную
     function RetrievPostForTextParams(Parametrs:string):TPostCollection;
-    constructor Create(AOwner: TComponent);override;//инициализация класса
-    destructor Destroy; override;//уничтожение
+
+    //Комментарии
+    function RetrievAllComments:TCommentCollection;//возвращает все комментарии текущего блога
+
   published
     property Auth:string read FAuth write SetAuth;
     property AppName:string read FAppName write SetAppName;
@@ -262,6 +274,12 @@ begin
   FreeAndNil(FXMLDoc);
   FBlogs.Free;
   inherited;
+end;
+
+//получение id комментария
+function TBlogger.GetCommentId(aSourse: string): string;
+begin
+//
 end;
 
 function TBlogger.GetHostName(url : string) : string;
@@ -476,6 +494,52 @@ begin
   finally
     FreeAndNil(Nodes);
     FreeAndNil(NodesChild);
+  end;
+end;
+
+//возвращает все комментарии текущего блога
+function TBlogger.RetrievAllComments: TCommentCollection;
+var
+  Nodes,NodesChild: TXmlNodeList;
+  i,i2:Integer;
+begin
+  Result:=TCommentCollection.Create(nil);
+  FXMLDoc.Clear;
+  if FAuth<>'' then
+  begin//'http://www.blogger.com/feeds/9144819905011498730/posts/default'
+      //http://www.blogger.com/feeds/blogID/comments/default
+    if FCurrentBlog>-1 then
+      FXMLDoc.ReadFromString(GetUrl(cnsPostBlogStart+Blogs.Items[FCurrentBlog].FBlogId+cnsCommentsEnd,'','get',FAuth,''))
+    else
+      ToError(rsErrorNotSelectBlog);
+  end
+  else
+  begin
+    ToError(rsErrorNotTolken);
+    Exit;////////ИСПРАВИТЬ!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  end;
+
+  Nodes:=TXmlNodeList.Create;
+  FXMLDoc.Root.FindNodes(cnsEntry,Nodes);//<entry gd:etag='W/"CUYCQX47eSp7ImA9WB9UFkU."'>
+  for i := 0 to Nodes.Count-1 do
+  begin
+    Result.Add;
+    Result.Items[i].CommentId:=GetCommentId(Nodes.Items[i].NodeByName(cnsId).ValueAsString);//id комментария
+    Result.Items[i].CommentTitle:=Nodes.Items[i].NodeByName(cnsTitle).ValueAsString;//заголовок
+    Result.Items[i].CommentSourse.Add(Nodes.Items[i].NodeByName(cnsContent).ValueAsString);//текст комментария
+    Result.Items[i].CommentPublished:=Nodes.Items[i].NodeByName(cnsPublished).ValueAsDateTime;// дата публикации комментария
+    Result.Items[i].CommentUpdate:=Nodes.Items[i].NodeByName(cnsUpdated).ValueAsDateTime;// дата обновления комментария
+//    Result.Items[i].CommentAutorName:=Nodes.Items[i].NodeByName(cnsName).ValueAsString;//имя автора
+//    Result.Items[i].CommentAutorURL:=Nodes.Items[i].NodeByName(cnsURl).ValueAsString;//профиль автора
+//    Result.Items[i].CommentAutorEmail:=Nodes.Items[i].NodeByName(cnsEmail).ValueAsString;//адрес электронной почты автора
+{
+    NodesChild:=TXmlNodeList.Create;
+    Nodes.Items[i].FindNodes(cnsAuthor,NodesChild);
+    for i2 := 0 to NodesChild.Count - 1 do
+    begin
+      Result.Items[i].СategoryPost.Add(NodesChild.Items[i2].AttributeByName[cntTerm]);
+    end;
+}
   end;
 end;
 
@@ -1066,13 +1130,21 @@ end;
 
 function TCommentCollection.Add: TCommentItem;
 begin
-
+  result := TCommentItem(inherited Add);
 end;
 
-function TCommentCollection.AddEx(aPostTitle, aPostId: string; aPostSourse: TStringList; aPostPublished,
-  aPostUpdate: TDateTime): TCommentItem;
+function TCommentCollection.AddEx(aCommentTitle, aCommentId: string; aCommentSourse: TStringList; aCommentPublished,
+  aCommentUpdate: TDateTime; aAutorName, aAutorEmail, aAutorURL: string): TCommentItem;
 begin
-
+  result := inherited Add as TCommentItem;
+  Result.FCommentTitle:=aCommentTitle;
+  Result.FCommentId:=aCommentId;
+  Result.FCommentSourse.Assign(aCommentSourse);
+  Result.FCommentPublished:=aCommentPublished;
+  Result.FCommentUpdate:=aCommentUpdate;
+  Result.FAutorName:=aAutorName;
+  Result.FAutorEmail:=aAutorEmail;
+  Result.FAutorURL:=aAutorURL;
 end;
 
 constructor TCommentCollection.Create(AOwner: TComponent);

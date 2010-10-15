@@ -96,8 +96,8 @@ object Form1: TForm1
     OnClick = Button5Click
   end
   object Edit1: TEdit
-    Left = 224
-    Top = 327
+    Left = 390
+    Top = 131
     Width = 185
     Height = 21
     TabOrder = 9
@@ -108,16 +108,33 @@ object Form1: TForm1
     Top = 353
     Width = 201
     Height = 25
-    Caption = 'Button6'
+    Caption = #1059#1076#1072#1083#1077#1085#1080#1077' '#1087#1086#1089#1090#1072
     TabOrder = 10
     OnClick = Button6Click
   end
   object ProgressBar1: TProgressBar
-    Left = 328
-    Top = 244
+    Left = 390
+    Top = 108
     Width = 150
     Height = 17
     TabOrder = 11
+  end
+  object Button7: TButton
+    Left = 8
+    Top = 384
+    Width = 201
+    Height = 25
+    Caption = #1055#1086#1083#1091#1095#1077#1085#1080#1077' '#1074#1089#1077#1093' '#1082#1086#1084#1084#1077#1085#1090#1072#1088#1080#1077#1074
+    TabOrder = 12
+    OnClick = Button7Click
+  end
+  object Edit2: TEdit
+    Left = 215
+    Top = 217
+    Width = 161
+    Height = 21
+    TabOrder = 13
+    Text = 'Edit2'
   end
   object Blogger1: TBlogger
     AppName = 'MyCompany'
