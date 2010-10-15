@@ -133,7 +133,6 @@ object Form1: TForm1
       '0100625 Firefox/3.6.6'
     AccountType = atGOOGLE
     Email = 'nmdsoft@gmail.com'
-    Password = 'dima1234programmer4321'
     Service = blogger
     OnAutorization = GoogleLogin1Autorization
     Left = 584

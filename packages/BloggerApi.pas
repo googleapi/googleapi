@@ -63,6 +63,52 @@ type
   //Прогресс выполнения задания
   TProgressEvent = procedure(aCurrentProgress,aMaxProgress: Integer) of object;
 
+  //для комментариев
+  TCommentItem = class (TCollectionItem)
+  private
+    FCommentTitle: string;
+    FCommentId: string;
+    FCommentSourse: TStringList;
+    FCommentPublished: TDateTime;
+    FCommentUpdate: TDateTime;
+    FAutorName:string;
+    FAutorURL:string;
+    FAutorEmail:string;
+    procedure SetCommentId(const Value: string);
+    procedure SetCommentPublished(const Value: TDateTime);
+    procedure SetCommentSourse(const Value: TStringList);
+    procedure SetCommentTitle(const Value: string);
+    procedure SetCommentUpdate(const Value: TDateTime);
+    procedure SetCommentAutorEmail(const Value: string);
+    procedure SetCommentAutorName(const Value: string);
+    procedure SetCommentAutorURL(const Value: string);
+  public
+    constructor Create(Collection: TCollection);override;
+    destructor Destroy; override;
+  published
+    property CommentId:string  read FCommentId write SetCommentId;
+    property CommentTitle:string  read FCommentTitle write SetCommentTitle;
+    property CommentSourse:TStringList  read FCommentSourse write SetCommentSourse;
+    property CommentPublished:TDateTime  read FCommentPublished write SetCommentPublished;
+    property CommentUpdate:TDateTime  read FCommentUpdate write SetCommentUpdate;
+    property CommentAutorName:string  read FAutorName write SetCommentAutorName;
+    property CommentAutorURL:string  read FAutorURL write SetCommentAutorURL;
+    property CommentAutorEmail:string  read FAutorEmail write SetCommentAutorEmail;
+  end;
+
+  //комментарии
+  TCommentCollection = class (TCollection)
+  private
+    function GetItemComment(Index: Integer): TCommentItem;
+    procedure SetItemComment(Index: Integer; Value: TCommentItem);
+  public
+    constructor Create(AOwner:TComponent);
+    function Add: TCommentItem;
+    property Items[Index: Integer]: TCommentItem read GetItemComment write SetItemComment;
+    function AddEx(aPostTitle,aPostId:string; aPostSourse:TStringList;aPostPublished,aPostUpdate:TDateTime): TCommentItem;
+  end;
+
+  //для сообщений
   TPostItem = class (TCollectionItem)
   private
     FPostTitle: string;
@@ -960,6 +1006,88 @@ end;
 procedure Register;
 begin
   RegisterComponents('WebDelphi.ru', [TBlogger]);
+end;
+
+{ TCommentItem }
+
+constructor TCommentItem.Create(Collection: TCollection);
+begin
+  inherited;
+  FCommentSourse:=TStringList.Create;
+end;
+
+destructor TCommentItem.Destroy;
+begin
+  FCommentSourse.Free;
+  inherited;
+end;
+
+procedure TCommentItem.SetCommentAutorEmail(const Value: string);
+begin
+  FAutorEmail := Value;
+end;
+
+procedure TCommentItem.SetCommentAutorName(const Value: string);
+begin
+  FAutorName := Value;
+end;
+
+procedure TCommentItem.SetCommentAutorURL(const Value: string);
+begin
+  FAutorURL := Value;
+end;
+
+procedure TCommentItem.SetCommentId(const Value: string);
+begin
+  FCommentId:=Value;
+end;
+
+procedure TCommentItem.SetCommentPublished(const Value: TDateTime);
+begin
+  FCommentPublished:=Value;
+end;
+
+procedure TCommentItem.SetCommentSourse(const Value: TStringList);
+begin
+  FCommentSourse.Assign(Value);
+end;
+
+procedure TCommentItem.SetCommentTitle(const Value: string);
+begin
+  FCommentTitle:=Value;
+end;
+
+procedure TCommentItem.SetCommentUpdate(const Value: TDateTime);
+begin
+  FCommentUpdate:=Value;
+end;
+
+{ TCommentCollection }
+
+function TCommentCollection.Add: TCommentItem;
+begin
+
+end;
+
+function TCommentCollection.AddEx(aPostTitle, aPostId: string; aPostSourse: TStringList; aPostPublished,
+  aPostUpdate: TDateTime): TCommentItem;
+begin
+
+end;
+
+constructor TCommentCollection.Create(AOwner: TComponent);
+begin
+  inherited Create(TCommentItem);
+end;
+
+function TCommentCollection.GetItemComment(Index: Integer): TCommentItem;
+begin
+  result := TCommentItem(inherited GetItem(Index));
+end;
+
+procedure TCommentCollection.SetItemComment(Index: Integer; Value: TCommentItem);
+begin
+   inherited SetItem(Index, Value);
 end;
 
 end.
