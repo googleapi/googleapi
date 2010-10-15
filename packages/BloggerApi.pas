@@ -529,18 +529,17 @@ begin
     Result.Items[i].CommentSourse.Add(Nodes.Items[i].NodeByName(cnsContent).ValueAsString);//текст комментария
     Result.Items[i].CommentPublished:=Nodes.Items[i].NodeByName(cnsPublished).ValueAsDateTime;// дата публикации комментария
     Result.Items[i].CommentUpdate:=Nodes.Items[i].NodeByName(cnsUpdated).ValueAsDateTime;// дата обновления комментария
-//    Result.Items[i].CommentAutorName:=Nodes.Items[i].NodeByName(cnsName).ValueAsString;//имя автора
-//    Result.Items[i].CommentAutorURL:=Nodes.Items[i].NodeByName(cnsURl).ValueAsString;//профиль автора
-//    Result.Items[i].CommentAutorEmail:=Nodes.Items[i].NodeByName(cnsEmail).ValueAsString;//адрес электронной почты автора
-{
+
     NodesChild:=TXmlNodeList.Create;
     Nodes.Items[i].FindNodes(cnsAuthor,NodesChild);
     for i2 := 0 to NodesChild.Count - 1 do
     begin
-      Result.Items[i].СategoryPost.Add(NodesChild.Items[i2].AttributeByName[cntTerm]);
+      Result.Items[i].CommentAutorName:=NodesChild.Items[i2].NodeByName(cnsName).ValueAsString;//имя автора
+      Result.Items[i].CommentAutorURL:=NodesChild.Items[i2].NodeByName(cnsURl).ValueAsString;//профиль автора
+      Result.Items[i].CommentAutorEmail:=NodesChild.Items[i2].NodeByName(cnsEmail).ValueAsString;//адрес электронной почты автора
     end;
-}
   end;
+//  FreeAndNil(NodesChild);
 end;
 
 {-------------------------------------------------------------------------------

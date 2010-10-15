@@ -142,7 +142,7 @@ begin
     Exit;
   end;
   for I := 0 to a.Count - 1 do
-    Memo3.Lines.Add(a.Items[i].CommentSourse.Text);
+    Memo3.Lines.Add(a.Items[i].CommentAutorName);
   a.Free;
 end;
 
