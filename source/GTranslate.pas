@@ -1,41 +1,41 @@
 { ==============================================================================|
-|Ïğîåêò: Google API â Delphi                                                   |
-|==============================================================================|
-|unit: GTranslate                                                              |
-|==============================================================================|
-|Îïèñàíèå: Ìîäóëü äëÿ ğàáîòû ñ ïåğåâîä÷èêîì Google (AJAX Language API).        |
-|==============================================================================|
-|Çàâèñèìîñòè:                                                                  |
-|1. Äëÿ ïàğñèíãà JSON-äîêóìåíòîâ èñïîëüçóåòñÿ áèáëèîòåêà SuperObject           |
-|==============================================================================|
-| Àâòîğ: Vlad. (vlad383@gmail.com)                                             |
-| Äàòà: 09.08.2010                                                             |
-| Âåğñèÿ: ñì. íèæå                                                             |
-| Copyright (c) 2009-2010 WebDelphi.ru                                         |
-|==============================================================================|
-| ËÈÖÅÍÇÈÎÍÍÎÅ ÑÎÃËÀØÅÍÈÅ                                                      |
-|==============================================================================|
-| ÄÀÍÍÎÅ ÏĞÎÃĞÀÌÌÍÎÅ ÎÁÅÑÏÅ×ÅÍÈÅ ÏĞÅÄÎÑÒÀÂËßÅÒÑß «ÊÀÊ ÅÑÒÜ», ÁÅÇ ËŞÁÎÃÎ ÂÈÄÀ   |
-| ÃÀĞÀÍÒÈÉ, ßÂÍÎ ÂÛĞÀÆÅÍÍÛÕ ÈËÈ ÏÎÄĞÀÇÓÌÅÂÀÅÌÛÕ, ÂÊËŞ×Àß, ÍÎ ÍÅ ÎÃĞÀÍÈ×ÈÂÀßÑÜ  |
-| ÃÀĞÀÍÒÈßÌÈ ÒÎÂÀĞÍÎÉ ÏĞÈÃÎÄÍÎÑÒÈ, ÑÎÎÒÂÅÒÑÒÂÈß ÏÎ ÅÃÎ ÊÎÍÊĞÅÒÍÎÌÓ ÍÀÇÍÀ×ÅÍÈŞ  |
-| È ÍÅÍÀĞÓØÅÍÈß ÏĞÀÂ. ÍÈ Â ÊÀÊÎÌ ÑËÓ×ÀÅ ÀÂÒÎĞÛ ÈËÈ ÏĞÀÂÎÎÁËÀÄÀÒÅËÈ ÍÅ ÍÅÑÓÒ    |
-| ÎÒÂÅÒÑÒÂÅÍÍÎÑÒÈ ÏÎ ÈÑÊÀÌ Î ÂÎÇÌÅÙÅÍÈÈ ÓÙÅĞÁÀ, ÓÁÛÒÊÎÂ ÈËÈ ÄĞÓÃÈÕ ÒĞÅÁÎÂÀÍÈÉ  |
-| ÏÎ ÄÅÉÑÒÂÓŞÙÈÌ ÊÎÍÒĞÀÊÒÀÌ, ÄÅËÈÊÒÀÌ ÈËÈ ÈÍÎÌÓ, ÂÎÇÍÈÊØÈÌ ÈÇ, ÈÌÅŞÙÈÌ         |
-| ÏĞÈ×ÈÍÎÉ ÈËÈ ÑÂßÇÀÍÍÛÌ Ñ ÏĞÎÃĞÀÌÌÍÛÌ ÎÁÅÑÏÅ×ÅÍÈÅÌ ÈËÈ ÈÑÏÎËÜÇÎÂÀÍÈÅÌ         |
-| ÏĞÎÃĞÀÌÌÍÎÃÎ ÎÁÅÑÏÅ×ÅÍÈß ÈËÈ ÈÍÛÌÈ ÄÅÉÑÒÂÈßÌÈ Ñ ÏĞÎÃĞÀÌÌÍÛÌ ÎÁÅÑÏÅ×ÅÍÈÅÌ.    |
-|                                                                              |
-| This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF        |
-| ANY KIND, either express or implied.                                         |
-|==============================================================================|
-| ÎÁÍÎÂËÅÍÈß ÊÎÌÏÎÍÅÍÒÀ                                                        |
-|==============================================================================|
-| Ïîñëåäíèå îáíîâëåíèÿ ìîäóëÿ GFeedBurner ìîæíî íàéòè â ğåïîçèòîğèè ïî àäğåñó: |
-| http://github.com/googleapi                                                  |
-|==============================================================================|
-| Èñòîğèÿ âåğñèé                                                               |
-|==============================================================================|
-|                                                                              |
-|==============================================================================}
+  |Ïğîåêò: Google API â Delphi                                                   |
+  |==============================================================================|
+  |unit: GTranslate                                                              |
+  |==============================================================================|
+  |Îïèñàíèå: Ìîäóëü äëÿ ğàáîòû ñ ïåğåâîä÷èêîì Google (AJAX Language API).        |
+  |==============================================================================|
+  |Çàâèñèìîñòè:                                                                  |
+  |1. Äëÿ ïàğñèíãà JSON-äîêóìåíòîâ èñïîëüçóåòñÿ áèáëèîòåêà SuperObject           |
+  |==============================================================================|
+  | Àâòîğ: Vlad. (vlad383@gmail.com)                                             |
+  | Äàòà: 09.08.2010                                                             |
+  | Âåğñèÿ: ñì. íèæå                                                             |
+  | Copyright (c) 2009-2010 WebDelphi.ru                                         |
+  |==============================================================================|
+  | ËÈÖÅÍÇÈÎÍÍÎÅ ÑÎÃËÀØÅÍÈÅ                                                      |
+  |==============================================================================|
+  | ÄÀÍÍÎÅ ÏĞÎÃĞÀÌÌÍÎÅ ÎÁÅÑÏÅ×ÅÍÈÅ ÏĞÅÄÎÑÒÀÂËßÅÒÑß «ÊÀÊ ÅÑÒÜ», ÁÅÇ ËŞÁÎÃÎ ÂÈÄÀ   |
+  | ÃÀĞÀÍÒÈÉ, ßÂÍÎ ÂÛĞÀÆÅÍÍÛÕ ÈËÈ ÏÎÄĞÀÇÓÌÅÂÀÅÌÛÕ, ÂÊËŞ×Àß, ÍÎ ÍÅ ÎÃĞÀÍÈ×ÈÂÀßÑÜ  |
+  | ÃÀĞÀÍÒÈßÌÈ ÒÎÂÀĞÍÎÉ ÏĞÈÃÎÄÍÎÑÒÈ, ÑÎÎÒÂÅÒÑÒÂÈß ÏÎ ÅÃÎ ÊÎÍÊĞÅÒÍÎÌÓ ÍÀÇÍÀ×ÅÍÈŞ  |
+  | È ÍÅÍÀĞÓØÅÍÈß ÏĞÀÂ. ÍÈ Â ÊÀÊÎÌ ÑËÓ×ÀÅ ÀÂÒÎĞÛ ÈËÈ ÏĞÀÂÎÎÁËÀÄÀÒÅËÈ ÍÅ ÍÅÑÓÒ    |
+  | ÎÒÂÅÒÑÒÂÅÍÍÎÑÒÈ ÏÎ ÈÑÊÀÌ Î ÂÎÇÌÅÙÅÍÈÈ ÓÙÅĞÁÀ, ÓÁÛÒÊÎÂ ÈËÈ ÄĞÓÃÈÕ ÒĞÅÁÎÂÀÍÈÉ  |
+  | ÏÎ ÄÅÉÑÒÂÓŞÙÈÌ ÊÎÍÒĞÀÊÒÀÌ, ÄÅËÈÊÒÀÌ ÈËÈ ÈÍÎÌÓ, ÂÎÇÍÈÊØÈÌ ÈÇ, ÈÌÅŞÙÈÌ         |
+  | ÏĞÈ×ÈÍÎÉ ÈËÈ ÑÂßÇÀÍÍÛÌ Ñ ÏĞÎÃĞÀÌÌÍÛÌ ÎÁÅÑÏÅ×ÅÍÈÅÌ ÈËÈ ÈÑÏÎËÜÇÎÂÀÍÈÅÌ         |
+  | ÏĞÎÃĞÀÌÌÍÎÃÎ ÎÁÅÑÏÅ×ÅÍÈß ÈËÈ ÈÍÛÌÈ ÄÅÉÑÒÂÈßÌÈ Ñ ÏĞÎÃĞÀÌÌÍÛÌ ÎÁÅÑÏÅ×ÅÍÈÅÌ.    |
+  |                                                                              |
+  | This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF        |
+  | ANY KIND, either express or implied.                                         |
+  |==============================================================================|
+  | ÎÁÍÎÂËÅÍÈß ÊÎÌÏÎÍÅÍÒÀ                                                        |
+  |==============================================================================|
+  | Ïîñëåäíèå îáíîâëåíèÿ ìîäóëÿ GFeedBurner ìîæíî íàéòè â ğåïîçèòîğèè ïî àäğåñó: |
+  | http://github.com/googleapi                                                  |
+  |==============================================================================|
+  | Èñòîğèÿ âåğñèé                                                               |
+  |==============================================================================|
+  |                                                                              |
+  |============================================================================== }
 unit GTranslate;
 
 interface
@@ -104,7 +104,7 @@ resourcestring
   rsLang_ja = 'ÿïîíñêèé';
 
   rsErrorDestLng = 'Ïåğåâîä íåâîçìîæåí ò.ê. íå îïğåäåëåí ÿçûê ïåğåâîäà';
-  rsErrorTrnsl = 'Âî âğåìÿ ïåğåâîäà ïğîèçîøëà îøèáêà: %s';
+  rsErrorTrnsl = 'Âî âğåìÿ ïåğåâîäà ïğîèçîøëà îøèáêà';
 
 type
   TLanguageEnum = (unknown, lng_af, lng_sq, lng_ar, lng_hy, lng_az, lng_eu,
@@ -129,7 +129,7 @@ type
 
 const
   Languages: array [0 .. 57] of TLanguageRec =
-    ((Name:rsLangAuto; Ident: unknown),
+    ((Name: rsLangAuto; Ident: unknown),
     (Name: rsLang_en; Ident: lng_en), (Name: rsLang_ru; Ident: lng_ru),
     (Name: rsLang_it; Ident: lng_it), (Name: rsLang_az; Ident: lng_az),
     (Name: rsLang_sq; Ident: lng_sq), (Name: rsLang_ar; Ident: lng_ar),
@@ -159,15 +159,13 @@ const
     (Name: rsLang_hr; Ident: lng_hr), (Name: rsLang_cs; Ident: lng_cs),
     (Name: rsLang_sv; Ident: lng_sv), (Name: rsLang_et; Ident: lng_et),
     (Name: rsLang_ja; Ident: lng_ja));
-
-  cTranslateURL = 'http://ajax.googleapis.com/ajax/services/language/translate';
-  cDetectURL = 'http://ajax.googleapis.com/ajax/services/language/detect';
-  cTranslatedPath = 'responseData.translatedText';
+  cTranslateURL = 'https://www.googleapis.com/language/translate/v';
+  cTranslatedPath ='data.translations.translatedText';
   cDetectedLangPath = 'responseData.detectedSourceLanguage';
   cResponcePath = 'responseStatus';
   cResponceTextPath = 'responseDetails';
-  APIVersion = '1.0';
-  TranslatorVersion = '0.1';
+  APIVersion = '2';
+  TranslatorVersion = '0.2';
   URLSpecialChar: TSpecials = [#$00 .. #$20, '_', '<', '>', '"', '%', '{', '}',
     '|', '\', '^', '~', '[', ']', '`', #$7F .. #$FF];
 
@@ -178,12 +176,15 @@ type
 
   TTranslator = class(TComponent)
   private
+    FVersion   : string;
     FSourceLang: TLanguageEnum;
     FDestLang: TLanguageEnum;
+    FKey: string;
     FOnTranslate: TOnTranslate;
     FOnTranslateError: TOnTranslateError;
     function GetDetectedLanguage(const DetectStr: string): TLanguageEnum;
     function GetRequestURL(SourceStr: string): string;
+    function GetVersion:string;
   public
     constructor Create(AOwner: TComponent); override;
     function Translate(const SourceStr: string): string;
@@ -192,9 +193,11 @@ type
   published
     property SourceLang: TLanguageEnum read FSourceLang write FSourceLang;
     property DestLang: TLanguageEnum read FDestLang write FDestLang;
+    property Key: string read FKey write FKey;
     property OnTranslate: TOnTranslate read FOnTranslate write FOnTranslate;
     property OnTranslateError: TOnTranslateError read FOnTranslateError write
       FOnTranslateError;
+    property Version: string read GetVersion;
   end;
 
 procedure Register;
@@ -219,24 +222,24 @@ begin
   SetLength(Result, Length(Value) * 3);
   l := 1;
   for n := 1 to Length(Value) do
-  begin
-    c := Value[n];
-    if c in Specials then
     begin
-      Result[l] := Delimiter;
-      Inc(l);
-      s := IntToHex(Ord(c), 2);
-      Result[l] := s[1];
-      Inc(l);
-      Result[l] := s[2];
-      Inc(l);
-    end
-    else
-    begin
-      Result[l] := c;
-      Inc(l);
+      c := Value[n];
+      if c in Specials then
+        begin
+          Result[l] := Delimiter;
+          Inc(l);
+          s := IntToHex(Ord(c), 2);
+          Result[l] := s[1];
+          Inc(l);
+          Result[l] := s[2];
+          Inc(l);
+        end
+      else
+        begin
+          Result[l] := c;
+          Inc(l);
+        end;
     end;
-  end;
   Dec(l);
   SetLength(Result, l);
 end;
@@ -275,13 +278,14 @@ var
 begin
   Result := unknown;
   for i := 0 to High(Languages) - 1 do
-  begin
-    if AnsiLowerCase(Trim(aName)) = AnsiLowerCase(Trim(Languages[i].Name)) then
     begin
-      Result := Languages[i].Ident;
-      break
+      if AnsiLowerCase(Trim(aName)) = AnsiLowerCase
+        (Trim(Languages[i].Name)) then
+        begin
+          Result := Languages[i].Ident;
+          break
+        end;
     end;
-  end;
 end;
 
 function TTranslator.GetLanguagesNames: TStringList;
@@ -299,17 +303,26 @@ var
 begin
   source := '';
   if SourceLang <> unknown then
-  begin
-    source := StringReplace
-      (GetEnumName(TypeInfo(TLanguageEnum), Ord(FSourceLang)), '_', '-',
-      [rfReplaceAll]);
-    Delete(source, 1, 4);
-  end;
+    begin
+      source := StringReplace
+        (GetEnumName(TypeInfo(TLanguageEnum), Ord(FSourceLang)), '_', '-',
+        [rfReplaceAll]);
+      Delete(source, 1, 4);
+    end;
   dest := StringReplace(GetEnumName(TypeInfo(TLanguageEnum), Ord(FDestLang)),
     '_', '-', [rfReplaceAll]);
   Delete(dest, 1, 4);
-  Result := EncodeURL(cTranslateURL + '?v=' + APIVersion + '&q=' + UTF8Encode
-      (SourceStr) + '&langpair=' + source + '|' + dest);
+  Result := cTranslateURL + APIVersion + '?key=' + Key + '&q=' + UTF8Encode(SourceStr);
+  if SourceLang<>unknown then
+    Result:=Result+'&source='+source;
+  if DestLang<>unknown then
+    Result:=Result+'&target='+dest;
+  EncodeURL(Result);
+end;
+
+function TTranslator.GetVersion: string;
+begin
+  Result:=APIVersion;
 end;
 
 function TTranslator.Translate(const SourceStr: string): string;
@@ -320,27 +333,23 @@ var
 begin
   if FDestLang = unknown then
     raise Exception.Create(rsErrorDestLng);
-  req := {$IFDEF VER210} CoXMLHTTP {$ELSE} CoXMLHTTPRequest {$ENDIF}.Create;
+  req := {$IFDEF VER220} CoXMLHTTP {$ELSE} CoXMLHTTPRequest {$ENDIF}.Create;
   req.open('GET', GetRequestURL(SourceStr), false, EmptyParam, EmptyParam);
   req.send(EmptyParam);
   s := PwideChar(req.responseText);
   obj := TSuperObject.ParseString(s, true);
-  if obj.i[cResponcePath] = 200 then
-  begin
-    Result := (obj.s[cTranslatedPath]);
+  try
+    Result:= obj.A['data.translations'].O[0].S['translatedText'];
     if Assigned(FOnTranslate) then
-    begin
-      if FSourceLang <> unknown then
-        FOnTranslate(SourceStr, Result, FSourceLang)
-      else
-        FOnTranslate(SourceStr, Result, GetDetectedLanguage
-            (obj.s[cDetectedLangPath]))
-    end;
-  end
-  else
-  begin
-    if Assigned(FOnTranslateError) then
-      FOnTranslateError(obj.i[cResponcePath], obj.s[cResponceTextPath]);
+       begin
+         if FSourceLang <> unknown then
+            FOnTranslate(SourceStr, Result, FSourceLang)
+         else
+           FOnTranslate(SourceStr, Result, GetDetectedLanguage
+           (obj.s[cDetectedLangPath]))
+       end;
+  except
+    raise Exception.Create(rsErrorTrnsl);
   end;
 end;
 

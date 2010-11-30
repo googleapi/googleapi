@@ -27,4 +27,8 @@ package Translator_pack;
 requires
   rtl;
 
+contains
+  GTranslate in '..\..\source\GTranslate.pas',
+  superobject in '..\..\addons\superobject\superobject.pas';
+
 end.

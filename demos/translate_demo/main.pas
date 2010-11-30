@@ -18,6 +18,8 @@ type
     Label3: TLabel;
     Label4: TLabel;
     ComboBox2: TComboBox;
+    Label5: TLabel;
+    Edit2: TEdit;
     procedure Button1Click(Sender: TObject);
     procedure Translator1Translate(const SourceStr, TranslateStr: string;
       LangDetected: TLanguageEnum);
@@ -39,6 +41,7 @@ implementation
 
 procedure TForm6.Button1Click(Sender: TObject);
 begin
+  Translator1.Key:=Edit2.Text;
   Translator1.Translate(Edit1.Text)
 end;
 

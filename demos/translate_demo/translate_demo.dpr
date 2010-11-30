@@ -3,7 +3,8 @@ program translate_demo;
 uses
   Forms,
   main in 'main.pas' {Form6},
-  GTranslate in '..\..\source\GTranslate.pas';
+  GTranslate in '..\..\source\GTranslate.pas',
+  superobject in '..\..\addons\superobject\superobject.pas';
 
 {$R *.res}
 
