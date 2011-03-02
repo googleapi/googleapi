@@ -44,7 +44,7 @@ type
 type
   TServices = (xapi, analytics, apps, gbase, jotspot, blogger, print, cl,
                codesearch, cp, writely, finance, mail, health, local, lh2, annotateweb,
-               wise, sitemaps, youtube, gtrans);
+               wise, sitemaps, youtube, gtrans,urlshortener);
 type
   TResultRec = packed record
     LoginStr: string;

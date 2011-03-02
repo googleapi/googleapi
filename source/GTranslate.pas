@@ -1,46 +1,49 @@
-{ ==============================================================================|
-  |Ïğîåêò: Google API â Delphi                                                   |
-  |==============================================================================|
-  |unit: GTranslate                                                              |
-  |==============================================================================|
-  |Îïèñàíèå: Ìîäóëü äëÿ ğàáîòû ñ ïåğåâîä÷èêîì Google (AJAX Language API).        |
-  |==============================================================================|
-  |Çàâèñèìîñòè:                                                                  |
-  |1. Äëÿ ïàğñèíãà JSON-äîêóìåíòîâ èñïîëüçóåòñÿ áèáëèîòåêà SuperObject           |
-  |==============================================================================|
-  | Àâòîğ: Vlad. (vlad383@gmail.com)                                             |
-  | Äàòà: 09.08.2010                                                             |
-  | Âåğñèÿ: ñì. íèæå                                                             |
-  | Copyright (c) 2009-2010 WebDelphi.ru                                         |
-  |==============================================================================|
-  | ËÈÖÅÍÇÈÎÍÍÎÅ ÑÎÃËÀØÅÍÈÅ                                                      |
-  |==============================================================================|
-  | ÄÀÍÍÎÅ ÏĞÎÃĞÀÌÌÍÎÅ ÎÁÅÑÏÅ×ÅÍÈÅ ÏĞÅÄÎÑÒÀÂËßÅÒÑß «ÊÀÊ ÅÑÒÜ», ÁÅÇ ËŞÁÎÃÎ ÂÈÄÀ   |
-  | ÃÀĞÀÍÒÈÉ, ßÂÍÎ ÂÛĞÀÆÅÍÍÛÕ ÈËÈ ÏÎÄĞÀÇÓÌÅÂÀÅÌÛÕ, ÂÊËŞ×Àß, ÍÎ ÍÅ ÎÃĞÀÍÈ×ÈÂÀßÑÜ  |
-  | ÃÀĞÀÍÒÈßÌÈ ÒÎÂÀĞÍÎÉ ÏĞÈÃÎÄÍÎÑÒÈ, ÑÎÎÒÂÅÒÑÒÂÈß ÏÎ ÅÃÎ ÊÎÍÊĞÅÒÍÎÌÓ ÍÀÇÍÀ×ÅÍÈŞ  |
-  | È ÍÅÍÀĞÓØÅÍÈß ÏĞÀÂ. ÍÈ Â ÊÀÊÎÌ ÑËÓ×ÀÅ ÀÂÒÎĞÛ ÈËÈ ÏĞÀÂÎÎÁËÀÄÀÒÅËÈ ÍÅ ÍÅÑÓÒ    |
-  | ÎÒÂÅÒÑÒÂÅÍÍÎÑÒÈ ÏÎ ÈÑÊÀÌ Î ÂÎÇÌÅÙÅÍÈÈ ÓÙÅĞÁÀ, ÓÁÛÒÊÎÂ ÈËÈ ÄĞÓÃÈÕ ÒĞÅÁÎÂÀÍÈÉ  |
-  | ÏÎ ÄÅÉÑÒÂÓŞÙÈÌ ÊÎÍÒĞÀÊÒÀÌ, ÄÅËÈÊÒÀÌ ÈËÈ ÈÍÎÌÓ, ÂÎÇÍÈÊØÈÌ ÈÇ, ÈÌÅŞÙÈÌ         |
-  | ÏĞÈ×ÈÍÎÉ ÈËÈ ÑÂßÇÀÍÍÛÌ Ñ ÏĞÎÃĞÀÌÌÍÛÌ ÎÁÅÑÏÅ×ÅÍÈÅÌ ÈËÈ ÈÑÏÎËÜÇÎÂÀÍÈÅÌ         |
-  | ÏĞÎÃĞÀÌÌÍÎÃÎ ÎÁÅÑÏÅ×ÅÍÈß ÈËÈ ÈÍÛÌÈ ÄÅÉÑÒÂÈßÌÈ Ñ ÏĞÎÃĞÀÌÌÍÛÌ ÎÁÅÑÏÅ×ÅÍÈÅÌ.    |
-  |                                                                              |
-  | This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF        |
-  | ANY KIND, either express or implied.                                         |
-  |==============================================================================|
-  | ÎÁÍÎÂËÅÍÈß ÊÎÌÏÎÍÅÍÒÀ                                                        |
-  |==============================================================================|
-  | Ïîñëåäíèå îáíîâëåíèÿ ìîäóëÿ GFeedBurner ìîæíî íàéòè â ğåïîçèòîğèè ïî àäğåñó: |
-  | http://github.com/googleapi                                                  |
-  |==============================================================================|
-  | Èñòîğèÿ âåğñèé                                                               |
-  |==============================================================================|
-  |                                                                              |
-  |============================================================================== }
+{ =============================================================================|
+  |Ïğîåêò: Google API â Delphi                                                 |
+  |============================================================================|
+  |unit: GTranslate                                                            |
+  |============================================================================|
+  |Îïèñàíèå: Ìîäóëü äëÿ ğàáîòû ñ ïåğåâîä÷èêîì Google.                          |
+  |============================================================================|
+  |Çàâèñèìîñòè:                                                                |
+  |1. Äëÿ ïàğñèíãà JSON-äîêóìåíòîâ èñïîëüçóåòñÿ áèáëèîòåêà SuperObject         |
+  |============================================================================|
+  | Àâòîğ: Vlad. (vlad383@gmail.com)                                           |
+  | Äàòà: 09.08.2010                                                           |
+  | Âåğñèÿ: ñì. íèæå                                                           |
+  | Copyright (c) 2009-2010 WebDelphi.ru                                       |
+  |============================================================================|
+  | ËÈÖÅÍÇÈÎÍÍÎÅ ÑÎÃËÀØÅÍÈÅ                                                    |
+  |============================================================================|
+  | ÄÀÍÍÎÅ ÏĞÎÃĞÀÌÌÍÎÅ ÎÁÅÑÏÅ×ÅÍÈÅ ÏĞÅÄÎÑÒÀÂËßÅÒÑß «ÊÀÊ ÅÑÒÜ», ÁÅÇ ËŞÁÎÃÎ ÂÈÄÀ |
+  | ÃÀĞÀÍÒÈÉ, ßÂÍÎ ÂÛĞÀÆÅÍÍÛÕ ÈËÈ ÏÎÄĞÀÇÓÌÅÂÀÅÌÛÕ, ÂÊËŞ×Àß, ÍÎ ÍÅ ÎÃĞÀÍÈ×ÈÂÀßÑÜ|
+  | ÃÀĞÀÍÒÈßÌÈ ÒÎÂÀĞÍÎÉ ÏĞÈÃÎÄÍÎÑÒÈ, ÑÎÎÒÂÅÒÑÒÂÈß ÏÎ ÅÃÎ ÊÎÍÊĞÅÒÍÎÌÓ ÍÀÇÍÀ×ÅÍÈŞ|
+  | È ÍÅÍÀĞÓØÅÍÈß ÏĞÀÂ. ÍÈ Â ÊÀÊÎÌ ÑËÓ×ÀÅ ÀÂÒÎĞÛ ÈËÈ ÏĞÀÂÎÎÁËÀÄÀÒÅËÈ ÍÅ ÍÅÑÓÒ  |
+  | ÎÒÂÅÒÑÒÂÅÍÍÎÑÒÈ ÏÎ ÈÑÊÀÌ Î ÂÎÇÌÅÙÅÍÈÈ ÓÙÅĞÁÀ, ÓÁÛÒÊÎÂ ÈËÈ ÄĞÓÃÈÕ ÒĞÅÁÎÂÀÍÈÉ|
+  | ÏÎ ÄÅÉÑÒÂÓŞÙÈÌ ÊÎÍÒĞÀÊÒÀÌ, ÄÅËÈÊÒÀÌ ÈËÈ ÈÍÎÌÓ, ÂÎÇÍÈÊØÈÌ ÈÇ, ÈÌÅŞÙÈÌ       |
+  | ÏĞÈ×ÈÍÎÉ ÈËÈ ÑÂßÇÀÍÍÛÌ Ñ ÏĞÎÃĞÀÌÌÍÛÌ ÎÁÅÑÏÅ×ÅÍÈÅÌ ÈËÈ ÈÑÏÎËÜÇÎÂÀÍÈÅÌ       |
+  | ÏĞÎÃĞÀÌÌÍÎÃÎ ÎÁÅÑÏÅ×ÅÍÈß ÈËÈ ÈÍÛÌÈ ÄÅÉÑÒÂÈßÌÈ Ñ ÏĞÎÃĞÀÌÌÍÛÌ ÎÁÅÑÏÅ×ÅÍÈÅÌ.  |
+  |                                                                            |
+  | This software is distributed on an "AS IS" basis, WITHOUT WARRANTY OF      |
+  | ANY KIND, either express or implied.                                       |
+  |============================================================================|
+  | ÎÁÍÎÂËÅÍÈß ÊÎÌÏÎÍÅÍÒÀ                                                      |
+  |============================================================================|
+  | Ïîñëåäíèå îáíîâëåíèÿ ìîäóëÿ GFeedBurner ìîæíî íàéòè â ğåïîçèòîğèè ïî àäğåñó:|
+  | http://github.com/googleapi                                                |
+  |============================================================================|
+  | Èñòîğèÿ âåğñèé                                                             |
+  |============================================================================|
+  |v. 0.2                                                                      |
+  | + ïîääåğæêà API v.2                                                        |
+  | + ñâîéñòâî key: string - êëş÷ äîñòóïà ê API                                |
+  |============================================================================ }
 unit GTranslate;
 
 interface
 
-uses windows, msxml, superobject, classes, variants, sysutils, typinfo;
+uses windows, superobject, classes, variants, sysutils, typinfo,synacode,
+     ssl_openssl,httpsend,Dialogs;
 
 resourcestring
   rsLangUnknown = 'Íåèçâåñòíûé ÿçûê';
@@ -105,6 +108,8 @@ resourcestring
 
   rsErrorDestLng = 'Ïåğåâîä íåâîçìîæåí ò.ê. íå îïğåäåëåí ÿçûê ïåğåâîäà';
   rsErrorTrnsl = 'Âî âğåìÿ ïåğåâîäà ïğîèçîøëà îøèáêà';
+  rsErrLagrgeReq =
+    'Êîëè÷åñòâî ñèìâîëîâ â òåêñòå äëÿ ïåğåâîäà ïğåâûøàåò äîïóñòèìîå çíà÷åíèå â 5000';
 
 type
   TLanguageEnum = (unknown, lng_af, lng_sq, lng_ar, lng_hy, lng_az, lng_eu,
@@ -159,15 +164,15 @@ const
     (Name: rsLang_hr; Ident: lng_hr), (Name: rsLang_cs; Ident: lng_cs),
     (Name: rsLang_sv; Ident: lng_sv), (Name: rsLang_et; Ident: lng_et),
     (Name: rsLang_ja; Ident: lng_ja));
+
   cTranslateURL = 'https://www.googleapis.com/language/translate/v';
-  cTranslatedPath ='data.translations.translatedText';
-  cDetectedLangPath = 'responseData.detectedSourceLanguage';
-  cResponcePath = 'responseStatus';
-  cResponceTextPath = 'responseDetails';
+  cMaxGet = 2000;
+  cMaxPost = 5000;
+
   APIVersion = '2';
   TranslatorVersion = '0.2';
-  URLSpecialChar: TSpecials = [#$00 .. #$20, '_', '<', '>', '"', '%', '{', '}',
-    '|', '\', '^', '~', '[', ']', '`', #$7F .. #$FF];
+//  URLSpecialChar: TSpecials = [#$00 .. #$20, '_', '<', '>', '"', '%', '{', '}',
+//    '|', '\', '^', '~', '[', ']', '`', #$7F .. #$FF];
 
 type
   TOnTranslate = procedure(const SourceStr, TranslateStr: string;
@@ -176,7 +181,7 @@ type
 
   TTranslator = class(TComponent)
   private
-    FVersion   : string;
+    FVersion: string;
     FSourceLang: TLanguageEnum;
     FDestLang: TLanguageEnum;
     FKey: string;
@@ -184,7 +189,11 @@ type
     FOnTranslateError: TOnTranslateError;
     function GetDetectedLanguage(const DetectStr: string): TLanguageEnum;
     function GetRequestURL(SourceStr: string): string;
-    function GetVersion:string;
+    function GetVersion: string;
+    function GetParams(const Text: TStringList): string;
+    function SendRequest(const aText: TStringList;
+      var Response: string): boolean;
+    function ParseError(const Response:string):boolean;
   public
     constructor Create(AOwner: TComponent); override;
     function Translate(const SourceStr: string): string;
@@ -201,9 +210,9 @@ type
   end;
 
 procedure Register;
-function EncodeURL(const Value: AnsiString): AnsiString; inline;
-function EncodeTriplet(const Value: AnsiString; Delimiter: AnsiChar;
-  Specials: TSpecials): AnsiString; inline;
+//function EncodeURL(const Value: AnsiString): AnsiString; inline;
+//function EncodeTriplet(const Value: AnsiString; Delimiter: AnsiChar;
+//  Specials: TSpecials): AnsiString; inline;
 
 implementation
 
@@ -212,42 +221,42 @@ begin
   RegisterComponents('WebDelphi.ru', [TTranslator]);
 end;
 
-function EncodeTriplet(const Value: AnsiString; Delimiter: AnsiChar;
-  Specials: TSpecials): AnsiString; inline;
-var
-  n, l: integer;
-  s: AnsiString;
-  c: AnsiChar;
-begin
-  SetLength(Result, Length(Value) * 3);
-  l := 1;
-  for n := 1 to Length(Value) do
-    begin
-      c := Value[n];
-      if c in Specials then
-        begin
-          Result[l] := Delimiter;
-          Inc(l);
-          s := IntToHex(Ord(c), 2);
-          Result[l] := s[1];
-          Inc(l);
-          Result[l] := s[2];
-          Inc(l);
-        end
-      else
-        begin
-          Result[l] := c;
-          Inc(l);
-        end;
-    end;
-  Dec(l);
-  SetLength(Result, l);
-end;
+//function EncodeTriplet(const Value: AnsiString; Delimiter: AnsiChar;
+//  Specials: TSpecials): AnsiString; inline;
+//var
+//  n, l: integer;
+//  s: AnsiString;
+//  c: AnsiChar;
+//begin
+//  SetLength(Result, Length(Value) * 3);
+//  l := 1;
+//  for n := 1 to Length(Value) do
+//    begin
+//      c := Value[n];
+//      if c in Specials then
+//        begin
+//          Result[l] := Delimiter;
+//          Inc(l);
+//          s := IntToHex(Ord(c), 2);
+//          Result[l] := s[1];
+//          Inc(l);
+//          Result[l] := s[2];
+//          Inc(l);
+//        end
+//      else
+//        begin
+//          Result[l] := c;
+//          Inc(l);
+//        end;
+//    end;
+//  Dec(l);
+//  SetLength(Result, l);
+//end;
 
-function EncodeURL(const Value: AnsiString): AnsiString; inline;
-begin
-  Result := EncodeTriplet(Value, '%', URLSpecialChar);
-end;
+//function EncodeURL(const Value: AnsiString): AnsiString; inline;
+//begin
+//  Result := EncodeTriplet(Value, '%', URLSpecialChar);
+//end;
 
 { TTranslator }
 
@@ -297,6 +306,32 @@ begin
     Result.Add(Languages[i].Name);
 end;
 
+function TTranslator.GetParams(const Text: TStringList): string;
+var
+  i: integer;
+  source, dest: string;
+begin
+  source := '';
+  if SourceLang <> unknown then
+    begin
+      source := StringReplace
+        (GetEnumName(TypeInfo(TLanguageEnum), Ord(FSourceLang)), '_', '-',
+        [rfReplaceAll]);
+      Delete(source, 1, 4);
+    end;
+  dest := StringReplace(GetEnumName(TypeInfo(TLanguageEnum), Ord(FDestLang)),
+    '_', '-', [rfReplaceAll]);
+  Delete(dest, 1, 4);
+  Result := 'key=' + Key;
+  for i := 0 to Text.Count - 1 do
+    Result := Result + '&q=' + Text[i];
+  if SourceLang <> unknown then
+    Result := Result + '&source=' + source;
+  if DestLang <> unknown then
+    Result := Result + '&target=' + dest;
+  Result:=EncodeURL(AnsiString(Result));
+end;
+
 function TTranslator.GetRequestURL(SourceStr: string): string;
 var
   source, dest: string;
@@ -312,45 +347,91 @@ begin
   dest := StringReplace(GetEnumName(TypeInfo(TLanguageEnum), Ord(FDestLang)),
     '_', '-', [rfReplaceAll]);
   Delete(dest, 1, 4);
-  Result := cTranslateURL + APIVersion + '?key=' + Key + '&q=' + UTF8Encode(SourceStr);
-  if SourceLang<>unknown then
-    Result:=Result+'&source='+source;
-  if DestLang<>unknown then
-    Result:=Result+'&target='+dest;
+  Result := cTranslateURL + APIVersion + '?key=' + Key + '&q=' +
+    UTF8Encode(SourceStr);
+  if SourceLang <> unknown then
+    Result := Result + '&source=' + source;
+  if DestLang <> unknown then
+    Result := Result + '&target=' + dest;
   EncodeURL(Result);
 end;
 
 function TTranslator.GetVersion: string;
 begin
-  Result:=APIVersion;
+  Result := APIVersion;
+end;
+
+function TTranslator.ParseError(const Response: string): boolean;
+var obj: ISuperObject;
+    s: PSOChar;
+begin
+  s := PwideChar(Response);
+  obj := TSuperObject.ParseString(s, true);
+  if not Assigned(obj) then Exit;
+  ShowMessage(obj.AsObject.GetNames.AsString);
+end;
+
+function TTranslator.SendRequest(const aText: TStringList;
+  var Response: string): boolean;
+var
+  i: integer;
+  PostData: TStringStream;
+  source, dest: string;
+begin
+  Result := false;
+  PostData := TStringStream.Create;
+  if (aText = nil) OR (aText.Count = 0) then
+    Exit;
+   with THTTPSend.Create do
+     begin
+       if HTTPMethod('GET', cTranslateURL + Version + '?' +
+          GetParams(aText)) then
+          begin
+            PostData.LoadFromStream(Document);
+            Result := true;
+            Response := PostData.DataString;
+            ParseError(Response)
+          end
+    end;
 end;
 
 function TTranslator.Translate(const SourceStr: string): string;
 var
   obj: ISuperObject;
-  req: IXMLHttpRequest;
   s: PSOChar;
+  Text: TStringList;
+  Resp: string;
 begin
   if FDestLang = unknown then
     raise Exception.Create(rsErrorDestLng);
-  req := {$IFDEF VER220} CoXMLHTTP {$ELSE} CoXMLHTTPRequest {$ENDIF}.Create;
-  req.open('GET', GetRequestURL(SourceStr), false, EmptyParam, EmptyParam);
-  req.send(EmptyParam);
-  s := PwideChar(req.responseText);
-  obj := TSuperObject.ParseString(s, true);
-  try
-    Result:= obj.A['data.translations'].O[0].S['translatedText'];
-    if Assigned(FOnTranslate) then
-       begin
-         if FSourceLang <> unknown then
+  Text := TStringList.Create;
+  Text.Add(SourceStr);
+
+  if SendRequest(Text, Resp) then
+    begin
+      s := PwideChar(Resp);
+      obj := TSuperObject.ParseString(s, true);
+      try
+        Result := UTF8ToString(obj.A['data.translations'].O[0].s['translatedText']);
+        if Assigned(FOnTranslate) then
+          begin
+            // if FSourceLang <> unknown then
             FOnTranslate(SourceStr, Result, FSourceLang)
-         else
-           FOnTranslate(SourceStr, Result, GetDetectedLanguage
-           (obj.s[cDetectedLangPath]))
-       end;
-  except
-    raise Exception.Create(rsErrorTrnsl);
-  end;
+            // else
+            // FOnTranslate(SourceStr, Result, GetDetectedLanguage
+            // (obj.s[cDetectedLangPath]))
+          end;
+      except
+        Text.Clear;
+        Text.Add(Resp);
+        Text.SaveToFile('Error.txt');
+        raise Exception.Create(rsErrorTrnsl+' :'+Resp);
+
+      end;
+    end
+    else
+      raise Exception.Create(Resp);
+
 end;
 
 end.
