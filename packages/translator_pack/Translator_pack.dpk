@@ -25,7 +25,8 @@ package Translator_pack;
 {$IMPLICITBUILD ON}
 
 requires
-  rtl;
+  rtl,
+  vcl;
 
 contains
   GTranslate in '..\..\source\GTranslate.pas',

@@ -14,12 +14,13 @@ type
     Memo1: TMemo;
     Button1: TButton;
     ComboBox1: TComboBox;
-    Translator1: TTranslator;
+    //Translator1: TTranslator;
     Label3: TLabel;
     Label4: TLabel;
     ComboBox2: TComboBox;
     Label5: TLabel;
     Edit2: TEdit;
+    Translator1: TTranslator;
     procedure Button1Click(Sender: TObject);
     procedure Translator1Translate(const SourceStr, TranslateStr: string;
       LangDetected: TLanguageEnum);
