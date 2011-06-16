@@ -1,10 +1,5 @@
-<<<<<<< HEAD
 unit uLanguage;
 
-=======
-unit uLanguage;
-
->>>>>>> remotes/origin/master
 interface
 
 const
@@ -141,43 +136,3 @@ implementation
 {$R GStrings.res}
 
 end.
-<<<<<<< HEAD
-=======
-=======
-<<<<<<< HEAD
->>>>>>> remotes/origin/NMD
-unit uLanguage;
-
-{$DEFINE RUSSIAN}
-const
-
-{$IFDEF RUSSIAN}
-{I langusges/lang_russian.pas}
-{$ENDIF}
-
-
-
-begin
-<<<<<<< HEAD
-end.
->>>>>>> remotes/origin/NMD
-=======
-=======
-unit uLanguage;
-
-{$DEFINE RUSSIAN}
-
-interface
-
-{$IFDEF RUSSIAN}
-{$I languages\lang_russian.inc}
-{$ENDIF}
-
-implementation
-
-begin
->>>>>>> remotes/origin/Vlad55
-end.
->>>>>>> remotes/origin/NMD
-=======
->>>>>>> remotes/origin/master
