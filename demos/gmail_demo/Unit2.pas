@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 unit Unit2;
-=======
-unit Unit2;
->>>>>>> remotes/origin/master
 
 interface
 
@@ -63,7 +59,7 @@ if OpenDialog1.Execute then
   begin
     ListBox2.Items.Add(OpenDialog1.FileName);
     GMailSMTP1.AttachFiles.Add(OpenDialog1.FileName);
-    ShowMessage('Новый файл добавлен в сообщение');
+    ShowMessage('РќРѕРІС‹Р№ С„Р°Р№Р» РґРѕР±Р°РІР»РµРЅ РІ СЃРѕРѕР±С‰РµРЅРёРµ');
   end;
 end;
 
@@ -73,7 +69,7 @@ if ListBox2.ItemIndex>0 then
   begin
     GMailSMTP1.AttachFiles.Delete(ListBox2.ItemIndex);
     ListBox2.Items.Delete(ListBox2.ItemIndex);
-    ShowMessage('Файл удален из сообщения');
+    ShowMessage('Р¤Р°Р№Р» СѓРґР°Р»РµРЅ РёР· СЃРѕРѕР±С‰РµРЅРёСЏ');
   end;
 end;
 
@@ -82,14 +78,14 @@ var i:integer;
 begin
   GMailSMTP1.AddText(Memo1.Text);
   Memo1.Lines.Clear;
-  ShowMessage('Фрагмент сообщения успешно добавлен');
+  ShowMessage('Р¤СЂР°РіРјРµРЅС‚ СЃРѕРѕР±С‰РµРЅРёСЏ СѓСЃРїРµС€РЅРѕ РґРѕР±Р°РІР»РµРЅ');
 end;
 
 procedure TForm2.Button2Click(Sender: TObject);
 begin
   GMailSMTP1.AddHTML(Memo1.Text);
   Memo1.Lines.Clear;
-  ShowMessage('Фрагмент сообщения успешно добавлен');
+  ShowMessage('Р¤СЂР°РіРјРµРЅС‚ СЃРѕРѕР±С‰РµРЅРёСЏ СѓСЃРїРµС€РЅРѕ РґРѕР±Р°РІР»РµРЅ');
 end;
 
 procedure TForm2.Button3Click(Sender: TObject);
@@ -100,9 +96,9 @@ GMailSMTP1.FromEmail:=Edit1.Text;
 GMailSMTP1.Recipients.Clear;
 GMailSMTP1.Recipients.Add(Edit2.Text);
 if GMailSMTP1.SendMessage(Edit3.Text, chk1.Checked) then
-  ShowMessage('Письмо отправлено')
+  ShowMessage('РџРёСЃСЊРјРѕ РѕС‚РїСЂР°РІР»РµРЅРѕ')
 else
-  ShowMessage('Отправка не удалась')
+  ShowMessage('РћС‚РїСЂР°РІРєР° РЅРµ СѓРґР°Р»Р°СЃСЊ')
 end;
 
 procedure TForm2.GMailSMTP1Status(Sender: TObject; Reason: THookSocketReason;
@@ -114,7 +110,3 @@ begin
 end;
 
 end.
-<<<<<<< HEAD
-
-=======
->>>>>>> remotes/origin/master
